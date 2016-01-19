@@ -3,8 +3,10 @@ package com.zlebank.zplatform.business.individual.service;
 import java.util.Date;
 
 import com.zlebank.zplatform.business.individual.bean.Order;
+import com.zlebank.zplatform.business.individual.bean.enums.OrderStatus;
 
 public interface OrderService {
+
 	/**
 	 * 订单查询列表
 	 * @param memberId 会员号
@@ -16,25 +18,24 @@ public interface OrderService {
 	 */
 	public Object queryOrderList(String memberId,Date startDate,Date endDate,int page,int pageSize);
 	/**
-	 * 订单明细信息
+	 * 订单明细信息 Query a order detail
 	 * @param memberId
 	 * @param orderNo
 	 * @return
 	 */
 	public Order queryOrder(String memberId,String orderNo);
-	/**
-	 * 生成消费订单
-	 * @param order
-	 * @return tn
-	 */
+
 	public String createOrder(Order order);
 	
 	/**
-	 * 订单支付
+	 * 订单支付  Pay a order
 	 * @param order 订单信息
 	 * @param smsCode 短信验证码
 	 * @param payPwd 支付密码
-	 * @return
+	 * @return {@link OrderStatus}
 	 */
-	public String pay(Order order,String smsCode,String payPwd);
+	public OrderStatus pay(Order order,String smsCode,String payPwd);
+
+	
+
 }

@@ -18,6 +18,7 @@ import com.zlebank.zplatform.business.individual.bean.Member;
 import com.zlebank.zplatform.business.individual.service.MemberInfoService;
 import com.zlebank.zplatform.commons.utils.StringUtil;
 import com.zlebank.zplatform.member.bean.MemberBean;
+import com.zlebank.zplatform.member.bean.enums.BusinessActorType;
 import com.zlebank.zplatform.member.bean.enums.MemberType;
 import com.zlebank.zplatform.member.dao.MemberDAO;
 import com.zlebank.zplatform.member.exception.CreateBusiAcctFailedException;
@@ -26,9 +27,11 @@ import com.zlebank.zplatform.member.exception.DataCheckFailedException;
 import com.zlebank.zplatform.member.exception.InvalidMemberDataException;
 import com.zlebank.zplatform.member.exception.LoginFailedException;
 import com.zlebank.zplatform.member.pojo.PojoMember;
+import com.zlebank.zplatform.member.service.MemberBankCardService;
 import com.zlebank.zplatform.member.service.MemberOperationService;
 import com.zlebank.zplatform.sms.pojo.enums.ModuleTypeEnum;
 import com.zlebank.zplatform.sms.service.ISMSService;
+import com.zlebank.zplatform.trade.service.IGateWayService;
 
 /**
  * Class Description
@@ -36,34 +39,42 @@ import com.zlebank.zplatform.sms.service.ISMSService;
  * @author guojia
  * @version
  * @date 2016年1月19日 下午3:18:39
- * @since 
+ * @since
  */
 @Service("memberInfoService")
-public class MemberInfoServiceImpl implements MemberInfoService{
-	
+public class MemberInfoServiceImpl implements MemberInfoService {
+
 	@Autowired
 	private MemberOperationService memberOperationService;
 	@Autowired
 	private ISMSService smsService;
 	@Autowired
 	private MemberDAO memberDAO;
-
+	@Autowired
+	private MemberBankCardService memberBankCardService;
+	@Autowired
+	private IGateWayService gateWayService;
+	
 	/**
 	 *
 	 * @param registerMemberInfo
 	 * @param smsCode
 	 * @return
-	 * @throws CreateBusiAcctFailedException 
-	 * @throws CreateMemberFailedException 
-	 * @throws InvalidMemberDataException 
+	 * @throws CreateBusiAcctFailedException
+	 * @throws CreateMemberFailedException
+	 * @throws InvalidMemberDataException
 	 */
 	@Override
-	public String register(Member registerMemberInfo, String smsCode) throws InvalidMemberDataException, CreateMemberFailedException, CreateBusiAcctFailedException {
-		int retCode = smsService.verifyCode(ModuleTypeEnum.REGISTER, registerMemberInfo.getPhone(), smsCode);
-		if(retCode!=1){
+	public String register(Member registerMemberInfo, String smsCode)
+			throws InvalidMemberDataException, CreateMemberFailedException,
+			CreateBusiAcctFailedException {
+		int retCode = smsService.verifyCode(ModuleTypeEnum.REGISTER,
+				registerMemberInfo.getPhone(), smsCode);
+		if (retCode != 1) {
 			throw new RuntimeException("验证码错误");
 		}
-		String memberId = memberOperationService.registMember(MemberType.INDIVIDUAL, registerMemberInfo);
+		String memberId = memberOperationService.registMember(
+				MemberType.INDIVIDUAL, registerMemberInfo);
 		return memberId;
 	}
 
@@ -75,10 +86,37 @@ public class MemberInfoServiceImpl implements MemberInfoService{
 	 */
 	@Override
 	public Member queryMemebr(String loginName, String coopInstiCode) {
-		PojoMember pm = memberDAO.getMemberByLoginNameAndCoopInsti(loginName, coopInstiCode);
-		
-		
-		return null;
+		PojoMember pm = memberDAO.getMemberByLoginNameAndCoopInsti(loginName,
+				coopInstiCode);
+		if(pm==null){
+			return null;
+		}
+		Member member = new Member();
+		long memid = pm.getMemid();
+		String memberId = pm.getMemberId();
+		String instiCode=pm.getInstiCode();
+		String memberName=pm.getMemberName();
+		String pwd=pm.getPwd();
+		String paypwd=pm.getPayPwd();
+		String realnameLv=pm.getRealnameLv();
+		String phone=pm.getPhone();
+		String email=pm.getEmail();
+		String memberType=pm.getMemberType().getCode();
+		String memberStatus=pm.getStatus().getCode();
+		String registerIdent=pm.getRegisterIdent();
+		member.setMemid(memid+"");
+		member.setMemberId(memberId);
+		member.setInstiCode(instiCode);
+		member.setMemberName(memberName);
+		member.setPwd(pwd);
+		member.setPaypwd(paypwd);
+		member.setRealnameLv(realnameLv);
+		member.setPhone(phone);
+		member.setEmail(email);
+		member.setMemberType(memberType);
+		member.setMemberStatus(memberStatus);
+		member.setRegisterIdent(registerIdent);
+		return member;
 	}
 
 	/**
@@ -87,18 +125,20 @@ public class MemberInfoServiceImpl implements MemberInfoService{
 	 * @param pwd
 	 * @param coopInstiCode
 	 * @return
-	 * @throws LoginFailedException 
-	 * @throws DataCheckFailedException 
+	 * @throws LoginFailedException
+	 * @throws DataCheckFailedException
 	 */
 	@Override
-	public boolean login(String loginName, String pwd, String coopInstiCode) throws DataCheckFailedException, LoginFailedException {
+	public boolean login(String loginName, String pwd, String coopInstiCode)
+			throws DataCheckFailedException, LoginFailedException {
 		// TODO Auto-generated method stub
 		MemberBean member = new MemberBean();
 		member.setLoginName(loginName);
 		member.setPwd(pwd);
 		member.setInstiCode(coopInstiCode);
-		String memberId = memberOperationService.login(MemberType.INDIVIDUAL, member);
-		if(StringUtil.isNotEmpty(memberId)){
+		String memberId = memberOperationService.login(MemberType.INDIVIDUAL,
+				member);
+		if (StringUtil.isNotEmpty(memberId)) {
 			return true;
 		}
 		return false;
@@ -113,8 +153,8 @@ public class MemberInfoServiceImpl implements MemberInfoService{
 	 */
 	@Override
 	public boolean realName(IndividualRealInfo individualRealInfo,
-			String smsCode, String coopInstiCode) {
-		// TODO Auto-generated method stub
+			String smsCode, String memberId) {
+		
 		return false;
 	}
 
@@ -123,10 +163,17 @@ public class MemberInfoServiceImpl implements MemberInfoService{
 	 * @param memberId
 	 * @param payPwd
 	 * @return
+	 * @throws DataCheckFailedException 
 	 */
 	@Override
-	public boolean vaildatePayPwd(String memberId, String payPwd) {
-		// TODO Auto-generated method stub
+	public boolean vaildatePayPwd(String memberId, String payPwd) throws DataCheckFailedException {
+		PojoMember pm = memberDAO.getMbmberByMemberId(memberId, BusinessActorType.INDIVIDUAL);
+		MemberBean member = new MemberBean();
+		member.setLoginName(pm.getLoginName());
+		member.setInstiCode(pm.getInstiCode());
+		member.setPhone(pm.getPhone());
+		member.setPaypwd(payPwd);
+		memberOperationService.verifyPayPwd(MemberType.INDIVIDUAL, member);
 		return false;
 	}
 
@@ -136,11 +183,17 @@ public class MemberInfoServiceImpl implements MemberInfoService{
 	 * @param orgPwd
 	 * @param pwd
 	 * @return
+	 * @throws DataCheckFailedException 
 	 */
 	@Override
-	public boolean modifyPwd(String memberId, String orgPwd, String pwd) {
-		// TODO Auto-generated method stub
-		return false;
+	public boolean modifyPwd(String memberId, String orgPwd, String pwd) throws DataCheckFailedException {
+		PojoMember pm = memberDAO.getMbmberByMemberId(memberId, BusinessActorType.INDIVIDUAL);
+		MemberBean member = new MemberBean();
+		member.setLoginName(pm.getLoginName());
+		member.setInstiCode(pm.getInstiCode());
+		member.setPhone(pm.getPhone());
+		member.setPwd(orgPwd);
+		return memberOperationService.resetLoginPwd(MemberType.INDIVIDUAL, member, pwd, true);
 	}
 
 	/**
@@ -149,11 +202,17 @@ public class MemberInfoServiceImpl implements MemberInfoService{
 	 * @param orgPayPwd
 	 * @param payPwd
 	 * @return
+	 * @throws DataCheckFailedException 
 	 */
 	@Override
-	public boolean modifyPayPwd(String memberId, String orgPayPwd, String payPwd) {
-		// TODO Auto-generated method stub
-		return false;
+	public boolean modifyPayPwd(String memberId, String orgPayPwd, String payPwd) throws DataCheckFailedException {
+		PojoMember pm = memberDAO.getMbmberByMemberId(memberId, BusinessActorType.INDIVIDUAL);
+		MemberBean member = new MemberBean();
+		member.setLoginName(pm.getLoginName());
+		member.setInstiCode(pm.getInstiCode());
+		member.setPhone(pm.getPhone());
+		member.setPaypwd(orgPayPwd);
+		return memberOperationService.resetPayPwd(MemberType.INDIVIDUAL, member, payPwd, true);
 	}
 
 	/**
@@ -162,11 +221,21 @@ public class MemberInfoServiceImpl implements MemberInfoService{
 	 * @param pwd
 	 * @param smsCode
 	 * @return
+	 * @throws DataCheckFailedException 
 	 */
 	@Override
-	public boolean resetPwd(String memberId, String pwd, String smsCode) {
-		// TODO Auto-generated method stub
-		return false;
+	public boolean resetPwd(String memberId, String pwd, String smsCode) throws DataCheckFailedException {
+		PojoMember pm = memberDAO.getMbmberByMemberId(memberId, BusinessActorType.INDIVIDUAL);
+		int retCode = smsService.verifyCode(ModuleTypeEnum.REGISTER,
+				pm.getPhone(), smsCode);
+		if (retCode != 1) {
+			throw new RuntimeException("验证码错误");
+		}
+		MemberBean member = new MemberBean();
+		member.setLoginName(pm.getLoginName());
+		member.setInstiCode(pm.getInstiCode());
+		member.setPhone(pm.getPhone());
+		return memberOperationService.resetLoginPwd(MemberType.INDIVIDUAL, member, pwd, false);
 	}
 
 	/**
@@ -175,11 +244,21 @@ public class MemberInfoServiceImpl implements MemberInfoService{
 	 * @param payPwd
 	 * @param smsCode
 	 * @return
+	 * @throws DataCheckFailedException 
 	 */
 	@Override
-	public boolean resetPayPwd(String memberId, String payPwd, String smsCode) {
-		// TODO Auto-generated method stub
-		return false;
+	public boolean resetPayPwd(String memberId, String payPwd, String smsCode) throws DataCheckFailedException {
+		PojoMember pm = memberDAO.getMbmberByMemberId(memberId, BusinessActorType.INDIVIDUAL);
+		int retCode = smsService.verifyCode(ModuleTypeEnum.REGISTER,
+				pm.getPhone(), smsCode);
+		if (retCode != 1) {
+			throw new RuntimeException("验证码错误");
+		}
+		MemberBean member = new MemberBean();
+		member.setLoginName(pm.getLoginName());
+		member.setInstiCode(pm.getInstiCode());
+		member.setPhone(pm.getPhone());
+		return memberOperationService.resetPayPwd(MemberType.INDIVIDUAL, member, payPwd, false);
 	}
 
 }

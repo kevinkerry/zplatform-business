@@ -64,7 +64,7 @@ public class Order{
 	private String relatetradetxn;
 	private String orderfinshtime;
 	/**
-	 * 状态(01:初始，订单提交成功，但未支付；02：支付中；03：支付失败；00：支付成功，04：订单失效)
+	 * 状态
 	 */
 	private OrderStatus status;
 	/**

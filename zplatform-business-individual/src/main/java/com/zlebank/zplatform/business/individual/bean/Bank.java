@@ -1,5 +1,9 @@
 package com.zlebank.zplatform.business.individual.bean;
-
+/**
+ * bank bean
+ * @author yangying
+ *
+ */
 public class Bank {
 	/**银行代码*/
 	private String bankCode;

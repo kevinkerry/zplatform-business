@@ -1,5 +1,9 @@
 package com.zlebank.zplatform.business.individual.bean;
-
+/**
+ * a bean represent information of individual member to real name authenticate
+ * @author yangying
+ *
+ */
 public class IndividualRealInfo {
 	/**银行卡号**/
 	private String cardNo;
