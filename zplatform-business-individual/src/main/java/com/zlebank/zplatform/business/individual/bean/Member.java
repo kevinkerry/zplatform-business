@@ -24,7 +24,13 @@ import com.zlebank.zplatform.member.bean.*;
  */
 public class Member extends MemberBean{
 	 
+	/**
+	 * 会员已绑定的银行卡列表
+	 */
 	private List<BankCardInfo> bankCardList;
+	/**
+	 * 订单列表
+	 */
 	private List<Order> orders; 
 
 	public List<BankCardInfo> getBankCardList() {

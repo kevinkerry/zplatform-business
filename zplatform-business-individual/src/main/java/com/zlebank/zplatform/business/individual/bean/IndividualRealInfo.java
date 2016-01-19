@@ -1,6 +1,7 @@
 package com.zlebank.zplatform.business.individual.bean;
 
 public class IndividualRealInfo {
+	/**银行卡号**/
 	private String cardNo;
 	/**
 	 * 1-借机卡，2-贷记卡

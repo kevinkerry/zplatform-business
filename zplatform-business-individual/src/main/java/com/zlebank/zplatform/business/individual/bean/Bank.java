@@ -1,7 +1,9 @@
 package com.zlebank.zplatform.business.individual.bean;
 
 public class Bank {
+	/**银行代码*/
 	private String bankCode;
+	/**银行名称*/
 	private String bankName;
 
 	public String getBankCode() {

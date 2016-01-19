@@ -2,7 +2,9 @@ package com.zlebank.zplatform.business.individual.bean;
 
 public class BankCardInfo {
 	private Bank bank;
+	/**绑卡标示**/
 	private String bindcardid;
+	
 	private IndividualRealInfo bankCardInfo;
 	private String status;
 
