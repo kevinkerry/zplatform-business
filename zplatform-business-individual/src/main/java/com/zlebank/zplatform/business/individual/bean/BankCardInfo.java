@@ -1,5 +1,9 @@
 package com.zlebank.zplatform.business.individual.bean;
-
+/**
+ * bank card bean
+ * @author yangying
+ *
+ */
 public class BankCardInfo {
 	private Bank bank;
 	private String bindcardid;

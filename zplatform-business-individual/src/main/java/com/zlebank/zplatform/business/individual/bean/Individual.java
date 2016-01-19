@@ -12,17 +12,17 @@ package com.zlebank.zplatform.business.individual.bean;
 
 import java.util.List;
 
-import com.zlebank.zplatform.member.bean.*;
+import com.zlebank.zplatform.member.bean.Person;
 
 /**
- * Class Description
+ * a bean represent a individual member
  *
  * @author guojia
  * @version
  * @date 2016年1月19日 上午10:02:01
  * @since
  */
-public class Member extends MemberBean{
+public class Individual extends Person{
 	 
 	private List<BankCardInfo> bankCardList;
 	private List<Order> orders; 
