@@ -311,5 +311,6 @@
 		</plugins>
 	</build>
 	<modules>
+		<module>../zplatform-business-individual</module>
 	</modules>
 </project>
