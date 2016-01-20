@@ -25,15 +25,27 @@ public interface OrderService {
 	 */
 	public Order queryOrder(String memberId,String orderNo);
 
-	public String createOrder(Order order);
+	
 	
 	/**
+
 	 * 订单支付  Pay a order
 	 * @param order 订单信息
 	 * @param smsCode 短信验证码
 	 * @param payPwd 支付密码
+	 * create a consume order
+	 * @param order
+	 * @return tn
+	 */
+	String createOrder(Order order);
+	/**
+	 * Pay a order with account balance
+	 * @param order
+	 * @param smsCode
+	 * @param payPwd
 	 * @return {@link OrderStatus}
 	 */
+
 	public OrderStatus pay(Order order,String smsCode,String payPwd);
 
 	

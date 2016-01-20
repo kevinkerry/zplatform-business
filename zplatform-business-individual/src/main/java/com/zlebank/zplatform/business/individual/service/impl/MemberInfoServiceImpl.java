@@ -16,10 +16,15 @@ import org.springframework.stereotype.Service;
 import com.zlebank.zplatform.business.individual.bean.IndividualRealInfo;
 import com.zlebank.zplatform.business.individual.bean.Member;
 import com.zlebank.zplatform.business.individual.service.MemberInfoService;
+import com.zlebank.zplatform.commons.bean.CardBin;
+import com.zlebank.zplatform.commons.dao.CardBinDao;
 import com.zlebank.zplatform.commons.utils.StringUtil;
 import com.zlebank.zplatform.member.bean.MemberBean;
+import com.zlebank.zplatform.member.bean.QuickpayCustBean;
+import com.zlebank.zplatform.member.bean.RealNameBean;
 import com.zlebank.zplatform.member.bean.enums.BusinessActorType;
 import com.zlebank.zplatform.member.bean.enums.MemberType;
+import com.zlebank.zplatform.member.bean.enums.RealNameLvType;
 import com.zlebank.zplatform.member.dao.MemberDAO;
 import com.zlebank.zplatform.member.exception.CreateBusiAcctFailedException;
 import com.zlebank.zplatform.member.exception.CreateMemberFailedException;
@@ -31,6 +36,8 @@ import com.zlebank.zplatform.member.service.MemberBankCardService;
 import com.zlebank.zplatform.member.service.MemberOperationService;
 import com.zlebank.zplatform.sms.pojo.enums.ModuleTypeEnum;
 import com.zlebank.zplatform.sms.service.ISMSService;
+import com.zlebank.zplatform.trade.bean.ResultBean;
+import com.zlebank.zplatform.trade.bean.wap.WapCardBean;
 import com.zlebank.zplatform.trade.service.IGateWayService;
 
 /**
@@ -54,7 +61,8 @@ public class MemberInfoServiceImpl implements MemberInfoService {
 	private MemberBankCardService memberBankCardService;
 	@Autowired
 	private IGateWayService gateWayService;
-	
+	@Autowired
+	private CardBinDao cardBinDao;
 	/**
 	 *
 	 * @param registerMemberInfo
@@ -98,7 +106,7 @@ public class MemberInfoServiceImpl implements MemberInfoService {
 		String memberName=pm.getMemberName();
 		String pwd=pm.getPwd();
 		String paypwd=pm.getPayPwd();
-		String realnameLv=pm.getRealnameLv();
+		RealNameLvType realnameLv=pm.getRealnameLv();
 		String phone=pm.getPhone();
 		String email=pm.getEmail();
 		String memberType=pm.getMemberType().getCode();
@@ -110,7 +118,7 @@ public class MemberInfoServiceImpl implements MemberInfoService {
 		member.setMemberName(memberName);
 		member.setPwd(pwd);
 		member.setPaypwd(paypwd);
-		member.setRealnameLv(realnameLv);
+		member.setRealnameLv(realnameLv.getCode());
 		member.setPhone(phone);
 		member.setEmail(email);
 		member.setMemberType(memberType);
@@ -136,8 +144,7 @@ public class MemberInfoServiceImpl implements MemberInfoService {
 		member.setLoginName(loginName);
 		member.setPwd(pwd);
 		member.setInstiCode(coopInstiCode);
-		String memberId = memberOperationService.login(MemberType.INDIVIDUAL,
-				member);
+		String memberId = memberOperationService.login(MemberType.INDIVIDUAL,member);
 		if (StringUtil.isNotEmpty(memberId)) {
 			return true;
 		}
@@ -150,11 +157,55 @@ public class MemberInfoServiceImpl implements MemberInfoService {
 	 * @param smsCode
 	 * @param coopInstiCode
 	 * @return
+	 * @throws DataCheckFailedException 
 	 */
 	@Override
 	public boolean realName(IndividualRealInfo individualRealInfo,
-			String smsCode, String memberId) {
-		
+            String smsCode,
+            String payPwd,
+            String memberId) throws DataCheckFailedException {
+		//校验短信验证码
+		PojoMember pm = memberDAO.getMemberByMemberId(memberId, BusinessActorType.INDIVIDUAL);
+		int retCode = smsService.verifyCode(ModuleTypeEnum.BINDCARD,pm.getPhone(), smsCode);
+		if(retCode != 1) {
+			throw new RuntimeException("验证码错误");
+		}
+		WapCardBean cardBean = new WapCardBean(individualRealInfo.getCardNo(), individualRealInfo.getCardType(), individualRealInfo.getCustomerName(), 
+				individualRealInfo.getCertifType(), individualRealInfo.getCertifNo(), individualRealInfo.getPhoneNo(), individualRealInfo.getCvn2(), 
+				individualRealInfo.getExpired());
+		ResultBean resultBean = gateWayService.bindingBankCard(pm.getInstiCode(), memberId, cardBean);
+		if(resultBean.isResultBool()){
+			//保存实名认证信息
+			RealNameBean realNameBean = new RealNameBean();
+			realNameBean.setMemberId(memberId);
+			realNameBean.setRealname(individualRealInfo.getCustomerName());
+			realNameBean.setIdentiType(individualRealInfo.getCertifType());
+			realNameBean.setIdentiNum(individualRealInfo.getCertifNo());
+			realNameBean.setStatus("00");
+			memberBankCardService.saveRealNameInfo(realNameBean);
+			//保存绑卡信息
+			QuickpayCustBean quickpayCustBean = new QuickpayCustBean();
+			quickpayCustBean.setCustomerno(pm.getInstiCode());
+			quickpayCustBean.setCardno(individualRealInfo.getCardNo());
+			quickpayCustBean.setCardtype(individualRealInfo.getCardType());
+			quickpayCustBean.setAccname(individualRealInfo.getCustomerName());
+			quickpayCustBean.setPhone(individualRealInfo.getPhoneNo());
+			quickpayCustBean.setIdtype(individualRealInfo.getCertifType());
+			quickpayCustBean.setIdnum(individualRealInfo.getCertifNo());
+			quickpayCustBean.setCvv2(individualRealInfo.getCvn2());
+			quickpayCustBean.setValidtime(individualRealInfo.getExpired());
+			quickpayCustBean.setRelatememberno(memberId);
+			CardBin cardBin = cardBinDao.getCard(individualRealInfo.getCardNo());
+			quickpayCustBean.setBankcode(cardBin.getBankCode());
+			quickpayCustBean.setBankname(cardBin.getBankName());
+			memberBankCardService.saveQuickPayCust(quickpayCustBean);
+			//重置支付密码
+			MemberBean member = new MemberBean();
+			member.setLoginName(pm.getLoginName());
+			member.setInstiCode(pm.getInstiCode());
+			member.setPhone(pm.getPhone());
+			return memberOperationService.resetPayPwd(MemberType.INDIVIDUAL, member, payPwd, false);
+		}
 		return false;
 	}
 
@@ -167,14 +218,13 @@ public class MemberInfoServiceImpl implements MemberInfoService {
 	 */
 	@Override
 	public boolean vaildatePayPwd(String memberId, String payPwd) throws DataCheckFailedException {
-		PojoMember pm = memberDAO.getMbmberByMemberId(memberId, BusinessActorType.INDIVIDUAL);
+		PojoMember pm = memberDAO.getMemberByMemberId(memberId, BusinessActorType.INDIVIDUAL);
 		MemberBean member = new MemberBean();
 		member.setLoginName(pm.getLoginName());
 		member.setInstiCode(pm.getInstiCode());
 		member.setPhone(pm.getPhone());
 		member.setPaypwd(payPwd);
-		memberOperationService.verifyPayPwd(MemberType.INDIVIDUAL, member);
-		return false;
+		return memberOperationService.verifyPayPwd(MemberType.INDIVIDUAL, member);
 	}
 
 	/**
@@ -187,7 +237,7 @@ public class MemberInfoServiceImpl implements MemberInfoService {
 	 */
 	@Override
 	public boolean modifyPwd(String memberId, String orgPwd, String pwd) throws DataCheckFailedException {
-		PojoMember pm = memberDAO.getMbmberByMemberId(memberId, BusinessActorType.INDIVIDUAL);
+		PojoMember pm = memberDAO.getMemberByMemberId(memberId, BusinessActorType.INDIVIDUAL);
 		MemberBean member = new MemberBean();
 		member.setLoginName(pm.getLoginName());
 		member.setInstiCode(pm.getInstiCode());
@@ -206,7 +256,7 @@ public class MemberInfoServiceImpl implements MemberInfoService {
 	 */
 	@Override
 	public boolean modifyPayPwd(String memberId, String orgPayPwd, String payPwd) throws DataCheckFailedException {
-		PojoMember pm = memberDAO.getMbmberByMemberId(memberId, BusinessActorType.INDIVIDUAL);
+		PojoMember pm = memberDAO.getMemberByMemberId(memberId, BusinessActorType.INDIVIDUAL);
 		MemberBean member = new MemberBean();
 		member.setLoginName(pm.getLoginName());
 		member.setInstiCode(pm.getInstiCode());
@@ -225,7 +275,7 @@ public class MemberInfoServiceImpl implements MemberInfoService {
 	 */
 	@Override
 	public boolean resetPwd(String memberId, String pwd, String smsCode) throws DataCheckFailedException {
-		PojoMember pm = memberDAO.getMbmberByMemberId(memberId, BusinessActorType.INDIVIDUAL);
+		PojoMember pm = memberDAO.getMemberByMemberId(memberId, BusinessActorType.INDIVIDUAL);
 		int retCode = smsService.verifyCode(ModuleTypeEnum.REGISTER,
 				pm.getPhone(), smsCode);
 		if (retCode != 1) {
@@ -248,7 +298,7 @@ public class MemberInfoServiceImpl implements MemberInfoService {
 	 */
 	@Override
 	public boolean resetPayPwd(String memberId, String payPwd, String smsCode) throws DataCheckFailedException {
-		PojoMember pm = memberDAO.getMbmberByMemberId(memberId, BusinessActorType.INDIVIDUAL);
+		PojoMember pm = memberDAO.getMemberByMemberId(memberId, BusinessActorType.INDIVIDUAL);
 		int retCode = smsService.verifyCode(ModuleTypeEnum.REGISTER,
 				pm.getPhone(), smsCode);
 		if (retCode != 1) {

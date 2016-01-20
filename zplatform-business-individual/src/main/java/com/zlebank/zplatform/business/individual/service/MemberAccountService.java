@@ -2,11 +2,13 @@ package com.zlebank.zplatform.business.individual.service;
 
 import com.zlebank.zplatform.business.individual.bean.MemInAndExDetail;
 import com.zlebank.zplatform.business.individual.bean.Order;
+import com.zlebank.zplatform.business.individual.exception.AbstractIndividualBusinessException;
 import com.zlebank.zplatform.commons.bean.PagedResult;
 import com.zlebank.zplatform.member.bean.MemberAccountBean;
+import com.zlebank.zplatform.trade.exception.TradeException;
 /**
  * 
- * individual member account service
+ * Individual member account service
  *
  * @author yangying
  * @version
@@ -24,26 +26,34 @@ public interface MemberAccountService {
      * @return tn - a order number represent platform accept recharge.
      * @see OrderService
      */
-    String recharge(Order order);
+    String recharge(Order order) throws TradeException,
+            AbstractIndividualBusinessException;
     /**
-     * member account withdraw.Just create a withdraw order,it will be processed
+     * Member account withdraw.Just create a withdraw order,it will be processed
      * by background program. Member can check bank account later if background
      * program handle success.
      * 
      * @param order
-     * @return tn - a order number represent platform accept withdraw.
+     * @param smsCode
+     * @return
      */
-    String withdraw(Order order);
-     /**
-      * query member basic funds account
-      * @param memberId
-      * @return
-      */
-    MemberAccountBean queryMemberFuns(String memberId);
+    String withdraw(Order order,String payPwd, String smsCode);
     /**
-     * query member income and express detail
+     * query member basic funds account
+     * 
      * @param memberId
      * @return
      */
-    PagedResult<MemInAndExDetail> queryAccInAndExDetail(String memberId);
+    MemberAccountBean queryMemberFuns(String memberId);
+    /**
+     * query member income and express detail
+     * 
+     * @param memberId
+     * @param page
+     * @param pageSize
+     * @return
+     */
+    PagedResult<MemInAndExDetail> queryAccInAndExDetail(String memberId,
+            int page,
+            int pageSize);
 }

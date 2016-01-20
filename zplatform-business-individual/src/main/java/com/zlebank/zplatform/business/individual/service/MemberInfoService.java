@@ -13,7 +13,6 @@ import com.zlebank.zplatform.member.bean.MemberBean;
 
 
 public interface MemberInfoService {
-
 	/**
 	 * 会员注册 Register a individual member
 	 * @param registerMemberInfo 会员信息
@@ -47,8 +46,12 @@ public interface MemberInfoService {
 	 * @param smsCode 短信验证码
 	 * @param 会员号 
 	 * @return
+	 * @throws DataCheckFailedException 
 	 */
-	public boolean realName(IndividualRealInfo individualRealInfo,String smsCode,String memberId);
+	public boolean realName(IndividualRealInfo individualRealInfo,
+            String smsCode,
+            String payPwd,
+            String memberId) throws DataCheckFailedException;
 	/**
 	 * 验证支付密码  Verify the pay password
 	 * @param memberId 会员号
@@ -97,5 +100,4 @@ public interface MemberInfoService {
 	 * @throws DataCheckFailedException 
 	 */
 	public boolean resetPayPwd(String memberId,String payPwd,String smsCode) throws DataCheckFailedException;
-
 }
