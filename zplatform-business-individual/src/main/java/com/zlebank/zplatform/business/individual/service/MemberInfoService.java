@@ -33,14 +33,15 @@ public interface MemberInfoService {
      * Do a real name authenticate
      * 
      * @param individualRealInfo
-     *            real name information
      * @param smsCode
-     * @param coopInstiCode
+     * @param payPwd
+     * @param memberId
      * @return
      */
     boolean realName(IndividualRealInfo individualRealInfo,
             String smsCode,
-            String coopInstiCode);
+            String payPwd,
+            String memberId);
     /**
      * Verify the pay password
      * 
@@ -50,8 +51,11 @@ public interface MemberInfoService {
      */
     boolean vaildatePayPwd(String memberId, String payPwd);
     /**
-     * Modify the login password.<p>Note:The up layer which invoker the method must make
-     * sure that member has login</p>
+     * Modify the login password.
+     * <p>
+     * Note:The up layer which invoker the method must make sure that member has
+     * login
+     * </p>
      * 
      * @param memberId
      * @param orgPwd
@@ -62,8 +66,11 @@ public interface MemberInfoService {
      */
     boolean modifyPwd(String memberId, String orgPwd, String pwd);
     /**
-     * Modify the pay password.<p>Note:The up layer which invoker the method must make
-     * sure that member has login</p>
+     * Modify the pay password.
+     * <p>
+     * Note:The up layer which invoker the method must make sure that member has
+     * login
+     * </p>
      * 
      * @param memberId
      * @param orgPwd
@@ -75,16 +82,20 @@ public interface MemberInfoService {
     boolean modifyPayPwd(String memberId, String orgPayPwd, String payPwd);
     /**
      * Reset login password.No need to make sure that member has login
+     * 
      * @param memberId
-     * @param pwd the new login password
+     * @param pwd
+     *            the new login password
      * @param smsCode
      * @return
      */
     boolean resetPwd(String memberId, String pwd, String smsCode);
     /**
      * Reset pay password.No need to make sure that member has login
+     * 
      * @param memberId
-     * @param payPwd the new pay password
+     * @param payPwd
+     *            the new pay password
      * @param smsCode
      * @return
      */

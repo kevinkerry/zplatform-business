@@ -30,11 +30,20 @@ public interface OrderService {
 	 */
 	String createOrder(Order order);
 	/**
-	 * Pay a order
+	 * Pay a order with account balance
 	 * @param order
 	 * @param smsCode
 	 * @param payPwd
 	 * @return {@link OrderStatus}
 	 */
-	OrderStatus pay(Order order,String smsCode,String payPwd);
+	OrderStatus accountPay(Order order,String smsCode,String payPwd);
+	/**
+	 * Pay a order with account balance
+	 * 
+	 * @param order
+	 * @param smsCode
+	 * @param payPwd
+	 * @return
+	 */
+	OrderStatus quickPay(Order order,String smsCode,String payPwd);
 }

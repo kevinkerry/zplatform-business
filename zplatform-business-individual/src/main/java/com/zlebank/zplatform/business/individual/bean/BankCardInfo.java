@@ -5,8 +5,8 @@ package com.zlebank.zplatform.business.individual.bean;
  *
  */
 public class BankCardInfo {
-	private Bank bank;
-	private String bindcardid;
+    private String bindcardid;
+    private Bank bank;
 	private IndividualRealInfo bankCardInfo;
 	private String status;
 
