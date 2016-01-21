@@ -4,6 +4,7 @@ import java.util.Date;
 
 import com.zlebank.zplatform.business.individual.bean.Order;
 import com.zlebank.zplatform.business.individual.bean.enums.OrderStatus;
+import com.zlebank.zplatform.commons.bean.PagedResult;
 
 public interface OrderService {
 
@@ -16,7 +17,7 @@ public interface OrderService {
 	 * @param pageSize 当前页行数
 	 * @return
 	 */
-	public Object queryOrderList(String memberId,Date startDate,Date endDate,int page,int pageSize);
+	public PagedResult<Order> queryOrderList(String memberId,Date startDate,Date endDate,int page,int pageSize);
 	/**
 	 * 订单明细信息 Query a order detail
 	 * @param memberId

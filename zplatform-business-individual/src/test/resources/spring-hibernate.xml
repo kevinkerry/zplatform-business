@@ -42,6 +42,7 @@
 		<!-- 注解方式配置 -->
 		<property name="packagesToScan">
 			<list>
+				<value>com.zlebank.zplatform.sms.pojo</value>
 				<value>com.zlebank.zplatform.trade.model</value>
 				<value>com.zlebank.zplatform.acc.pojo</value>
 				<value>com.zlebank.zplatform.commons.dao.pojo</value>

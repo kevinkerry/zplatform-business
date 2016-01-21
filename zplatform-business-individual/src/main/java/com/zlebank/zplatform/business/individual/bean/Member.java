@@ -22,7 +22,7 @@ import com.zlebank.zplatform.member.bean.*;
  * @date 2016年1月19日 上午10:02:01
  * @since
  */
-public class Member extends MemberBean{
+public class Member extends Person{
 	 
 	/**
 	 * 会员已绑定的银行卡列表

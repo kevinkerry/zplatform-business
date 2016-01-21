@@ -71,6 +71,29 @@ public class IndividualRealInfo {
 	public void setPhoneNo(String phoneNo) {
 		this.phoneNo = phoneNo;
 	}
+	/**
+	 * @param cardNo
+	 * @param cardType
+	 * @param customerName
+	 * @param certifType
+	 * @param certifNo
+	 * @param phoneNo
+	 * @param cvn2
+	 * @param expired
+	 */
+	public IndividualRealInfo(String cardNo, String cardType,
+			String customerName, String certifType, String certifNo,
+			String phoneNo, String cvn2, String expired) {
+		super();
+		this.cardNo = cardNo;
+		this.cardType = cardType;
+		this.customerName = customerName;
+		this.certifType = certifType;
+		this.certifNo = certifNo;
+		this.phoneNo = phoneNo;
+		this.cvn2 = cvn2;
+		this.expired = expired;
+	}
 	public String getCvn2() {
 		return cvn2;
 	}
@@ -83,4 +106,13 @@ public class IndividualRealInfo {
 	public void setExpired(String expired) {
 		this.expired = expired;
 	}
+	/**
+	 * 
+	 */
+	public IndividualRealInfo() {
+		super();
+		// TODO Auto-generated constructor stub
+	}
+	
+	
 }

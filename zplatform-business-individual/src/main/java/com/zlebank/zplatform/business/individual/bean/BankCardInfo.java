@@ -1,10 +1,13 @@
 package com.zlebank.zplatform.business.individual.bean;
+
+import com.zlebank.zplatform.commons.bean.Bean;
+
 /**
  * bank card bean
  * @author yangying
  *
  */
-public class BankCardInfo {
+public class BankCardInfo implements Bean{
 	/**绑卡标示**/
 	private String bindcardid;
     private Bank bank;

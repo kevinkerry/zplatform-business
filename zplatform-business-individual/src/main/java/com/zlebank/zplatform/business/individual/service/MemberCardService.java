@@ -1,7 +1,5 @@
 package com.zlebank.zplatform.business.individual.service;
 
-import java.util.List;
-
 import com.zlebank.zplatform.business.individual.bean.BankCardInfo;
 import com.zlebank.zplatform.business.individual.bean.SupportedBankCardType;
 import com.zlebank.zplatform.commons.bean.CardBin;
@@ -22,8 +20,9 @@ public interface MemberCardService {
 	 * 查询会员绑定的银行卡 Query list of bank card which the member can use
 	 * @param memberId 会员号
 	 * @return
+	 * @throws IllegalAccessException 
 	 */
-	public List<BankCardInfo> queryBankCard(String memberId);
+	public PagedResult<BankCardInfo> queryBankCard(String memberId,String cardType,int page,int pageSize) throws IllegalAccessException;
 	/**
 	 * 查询银行卡bin信息 Query bank card info by bank card no.
 	 * @param bankCardNo 银行卡号
