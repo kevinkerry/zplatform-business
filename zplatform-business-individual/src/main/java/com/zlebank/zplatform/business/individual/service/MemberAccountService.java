@@ -3,8 +3,10 @@ package com.zlebank.zplatform.business.individual.service;
 import com.zlebank.zplatform.business.individual.bean.MemInAndExDetail;
 import com.zlebank.zplatform.business.individual.bean.Order;
 import com.zlebank.zplatform.business.individual.exception.AbstractIndividualBusinessException;
+import com.zlebank.zplatform.business.individual.exception.ValidateOrderException;
 import com.zlebank.zplatform.commons.bean.PagedResult;
 import com.zlebank.zplatform.member.bean.MemberAccountBean;
+import com.zlebank.zplatform.trade.exception.AbstractTradeDescribeException;
 import com.zlebank.zplatform.trade.exception.TradeException;
 /**
  * 
@@ -19,14 +21,20 @@ public interface MemberAccountService {
 
     // Object queryMemberAccount();
     /**
-     * member account recharge.Just create a recharge order.Invoker
+     * Member account recharge.Just create a recharge order.Invoke
      * {@code  OrderService.pay()} later if recharge success.
      * 
      * @param order
-     * @return tn - a order number represent platform accept recharge.
+     * @return tn - zplatform accept order no
+     * @throws ValidateOrderException
+     *             if validate order failed,invoke getCode() to see retCode and
+     *             getMessage to see more information.
+     * @throws TradeException
+     *             if create order error
+     * @throws AbstractIndividualBusinessException
      * @see OrderService
      */
-    String recharge(Order order) throws TradeException,
+    String recharge(Order order) throws ValidateOrderException, TradeException,
             AbstractIndividualBusinessException;
     /**
      * Member account withdraw.Just create a withdraw order,it will be processed
@@ -34,17 +42,29 @@ public interface MemberAccountService {
      * program handle success.
      * 
      * @param order
+     * @param payPwd
      * @param smsCode
-     * @return
+     * @return tn - zplatform accept order no
+     * @throws ValidateOrderException
+     *             if validate order failed,invoke getCode() to see retCode and
+     *             getMessage to see more information.
+     * @throws TradeException
+     *             if create order error
+     * @throws AbstractIndividualBusinessException
      */
-    String withdraw(Order order,String payPwd, String smsCode);
+    String withdraw(String json, String payPwd)
+            throws ValidateOrderException, TradeException,
+            AbstractTradeDescribeException, AbstractIndividualBusinessException;
     /**
      * query member basic funds account
      * 
      * @param memberId
      * @return
+     * @throws AbstractTradeDescribeException
+     *             if member funs account not exist
      */
-    MemberAccountBean queryMemberFuns(String memberId);
+    MemberAccountBean queryMemberFuns(String memberId)
+            throws AbstractTradeDescribeException;
     /**
      * query member income and express detail
      * 
@@ -52,8 +72,11 @@ public interface MemberAccountService {
      * @param page
      * @param pageSize
      * @return
+     * @throws AbstractTradeDescribeException
+     * @throws IllegalAccessException
      */
     PagedResult<MemInAndExDetail> queryAccInAndExDetail(String memberId,
             int page,
-            int pageSize);
+            int pageSize) throws AbstractTradeDescribeException,
+            IllegalAccessException;
 }
