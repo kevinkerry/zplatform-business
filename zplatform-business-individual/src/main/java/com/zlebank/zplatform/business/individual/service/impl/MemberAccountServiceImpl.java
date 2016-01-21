@@ -3,8 +3,8 @@ package com.zlebank.zplatform.business.individual.service.impl;
 import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Map;
 
+import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Isolation;
@@ -22,12 +22,12 @@ import com.zlebank.zplatform.business.individual.exception.PayPwdVerifyFailExcep
 import com.zlebank.zplatform.business.individual.exception.UnCheckedSystemException;
 import com.zlebank.zplatform.business.individual.exception.ValidateOrderException;
 import com.zlebank.zplatform.business.individual.service.MemberAccountService;
+import com.zlebank.zplatform.business.individual.service.OrderService;
 import com.zlebank.zplatform.commons.bean.DefaultPageResult;
 import com.zlebank.zplatform.commons.bean.PagedResult;
 import com.zlebank.zplatform.member.bean.MemberAccountBean;
 import com.zlebank.zplatform.member.bean.MemberBalanceDetailBean;
 import com.zlebank.zplatform.member.bean.MemberBean;
-import com.zlebank.zplatform.member.bean.enums.BusinessActorType;
 import com.zlebank.zplatform.member.bean.enums.MemberType;
 import com.zlebank.zplatform.member.exception.DataCheckFailedException;
 import com.zlebank.zplatform.member.exception.GetAccountFailedException;
@@ -57,34 +57,14 @@ public class MemberAccountServiceImpl implements MemberAccountService {
     private com.zlebank.zplatform.member.service.MemberAccountService memberAccountServiceImpl;
     @Autowired
     private ISMSService smsService;
+    @Autowired
+    private OrderService orderServiceImpl;
 
     @Override
     @Transactional(isolation = Isolation.READ_COMMITTED, propagation = Propagation.REQUIRED)
     public String recharge(Order order) throws ValidateOrderException,
             TradeException, AbstractIndividualBusinessException {
-        String tn = null;
-
-        Map<String, String> validateResult = orderValidator
-                .validateOrder(order);
-        String retCode = validateResult.get(IOrderValidator.RET_CODE);
-        if (retCode != null
-                && !retCode.equals(IOrderValidator.RET_CODE_SUCCESS)) {
-            throw new ValidateOrderException(
-                    validateResult.get(IOrderValidator.RET_CODE),
-                    validateResult.get(IOrderValidator.RET_MESSAGE));
-        }
-        try {
-            tn = gateWayService.dealWithWapOrder(order);
-        } catch (TradeException e) {
-            e.printStackTrace();
-        } catch (Exception e) {
-            e.printStackTrace();
-            throw new UnCheckedSystemException();
-        }
-        if (tn == null || tn.equals("")) {
-            throw new UnCheckedSystemException();
-        }
-        return tn;
+        return orderServiceImpl.createOrder(order);
     }
 
     @Override
@@ -98,7 +78,7 @@ public class MemberAccountServiceImpl implements MemberAccountService {
         String memberId = withdrawBean.getMemberId();
 
         PojoMember member = memberServiceImpl.getMbmberByMemberId(memberId,
-                BusinessActorType.INDIVIDUAL);
+                MemberType.INDIVIDUAL);
 
         if (member == null) {// 资金账户不存在
             throw new FailToGetAccountInfoException();
@@ -189,7 +169,8 @@ public class MemberAccountServiceImpl implements MemberAccountService {
         List<MemInAndExDetail> memInAndExDetailList = new ArrayList<MemInAndExDetail>();
         for (MemberBalanceDetailBean memberBalanceDetailBean : entrys
                 .getPagedResult()) {
-            MemInAndExDetail memInAndExDetail = (MemInAndExDetail) memberBalanceDetailBean;
+            MemInAndExDetail memInAndExDetail = new MemInAndExDetail();
+            BeanUtils.copyProperties(memberBalanceDetailBean, memInAndExDetail);
             memInAndExDetailList.add(memInAndExDetail);
         }
         PagedResult<MemInAndExDetail> result = new DefaultPageResult<>(

@@ -114,12 +114,12 @@
 
 	<distributionManagement>
 		<repository>
-			<id>zplatform</id>
+			<id>zplatform-Releases</id>
 			<name>Nexus Release</name>
 			<url>${project.nexus}/nexus/content/repositories/zplatform-Releases</url>
 		</repository>
 		<snapshotRepository>
-			<id>zplatform</id>
+			<id>zplatform-Snapshots</id>
 			<name>Nexus Snapshots</name>
 			<url>${project.nexus}/nexus/content/repositories/zplatform-Snapshots</url>
 		</snapshotRepository>

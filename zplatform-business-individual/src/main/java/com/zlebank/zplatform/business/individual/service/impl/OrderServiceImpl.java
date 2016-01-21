@@ -6,6 +6,10 @@ import java.util.List;
 import java.util.Map;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Isolation;
+import org.springframework.transaction.annotation.Propagation;
+import org.springframework.transaction.annotation.Transactional;
 
 import com.alibaba.fastjson.JSON;
 import com.zlebank.zplatform.acc.bean.BusiAcctQuery;
@@ -23,13 +27,11 @@ import com.zlebank.zplatform.business.individual.exception.UnknowPayWayException
 import com.zlebank.zplatform.business.individual.exception.ValidateOrderException;
 import com.zlebank.zplatform.business.individual.service.OrderService;
 import com.zlebank.zplatform.member.bean.MemberBean;
-import com.zlebank.zplatform.member.bean.enums.BusinessActorType;
 import com.zlebank.zplatform.member.bean.enums.MemberType;
 import com.zlebank.zplatform.member.exception.DataCheckFailedException;
 import com.zlebank.zplatform.member.pojo.PojoMember;
 import com.zlebank.zplatform.member.service.MemberOperationService;
 import com.zlebank.zplatform.member.service.MemberService;
-import com.zlebank.zplatform.sms.pojo.enums.ModuleTypeEnum;
 import com.zlebank.zplatform.sms.service.ISMSService;
 import com.zlebank.zplatform.trade.exception.AbstractTradeDescribeException;
 import com.zlebank.zplatform.trade.exception.BalanceNotEnoughException;
@@ -39,6 +41,7 @@ import com.zlebank.zplatform.trade.model.QuickpayCustModel;
 import com.zlebank.zplatform.trade.service.IGateWayService;
 import com.zlebank.zplatform.trade.service.IQuickpayCustService;
 
+@Service
 public class OrderServiceImpl implements OrderService {
 
     @Autowired
@@ -72,19 +75,22 @@ public class OrderServiceImpl implements OrderService {
     }
 
     @Override
+    @Transactional(isolation = Isolation.READ_COMMITTED, propagation = Propagation.REQUIRED)
     public String createOrder(Order order) throws ValidateOrderException,
             TradeException, AbstractIndividualBusinessException {
         String tn = null;
+        fullNonWalletData(order);
+
+        Map<String, String> validateResult = orderValidator
+                .validateOrder(order);
+        String retCode = validateResult.get(IOrderValidator.RET_CODE);
+        if (retCode != null
+                && !retCode.equals(IOrderValidator.RET_CODE_SUCCESS)) {
+            throw new ValidateOrderException(
+                    validateResult.get(IOrderValidator.RET_CODE),
+                    validateResult.get(IOrderValidator.RET_MESSAGE));
+        }
         try {
-            Map<String, String> validateResult = orderValidator
-                    .validateOrder(order);
-            String retCode = validateResult.get(IOrderValidator.RET_CODE);
-            if (retCode != null
-                    && !retCode.equals(IOrderValidator.RET_CODE_SUCCESS)) {
-                throw new ValidateOrderException(
-                        validateResult.get(IOrderValidator.RET_CODE),
-                        validateResult.get(IOrderValidator.RET_MESSAGE));
-            }
             tn = gateWayService.dealWithWapOrder(order);
         } catch (TradeException e) {
             e.printStackTrace();
@@ -98,6 +104,24 @@ public class OrderServiceImpl implements OrderService {
         return tn;
     }
 
+    private Order fullNonWalletData(Order order) {
+        /*
+         * 钱包接口中没有的参数,但是web收银台接口必须传入的参数
+         */
+        long orderTimeOutMill = 30 * 60 * 1000;
+        order.setOrderTimeout(String.valueOf(orderTimeOutMill));
+        // 风险信息域，非空,必须按照此格式
+        order.setRiskRateInfo("merUserId=" + order.getMemberId()
+                + "&commodityQty=0&commodityUnitPrice=0&");
+        // 前台通知地址，非空
+        order.setFrontUrl("wallet message has no this filed");
+        // 后台通知地址，非空
+        order.setBackUrl("wallet message has no this filed");
+        // 证书ID，非空
+        order.setCertId("-1");
+        return order;
+    }
+
     @Override
     public OrderStatus pay(String order,
             String smsCode,
@@ -106,8 +130,7 @@ public class OrderServiceImpl implements OrderService {
             AbstractIndividualBusinessException, TradeException {
         Order orderObj = JSON.parseObject(order, Order.class);
         String memberId = orderObj.getMemberId();
-        PojoMember member = memberServiceImpl.getMbmberByMemberId(memberId,
-                BusinessActorType.INDIVIDUAL);
+        PojoMember member = memberServiceImpl.getMbmberByMemberId(memberId, MemberType.INDIVIDUAL);
         if (member == null) {// 资金账户不存在
             throw new FailToGetAccountInfoException();
         }
@@ -130,7 +153,7 @@ public class OrderServiceImpl implements OrderService {
             memberBean.setLoginName(member.getLoginName());
             memberBean.setInstiCode(member.getInstiCode());
             memberBean.setPhone(member.getPayPwd());
-            // 校验支付密码和手机短信码
+            // 校验支付密码
             if (memberOperationServiceImpl.verifyPayPwd(MemberType.INDIVIDUAL,
                     memberBean)) {
                 throw new PayPwdVerifyFailException();
@@ -141,8 +164,7 @@ public class OrderServiceImpl implements OrderService {
             throw pe;
         }
         // 校验手机短信验证码
-        if (smsService.verifyCode(ModuleTypeEnum.WITHDRAW, member.getPhone(),
-                smsCode) != 1) {
+        if (smsService.verifyCode(member.getPhone(),orderObj.getTn(),smsCode)!=1) {
             throw new SmsCodeVerifyFailException();
         }
 

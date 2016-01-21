@@ -14,6 +14,7 @@ public class Order extends OrderBean {
     private String memberId;
     private String bindId;
     private OrderType orderType;
+    private String tn;
 
     public PayWay getPayWay() {
         return payWay;
@@ -45,5 +46,13 @@ public class Order extends OrderBean {
 
     public void setOrderType(OrderType orderType) {
         this.orderType = orderType;
+    }
+
+    public String getTn() {
+        return tn;
+    }
+
+    public void setTn(String tn) {
+        this.tn = tn;
     }
 }
