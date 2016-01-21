@@ -8,8 +8,11 @@ import org.junit.Assert;
 import org.junit.Ignore;
 import org.junit.Test;
 
+import com.alibaba.fastjson.JSON;
+import com.alibaba.fastjson.JSONObject;
 import com.zlebank.zplatform.acc.bean.enums.Usage;
 import com.zlebank.zplatform.business.individual.bean.MemInAndExDetail;
+import com.zlebank.zplatform.business.individual.bean.Order;
 import com.zlebank.zplatform.business.individual.exception.AbstractIndividualBusinessException;
 import com.zlebank.zplatform.business.individual.exception.ValidateOrderException;
 import com.zlebank.zplatform.business.individual.util.ApplicationContextAbled;
@@ -23,6 +26,7 @@ public class MemberAccountServiceTest extends ApplicationContextAbled {
     private MemberAccountService memberAccountService = (MemberAccountService) getContext()
             .getBean("busiMemberAccountServiceImpl");
     private final String individualMemberId = "100000000000564";
+    private final String payPwd = "e10adc3949ba59abbe56e057f20f883e";
     @Test
     @Ignore
     public void testRecharge() {
@@ -52,36 +56,65 @@ public class MemberAccountServiceTest extends ApplicationContextAbled {
             Assert.fail(e.getMessage());
         }
     }
-
+    @Test
     public void testWithdraw() {
-        // memberAccountService.withdraw(json, payPwd)
+        OrderGenerator orderGenerator = new RechargeOrderGenerator();
+        Order order = orderGenerator.generate(false);
+        String json = JSON.toJSONString(order);
+        JSONObject jsonObject = JSON.parseObject(json);
+        jsonObject.remove("txnAmt");
+        jsonObject.put("amount", order.getTxnAmt());
+        json = JSON.toJSONString(jsonObject);
+        System.out.println(json);
+        try {
+            memberAccountService.withdraw(json, payPwd);
+        } catch (TradeException e) {
+            // TODO Auto-generated catch block
+            e.printStackTrace();
+        } catch (AbstractTradeDescribeException e) {
+            // TODO Auto-generated catch block
+            e.printStackTrace();
+        } catch (AbstractIndividualBusinessException e) {
+            // TODO Auto-generated catch block
+            e.printStackTrace();
+        } catch (ValidateOrderException e) {
+            // TODO Auto-generated catch block
+            e.printStackTrace();
+        }
     }
     @Test
     @Ignore
     public void testQueryMemberFuns() {
         try {
-            MemberAccountBean memberAccountBean = memberAccountService.queryMemberFuns(individualMemberId);
-            Assert.assertEquals("6010101100000000000564", memberAccountBean.getBusiCode());
-            Assert.assertEquals("00",  memberAccountBean.getStatus());
-            Assert.assertEquals(Usage.BASICPAY,  memberAccountBean.getUsage());
+            MemberAccountBean memberAccountBean = memberAccountService
+                    .queryMemberFuns(individualMemberId);
+            Assert.assertEquals("6010101100000000000564",
+                    memberAccountBean.getBusiCode());
+            Assert.assertEquals("00", memberAccountBean.getStatus());
+            Assert.assertEquals(Usage.BASICPAY, memberAccountBean.getUsage());
             Assert.assertEquals(BigDecimal.ZERO, memberAccountBean.getBalance());
         } catch (AbstractTradeDescribeException e) {
             // TODO Auto-generated catch block
             e.printStackTrace();
         }
     }
-    
+
     @Test
+    @Ignore
     public void testqueryAccInAndExDetail() {
         try {
-            PagedResult<MemInAndExDetail> result = memberAccountService.queryAccInAndExDetail(individualMemberId, 1, 10);
+            PagedResult<MemInAndExDetail> result = memberAccountService
+                    .queryAccInAndExDetail(individualMemberId, 1, 10);
             Assert.assertEquals(0, result.getTotal());
-           
-            result = memberAccountService.queryAccInAndExDetail("100000000000435", 2, 14);
+
+            result = memberAccountService.queryAccInAndExDetail(
+                    "100000000000435", 2, 14);
             Assert.assertEquals(1054, result.getTotal());
             List<MemInAndExDetail> memInAndExDetails = result.getPagedResult();
-            for(MemInAndExDetail memInAndExDetail:memInAndExDetails){
-                System.out.println(memInAndExDetail.getBudgetType()+"|"+memInAndExDetail.getTxnTime()+"|"+memInAndExDetail.getTxnAmt());
+            for (MemInAndExDetail memInAndExDetail : memInAndExDetails) {
+                System.out.println(memInAndExDetail.getBudgetType() + "|"
+                        + memInAndExDetail.getTxnTime() + "|"
+                        + memInAndExDetail.getTxnAmt());
             }
         } catch (AbstractTradeDescribeException e) {
             // TODO Auto-generated catch block

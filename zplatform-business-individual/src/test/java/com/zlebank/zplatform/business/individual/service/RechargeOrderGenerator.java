@@ -15,6 +15,7 @@ public class RechargeOrderGenerator extends OrderGenerator {
     public Order generate(boolean isAnonymous) {
          Order order = consumeOrderGenerator.generate(isAnonymous);
          order.setOrderType(OrderType.RECHARGE);
+         order.setMerId("");
         return order;
     }
 

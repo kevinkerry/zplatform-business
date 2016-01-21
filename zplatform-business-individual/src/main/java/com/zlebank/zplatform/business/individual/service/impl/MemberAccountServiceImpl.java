@@ -12,6 +12,7 @@ import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
 
 import com.alibaba.fastjson.JSON;
+import com.alibaba.fastjson.JSONObject;
 import com.zlebank.zplatform.acc.bean.BusiAcctQuery;
 import com.zlebank.zplatform.acc.bean.enums.Usage;
 import com.zlebank.zplatform.acc.pojo.Money;
@@ -23,6 +24,7 @@ import com.zlebank.zplatform.business.individual.exception.UnCheckedSystemExcept
 import com.zlebank.zplatform.business.individual.exception.ValidateOrderException;
 import com.zlebank.zplatform.business.individual.service.MemberAccountService;
 import com.zlebank.zplatform.business.individual.service.OrderService;
+import com.zlebank.zplatform.business.individual.utils.Constants;
 import com.zlebank.zplatform.commons.bean.DefaultPageResult;
 import com.zlebank.zplatform.commons.bean.PagedResult;
 import com.zlebank.zplatform.member.bean.MemberAccountBean;
@@ -68,9 +70,11 @@ public class MemberAccountServiceImpl implements MemberAccountService {
     }
 
     @Override
+    @Transactional(isolation = Isolation.READ_COMMITTED, propagation = Propagation.REQUIRED)
     public String withdraw(String json, String payPwd)
             throws ValidateOrderException, TradeException,
             AbstractTradeDescribeException, AbstractIndividualBusinessException {
+        json = fullNonWalletData(json);
         WapWithdrawBean withdrawBean = JSON.parseObject(json,
                 WapWithdrawBean.class);
         Money withDrawAmount = Money.valueOf(new BigDecimal(withdrawBean
@@ -176,5 +180,16 @@ public class MemberAccountServiceImpl implements MemberAccountService {
         PagedResult<MemInAndExDetail> result = new DefaultPageResult<>(
                 memInAndExDetailList, entrys.getTotal());
         return result;
+    }
+    
+    private String fullNonWalletData(String jsonStr) {
+        /*
+         * 钱包接口中没有的参数,但是web收银台接口必须传入的参数
+         */
+        JSONObject jsonObj = JSON.parseObject(jsonStr);
+        jsonObj.put("backUrl", Constants.WALLET_MISSING_FIELD_STR);
+        jsonObj.put("virtualId", Constants.WALLET_MISSING_FIELD_STR);
+        
+        return JSON.toJSONString(jsonObj);
     }
 }

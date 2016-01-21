@@ -9,9 +9,7 @@ import com.zlebank.zplatform.business.individual.bean.Order;
 public abstract class OrderGenerator {
     protected final String version = "v1.0";
     protected final String encoding = "1";// 1-utf-8
-    protected final String txnType = "17";//
-    protected final String txnSubType = "00";
-    protected final String bizType = "000204";
+   
     protected final String channelType = "08";
     protected final String accessType = "0";
     protected final String coopInstiCode = "300000000000027";
