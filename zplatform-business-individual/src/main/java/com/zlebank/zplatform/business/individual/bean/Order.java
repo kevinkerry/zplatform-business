@@ -1,10 +1,17 @@
 package com.zlebank.zplatform.business.individual.bean;
 
+
+import com.zlebank.zplatform.business.individual.bean.enums.OrderType;
+
 import com.zlebank.zplatform.business.individual.bean.enums.PayWay;
+
 import com.zlebank.zplatform.commons.bean.Bean;
+
 import com.zlebank.zplatform.trade.bean.gateway.OrderBean;
 
+
 public class Order extends OrderBean implements Bean{
+
 
     /**
      * serialVersionUID
@@ -14,7 +21,9 @@ public class Order extends OrderBean implements Bean{
     private String memberId;
     private String bindId;
     private String status;
+    private OrderType orderType;
     private String tn;
+
     public PayWay getPayWay() {
         return payWay;
     }
@@ -54,6 +63,20 @@ public class Order extends OrderBean implements Bean{
 	}
 
 	/**
+	 * @return the orderType
+	 */
+	public OrderType getOrderType() {
+		return orderType;
+	}
+
+	/**
+	 * @param orderType the orderType to set
+	 */
+	public void setOrderType(OrderType orderType) {
+		this.orderType = orderType;
+	}
+
+	/**
 	 * @return the tn
 	 */
 	public String getTn() {
@@ -66,5 +89,5 @@ public class Order extends OrderBean implements Bean{
 	public void setTn(String tn) {
 		this.tn = tn;
 	}
-    
 }
+

@@ -4,9 +4,18 @@ import java.util.Date;
 
 import com.zlebank.zplatform.business.individual.bean.Order;
 import com.zlebank.zplatform.business.individual.bean.enums.OrderStatus;
+import com.zlebank.zplatform.business.individual.bean.enums.PayWay;
+import com.zlebank.zplatform.business.individual.exception.AbstractIndividualBusinessException;
+import com.zlebank.zplatform.business.individual.exception.ValidateOrderException;
 import com.zlebank.zplatform.commons.bean.PagedResult;
+import com.zlebank.zplatform.trade.exception.AbstractTradeDescribeException;
+import com.zlebank.zplatform.trade.exception.TradeException;
+
 
 public interface OrderService {
+
+
+	
 
 	/**
 	 * 订单查询列表
@@ -25,30 +34,27 @@ public interface OrderService {
 	 * @return
 	 */
 	public Order queryOrder(String memberId,String orderNo);
-
-	
-	
-	/**
-
-	 * 订单支付  Pay a order
-	 * @param order 订单信息
-	 * @param smsCode 短信验证码
-	 * @param payPwd 支付密码
-	 * create a consume order
-	 * @param order
-	 * @return tn
-	 */
-	String createOrder(Order order);
-	/**
-	 * Pay a order with account balance
-	 * @param order
-	 * @param smsCode
-	 * @param payPwd
-	 * @return {@link OrderStatus}
-	 */
-
-	public OrderStatus pay(Order order,String smsCode,String payPwd);
-
-	
+    /**
+     * create a consume order
+     * 
+     * @param order
+     * @return tn - zplatform accept order no
+     * @throws ValidateOrderException
+     * @throws TradeException
+     * @throws AbstractIndividualBusinessException
+     */
+    String createOrder(Order order) throws ValidateOrderException,
+            TradeException, AbstractIndividualBusinessException;
+    /**
+     * Pay a order with account balance
+     * 
+     * @param order
+     * @param smsCode
+     * @param payPwd
+     * @return {@link OrderStatus}
+     */
+    OrderStatus pay(String order, String smsCode, String payPwd, PayWay payWay)
+            throws AbstractTradeDescribeException,
+            AbstractIndividualBusinessException,TradeException;
 
 }

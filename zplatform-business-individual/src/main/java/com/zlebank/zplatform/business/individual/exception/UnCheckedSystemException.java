@@ -11,7 +11,6 @@ public class UnCheckedSystemException extends AbstractIndividualBusinessExceptio
 
     @Override
     public String getCode() {
-        // TODO Auto-generated method stub
         return "EBUBI0001";
     }
 

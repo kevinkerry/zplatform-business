@@ -1,38 +1,51 @@
-/* 
- * OrderServiceTest.java  
- * 
- * version TODO
- *
- * 2016年1月21日 
- * 
- * Copyright (c) 2016,zlebank.All rights reserved.
- * 
- */
+
 package com.zlebank.zplatform.business.individual.service;
-
 import java.text.ParseException;
-import java.util.Date;
 
+import org.junit.Assert;
 import org.junit.Test;
 
 import com.alibaba.fastjson.JSON;
 import com.zlebank.zplatform.business.individual.bean.Order;
+import com.zlebank.zplatform.business.individual.exception.AbstractIndividualBusinessException;
+import com.zlebank.zplatform.business.individual.exception.ValidateOrderException;
 import com.zlebank.zplatform.business.individual.util.ApplicationContextAbled;
 import com.zlebank.zplatform.commons.bean.PagedResult;
 import com.zlebank.zplatform.commons.utils.DateUtil;
+import com.zlebank.zplatform.trade.exception.TradeException;
 
-/**
- * Class Description
- *
- * @author guojia
- * @version
- * @date 2016年1月21日 下午4:30:03
- * @since 
- */
-public class OrderServiceTest extends ApplicationContextAbled{
-//100000000000564
-	
-	public void test_queryOrder(){
+public class OrderServiceTest extends ApplicationContextAbled {
+    @Test
+    public void testCreateOrder() {
+        OrderService orderService = (OrderService) getContext().getBean(
+                "orderServiceImpl");
+        String tn = null;
+        OrderGenerator orderGenerator = null;
+        try {
+            // test recharge order
+            orderGenerator = new RechargeOrderGenerator();
+            tn = orderService.createOrder(orderGenerator.generate(false));
+            System.out.println(tn);
+            Assert.assertNotNull(tn);
+            // test consume non anonymous order
+            orderGenerator = new ConsumeOrderGenerator();
+            tn = orderService.createOrder(orderGenerator.generate(false));
+            System.out.println(tn);
+            Assert.assertNotNull(tn);
+            // test consume non anonymous order
+            orderGenerator = new ConsumeOrderGenerator();
+            tn = orderService.createOrder(orderGenerator.generate(true));
+            System.out.println(tn);
+            Assert.assertNotNull(tn);
+        } catch (TradeException e) {
+            Assert.fail(e.getMessage());
+        } catch (AbstractIndividualBusinessException e) {
+            Assert.fail(e.getMessage());
+        } catch (ValidateOrderException e) {
+            Assert.fail(e.getMessage());
+        }
+    }
+    public void test_queryOrder(){
 		OrderService orderService = (OrderService) getContext().getBean("orderService");
 		Order order = orderService.queryOrder("100000000000564", "dGVWwxSCU68267726142181273");
 		System.out.println(JSON.toJSONString(order));
@@ -50,3 +63,4 @@ public class OrderServiceTest extends ApplicationContextAbled{
 		System.out.println(JSON.toJSONString(orderList));
 	}
 }
+
