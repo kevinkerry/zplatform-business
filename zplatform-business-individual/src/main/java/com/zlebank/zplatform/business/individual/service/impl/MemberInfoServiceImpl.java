@@ -25,7 +25,6 @@ import com.zlebank.zplatform.commons.utils.StringUtil;
 import com.zlebank.zplatform.member.bean.MemberBean;
 import com.zlebank.zplatform.member.bean.QuickpayCustBean;
 import com.zlebank.zplatform.member.bean.RealNameBean;
-import com.zlebank.zplatform.member.bean.enums.BusinessActorType;
 import com.zlebank.zplatform.member.bean.enums.MemberType;
 import com.zlebank.zplatform.member.bean.enums.RealNameLvType;
 import com.zlebank.zplatform.member.dao.MemberDAO;
@@ -171,12 +170,14 @@ public class MemberInfoServiceImpl implements MemberInfoService {
             String memberId,RealNameTypeEnum realNameTypeEnum) throws DataCheckFailedException {
 		//校验短信验证码
 		PojoMember pm = memberDAO.getMemberByMemberId(memberId, MemberType.INDIVIDUAL);
-		if(pm==null){
-			return false;
-		}
-		int retCode = smsService.verifyCode(ModuleTypeEnum.BINDCARD,pm.getPhone(), smsCode);
-		if(retCode != 1) {
-			throw new RuntimeException("验证码错误");
+		if(realNameTypeEnum!=RealNameTypeEnum.CARDREALNAME){
+			if(pm==null){
+				return false;
+			}
+			int retCode = smsService.verifyCode(ModuleTypeEnum.BINDCARD,pm.getPhone(), smsCode);
+			if(retCode != 1) {
+				throw new RuntimeException("验证码错误");
+			}
 		}
 		WapCardBean cardBean = new WapCardBean(individualRealInfo.getCardNo(), individualRealInfo.getCardType(), individualRealInfo.getCustomerName(), 
 				individualRealInfo.getCertifType(), individualRealInfo.getCertifNo(), individualRealInfo.getPhoneNo(), individualRealInfo.getCvn2(), 
