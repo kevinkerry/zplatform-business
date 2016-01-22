@@ -27,6 +27,7 @@ import com.zlebank.zplatform.business.individual.exception.UnCheckedSystemExcept
 import com.zlebank.zplatform.business.individual.exception.UnknowPayWayException;
 import com.zlebank.zplatform.business.individual.exception.ValidateOrderException;
 import com.zlebank.zplatform.business.individual.service.OrderService;
+import com.zlebank.zplatform.business.individual.utils.Constants;
 import com.zlebank.zplatform.commons.bean.DefaultPageResult;
 import com.zlebank.zplatform.commons.bean.PagedResult;
 import com.zlebank.zplatform.commons.utils.DateUtil;
@@ -158,11 +159,11 @@ public class OrderServiceImpl implements OrderService {
         order.setRiskRateInfo("merUserId=" + order.getMemberId()
                 + "&commodityQty=0&commodityUnitPrice=0&");
         // 前台通知地址，非空
-        order.setFrontUrl("wallet message has no this filed");
+        order.setFrontUrl(Constants.WALLET_MISSING_FIELD_STR);
         // 后台通知地址，非空
-        order.setBackUrl("wallet message has no this filed");
+        order.setBackUrl(Constants.WALLET_MISSING_FIELD_STR);
         // 证书ID，非空
-        order.setCertId("-1");
+        order.setCertId(String.valueOf(Constants.WALLET_MISSING_FIELD_INT));
         return order;
     }
 
@@ -239,4 +240,3 @@ public class OrderServiceImpl implements OrderService {
         return null;
     }
 }
-

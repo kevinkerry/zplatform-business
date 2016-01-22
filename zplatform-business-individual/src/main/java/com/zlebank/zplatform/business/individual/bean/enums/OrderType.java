@@ -10,6 +10,10 @@ public enum OrderType {
      */
     CONSUME("0001"), 
     /**
+     * consume
+     */
+    WITHDRAW("1001"),
+    /**
      * unknow
      */
     UNKNOW("");

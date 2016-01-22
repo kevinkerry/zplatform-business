@@ -7,8 +7,10 @@ import com.zlebank.zplatform.business.individual.bean.Order;
 import com.zlebank.zplatform.business.individual.bean.enums.OrderType;
 import com.zlebank.zplatform.business.individual.utils.Constants;
 
-public class ConsumeOrderGenerator extends OrderGenerator{
-
+public class ConsumeOrderGenerator extends OrderGenerator {
+    private final String txnType = "17";//
+    private final String txnSubType = "00";
+    private final String bizType = "000204";
     @Override
     public Order generate(boolean isAnonymous) {
         Order order = new Order();

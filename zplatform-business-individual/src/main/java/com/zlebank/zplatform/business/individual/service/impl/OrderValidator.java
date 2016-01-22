@@ -18,17 +18,17 @@ import com.zlebank.zplatform.trade.service.IMemberService;
 import com.zlebank.zplatform.trade.service.IProdCaseService;
 
 @Service
-public class OrderValidator implements IOrderValidator{
+public class OrderValidator implements IOrderValidator {
     @Autowired
     private IGateWayService gateWayService;
     @Autowired
     private IProdCaseService prodCaseService;
     @Autowired
     private IMemberService memberService;
-    
+
     public Map<String, String> validateOrder(Order order) {
         // 验证订单数据有效性，用hibernate validator处理
-        Map<String, String> resultMap = new HashMap<String,String>();
+        Map<String, String> resultMap = new HashMap<String, String>();
         ResultBean resultBean = GateWayTradeAnalyzer.validateOrder(order);
         if (!resultBean.isResultBool()) {
             // 订单信息长度和非空验证未通过
@@ -44,19 +44,9 @@ public class OrderValidator implements IOrderValidator{
             resultMap.put(RET_CODE, riskResultBean.getErrCode());
             return resultMap;
         }
-        //钱包数据与web收银台数据不一致，验签不能通过，验签暂时关闭
-       /* ResultBean signResultBean = gateWayService.verifyOrder(order);
-        if (!signResultBean.isResultBool()) {
-            // 订单信息验签未通过
-            resultMap.put(RET_MESSAGE, signResultBean.getErrMsg());
-            resultMap.put(RET_CODE, signResultBean.getErrCode());
-            return resultMap;
-        }*/
 
         // 验证订单号是否重复
-        try {
-            /*String memberId = ((RiskRateInfoBean) riskResultBean.getResultObj())
-                    .getMerUserId();*/
+        try { 
             gateWayService.verifyRepeatWebOrder(order.getOrderId(),
                     order.getTxnTime(), order.getTxnAmt(), order.getMerId(),
                     order.getMemberId());
@@ -76,40 +66,26 @@ public class OrderValidator implements IOrderValidator{
             return resultMap;
         }
 
-        // 检验机构和商户有效性
-        /*if (StringUtil.isNotEmpty(order.getCoopInstiId())) {
-            MemberBaseModel subMember = memberService.getMemberByMemberId(order.getCoopInstiId());
-            if (subMember == null) {
-                resultMap.put(RET_MESSAGE,"商户信息不存在");
-                resultMap.put(RET_CODE, "RC10");
+
+        // 业务验证 
+        if (order.getOrderType() != OrderType.CONSUME) {//非消费类订单
+            if (StringUtils.isEmpty(order.getMemberId())
+                    || order.getMemberId().equals(Constants.ANONYMOUS_MERCH_ID)) {
+                resultBean = new ResultBean("GW19", "非消费类订单不支持匿名支付");
+                resultMap.put(RET_MESSAGE, resultBean.getErrMsg());
+                resultMap.put(RET_CODE, resultBean.getErrCode());
                 return resultMap;
-            }不需要校验二级商户号
-            if (order.getSubMerId().startsWith("2")) {// 对于商户会员需要进行检查
-                ResultBean memberResultBean = memberService.verifySubMerch(
-                        order.getMerId(), order.getSubMerId());
-                if (!memberResultBean.isResultBool()) {
-                    resultMap.put(RET_MESSAGE, memberResultBean.getErrMsg());
-                    resultMap.put(RET_CODE, memberResultBean.getErrCode());
-                    return resultMap;
-                }
-            }
-
-        }*/
-
-        // 业务验证
-        // 充值业务，如果memberId为空，或者为999999999999999时为非法订单
-        ResultBean memberBusiResultBean = null;
-        if(order.getOrderType()!=OrderType.CONSUME){
-            if(StringUtils.isEmpty(order.getMemberId())||order.getMemberId().equals(Constants.ANONYMOUS_MERCH_ID)){
-                memberBusiResultBean = new ResultBean("GW19", "非消费类订单不支持匿名支付");
-                resultMap.put(RET_MESSAGE, memberBusiResultBean.getErrMsg());
-                resultMap.put(RET_CODE, memberBusiResultBean.getErrCode());
+            } 
+        }else{//消费类订单
+            if (StringUtils.isEmpty(order.getMerId())) {
+                resultBean = new ResultBean("GW20", "消费类订单商户代码不能为空");
+                resultMap.put(RET_MESSAGE, resultBean.getErrMsg());
+                resultMap.put(RET_CODE, resultBean.getErrCode());
                 return resultMap;
             }
         }
-         
-        resultMap.put(RET_MESSAGE, RET_MESSAGE_SUCCESS);
-        resultMap.put(RET_CODE, RET_CODE_SUCCESS);
+        resultMap.put(RET_MESSAGE, RET_CODE_SUCCESS);
+        resultMap.put(RET_CODE, RET_MESSAGE_SUCCESS);
         return resultMap;
     }
 }

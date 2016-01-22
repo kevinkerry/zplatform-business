@@ -42,6 +42,7 @@ public class OrderServiceTest extends ApplicationContextAbled {
         } catch (AbstractIndividualBusinessException e) {
             Assert.fail(e.getMessage());
         } catch (ValidateOrderException e) {
+            e.printStackTrace();
             Assert.fail(e.getMessage());
         }
     }
@@ -63,4 +64,3 @@ public class OrderServiceTest extends ApplicationContextAbled {
 		System.out.println(JSON.toJSONString(orderList));
 	}
 }
-
