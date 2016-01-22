@@ -13,10 +13,6 @@ import com.zlebank.zplatform.trade.exception.TradeException;
 
 
 public interface OrderService {
-
-
-	
-
 	/**
 	 * 订单查询列表
 	 * @param memberId 会员号
@@ -28,7 +24,7 @@ public interface OrderService {
 	 */
 	public PagedResult<Order> queryOrderList(String memberId,Date startDate,Date endDate,int page,int pageSize);
 	/**
-	 * 订单明细信息 Query a order detail
+	 * 订单明细信息<br/> Query a order detail
 	 * @param memberId
 	 * @param orderNo
 	 * @return

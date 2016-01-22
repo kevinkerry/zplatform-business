@@ -1,12 +1,10 @@
 package com.zlebank.zplatform.business.individual.bean;
 
 
+import com.zlebank.zplatform.business.individual.bean.enums.OrderStatus;
 import com.zlebank.zplatform.business.individual.bean.enums.OrderType;
-
 import com.zlebank.zplatform.business.individual.bean.enums.PayWay;
-
 import com.zlebank.zplatform.commons.bean.Bean;
-
 import com.zlebank.zplatform.trade.bean.gateway.OrderBean;
 
 
@@ -20,7 +18,7 @@ public class Order extends OrderBean implements Bean{
     private PayWay payWay;
     private String memberId;
     private String bindId;
-    private String status;
+    private OrderStatus status;
     private OrderType orderType;
     private String tn;
 
@@ -51,14 +49,14 @@ public class Order extends OrderBean implements Bean{
 	/**
 	 * @return the status
 	 */
-	public String getStatus() {
+	public OrderStatus getStatus() {
 		return status;
 	}
 
 	/**
 	 * @param status the status to set
 	 */
-	public void setStatus(String status) {
+	public void setStatus(OrderStatus status) {
 		this.status = status;
 	}
 

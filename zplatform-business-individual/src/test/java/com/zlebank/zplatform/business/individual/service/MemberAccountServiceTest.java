@@ -56,6 +56,7 @@ public class MemberAccountServiceTest extends ApplicationContextAbled {
             Assert.fail(e.getMessage());
         }
     }
+    
     @Test
     public void testWithdraw() {
         OrderGenerator orderGenerator = new RechargeOrderGenerator();
