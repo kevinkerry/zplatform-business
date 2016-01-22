@@ -84,8 +84,8 @@ public class OrderValidator implements IOrderValidator {
                 return resultMap;
             }
         }
-        resultMap.put(RET_MESSAGE, RET_CODE_SUCCESS);
-        resultMap.put(RET_CODE, RET_MESSAGE_SUCCESS);
+        resultMap.put(RET_MESSAGE,RET_MESSAGE_SUCCESS );
+        resultMap.put(RET_CODE, RET_CODE_SUCCESS);
         return resultMap;
     }
 }
