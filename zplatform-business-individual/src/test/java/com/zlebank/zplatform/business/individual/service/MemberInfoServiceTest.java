@@ -143,19 +143,19 @@ public class MemberInfoServiceTest extends ApplicationContextAbled{
 			e.printStackTrace();
 		}
 	}
-	//@Test
+	@Test
 	public void test_realName(){
 		MemberInfoService memberInfoService = (MemberInfoService)getContext().getBean("memberInfoService");
 		IndividualRealInfo individualRealInfo = new IndividualRealInfo("6228480018543668976", "1", "郭佳", "01", "110105198610094112", "18600806796", "", "");
 		try {
-			boolean flag = memberInfoService.realName(individualRealInfo, "679519", "654321", "100000000000572",RealNameTypeEnum.PERSONLANDCARDREALNAME);
+			boolean flag = memberInfoService.realName(individualRealInfo, "679519", "654321", "100000000000572",RealNameTypeEnum.CARDREALNAME);
 			System.out.println(flag);
 		} catch (DataCheckFailedException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
 	}
-	@Test
+	//@Test
 	public void test_vaildatePwd(){
 		MemberInfoService memberInfoService = (MemberInfoService)getContext().getBean("memberInfoService");
 		try {

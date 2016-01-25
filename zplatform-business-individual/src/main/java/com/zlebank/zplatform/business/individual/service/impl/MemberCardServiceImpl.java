@@ -135,8 +135,7 @@ public class MemberCardServiceImpl implements MemberCardService{
 		quickpayCustBean.setRelatememberno(individualMember.getMemberId());
 		quickpayCustBean.setBankcode(bankCardInfo.getBank().getBankCode());
 		quickpayCustBean.setBankname(bankCardInfo.getBank().getBankName());
-		memberBankCardService.saveQuickPayCust(quickpayCustBean);
-		return "";
+		return memberBankCardService.saveQuickPayCust(quickpayCustBean)+"";
 	}
 
 	/**
