@@ -19,5 +19,13 @@ public interface SmsService {
 	 * @return
 	 */
 	public boolean sendSmsCode(String memberId,String phone,ModuleTypeEnum moduleType);
+	
+	/**
+	 * 短信发送验证码
+	 * @param json
+	 * @param moduleType
+	 * @return
+	 */
+	public boolean sendSmsCode(String json,ModuleTypeEnum moduleType);
 
 }

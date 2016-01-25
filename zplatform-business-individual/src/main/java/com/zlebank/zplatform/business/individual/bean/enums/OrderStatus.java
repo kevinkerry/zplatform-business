@@ -28,7 +28,7 @@ public enum OrderStatus {
     
     public static OrderStatus fromValue(String code){
         for(OrderStatus orderStatus:OrderStatus.values()){
-            if(code!=null&&orderStatus.equals(code)){
+            if(code!=null&&orderStatus.getCode().equals(code)){
                 return orderStatus;
             }
         }

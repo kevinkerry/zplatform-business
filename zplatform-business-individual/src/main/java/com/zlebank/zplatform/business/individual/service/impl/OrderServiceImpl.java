@@ -86,7 +86,7 @@ public class OrderServiceImpl implements OrderService {
 			BigDecimal txnAmt = (BigDecimal) valueMap.get("ORDERAMT");
 			order.setTxnAmt(txnAmt.longValue()+"");
 			order.setTxnTime(valueMap.get("ORDERCOMMITIME")+"");
-			order.setStatus(valueMap.get("STATUS")+"");
+			order.setStatus(OrderStatus.fromValue(String.valueOf(valueMap.get("STATUS"))));
 			order.setOrderDesc(valueMap.get("ORDERDESC")+"");
 			order.setCurrencyCode(valueMap.get("CURRENCYCODE")+"");
 			order.setTn(valueMap.get("TN")+"");
@@ -112,7 +112,7 @@ public class OrderServiceImpl implements OrderService {
 		order.setOrderId(orderinfoModel.getOrderno());
 		order.setTxnAmt(orderinfoModel.getOrderamt()+"");
 		order.setTxnTime(orderinfoModel.getOrdercommitime());
-		order.setStatus(orderinfoModel.getStatus());
+		order.setStatus(OrderStatus.fromValue(orderinfoModel.getStatus()));
 		order.setOrderDesc(orderinfoModel.getOrderdesc());
 		order.setCurrencyCode(orderinfoModel.getCurrencycode());
 		order.setTn(orderinfoModel.getTn());
@@ -237,6 +237,7 @@ public class OrderServiceImpl implements OrderService {
         }
 
         // TODO need query tn and return order status
-        return null;
+        Order orderRet = queryOrder(member.getMemberId(),orderObj.getOrderId());
+        return orderRet.getStatus();
     }
 }
