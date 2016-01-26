@@ -1,6 +1,9 @@
 package com.zlebank.zplatform.business.individual.bean.enums;
 
 public enum OrderStatus {
+
+    /** 支付成功 */
+    SUCCESS("00"),
     /**
      * initial，wait to pay
      */
@@ -13,10 +16,8 @@ public enum OrderStatus {
      * pay failed
      */
     PAYFAILED("03"),
-    /**
-     * pay success
-     */
-    SUCCESS("04"),UNKNOW("");
+    
+    UNKNOW("");
     private String code;
     private OrderStatus(String code) {
         this.code = code;

@@ -103,8 +103,8 @@ public class OrderServiceImpl implements OrderService {
 	 */
 	@Override
 	@Transactional(propagation=Propagation.REQUIRED,rollbackFor=Throwable.class)
-	public Order queryOrder(String memberId, String orderNo) {
-		TxnsOrderinfoModel orderinfoModel = gateWayService.getPersonOrder(orderNo, memberId);
+	public Order queryOrder(String memberId, String tn) {
+		TxnsOrderinfoModel orderinfoModel = gateWayService.getOrderinfoByTN(tn);
 		Order order = new Order();
 		order.setMerId(orderinfoModel.getFirmemberno());
 		order.setMerName(orderinfoModel.getFirmembername());
@@ -197,9 +197,10 @@ public class OrderServiceImpl implements OrderService {
             MemberBean memberBean = new MemberBean();
             memberBean.setLoginName(member.getLoginName());
             memberBean.setInstiCode(member.getInstiCode());
-            memberBean.setPhone(member.getPayPwd());
+            memberBean.setPhone(member.getPhone());
+            memberBean.setPaypwd(payPwd);
             // 校验支付密码
-            if (memberOperationServiceImpl.verifyPayPwd(MemberType.INDIVIDUAL,
+            if (!memberOperationServiceImpl.verifyPayPwd(MemberType.INDIVIDUAL,
                     memberBean)) {
                 throw new PayPwdVerifyFailException();
             }
@@ -236,8 +237,7 @@ public class OrderServiceImpl implements OrderService {
                 throw new UnknowPayWayException();
         }
 
-        // TODO need query tn and return order status
-        Order orderRet = queryOrder(member.getMemberId(),orderObj.getOrderId());
+        Order orderRet = queryOrder(member.getMemberId(),orderObj.getTn());
         return orderRet.getStatus();
     }
 }
