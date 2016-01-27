@@ -113,7 +113,7 @@ public class MemberAccountServiceImpl implements MemberAccountService {
             memberBean.setPhone(member.getPhone());
             memberBean.setPaypwd(payPwd);
             // 校验支付密码
-            if (memberOperationServiceImpl.verifyPayPwd(MemberType.INDIVIDUAL,
+            if (!memberOperationServiceImpl.verifyPayPwd(MemberType.INDIVIDUAL,
                     memberBean)) {
                 throw new PayPwdVerifyFailException();
             }
