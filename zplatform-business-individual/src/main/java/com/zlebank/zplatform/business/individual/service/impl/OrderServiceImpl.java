@@ -209,8 +209,17 @@ public class OrderServiceImpl implements OrderService {
             pe.initCause(e);
             throw pe;
         }
+
+        String phoneNo = "";
+        if (payWay == PayWay.ACCOUNT) {
+            phoneNo = member.getPhone();
+        } else if (payWay == PayWay.QUICK){
+            QuickpayCustModel card = quickpayCustService.getCardByBindId(orderObj.getBindId());
+            phoneNo = card.getPhone();
+        }
+
         // 校验手机短信验证码
-        if (smsService.verifyCode(member.getPhone(),orderObj.getTn(),smsCode)!=1) {
+        if (smsService.verifyCode(phoneNo,orderObj.getTn(),smsCode)!=1) {
             throw new SmsCodeVerifyFailException();
         }
 
