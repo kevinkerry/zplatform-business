@@ -174,7 +174,7 @@ public class MemberInfoServiceImpl implements MemberInfoService {
 			if(pm==null){
 				return false;
 			}
-			int retCode = smsService.verifyCode(ModuleTypeEnum.BINDCARD,pm.getPhone(), smsCode);
+			int retCode = smsService.verifyCode(ModuleTypeEnum.BINDCARD,individualRealInfo.getPhoneNo(), smsCode);
 			if(retCode != 1) {
 				throw new RuntimeException("验证码错误");
 			}
