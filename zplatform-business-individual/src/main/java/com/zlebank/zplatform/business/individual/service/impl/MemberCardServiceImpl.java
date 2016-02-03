@@ -103,7 +103,9 @@ public class MemberCardServiceImpl implements MemberCardService{
 	@Override
 	@Transactional(propagation=Propagation.REQUIRED,rollbackFor=Throwable.class)
 	public CardBin queryCardBin(String bankCardNo) {
-		return cardBinDao.getCard(bankCardNo);
+		CardBin cardBin = cardBinDao.getCard(bankCardNo);
+		cardBin.setBankCode(cardBin.getBankCode()+"0000");
+		return cardBin;
 	}
 
 	/**
