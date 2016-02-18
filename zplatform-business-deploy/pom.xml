@@ -129,12 +129,12 @@
 			<dependency>
 				<groupId>com.zlebank.zplatform</groupId>
 				<artifactId>zplatform-trade-core</artifactId>
-				<version>1.2.0-SNAPSHOT</version>
+				<version>1.2.0</version>
 			</dependency>
 			<dependency>
 				<groupId>com.zlebank.zplatform</groupId>
 				<artifactId>zplatform-member</artifactId>
-				<version>1.2.0-SNAPSHOT</version>
+				<version>1.2.0</version>
 			</dependency>
 			<dependency>
 				<groupId>com.zlebank.zplatform</groupId>
