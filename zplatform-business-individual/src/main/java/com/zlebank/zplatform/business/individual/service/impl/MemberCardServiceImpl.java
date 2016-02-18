@@ -30,6 +30,7 @@ import com.zlebank.zplatform.commons.bean.PagedResult;
 import com.zlebank.zplatform.commons.dao.CardBinDao;
 import com.zlebank.zplatform.member.bean.MemberBean;
 import com.zlebank.zplatform.member.bean.QuickpayCustBean;
+import com.zlebank.zplatform.member.bean.RealNameBean;
 import com.zlebank.zplatform.member.exception.DataCheckFailedException;
 import com.zlebank.zplatform.member.exception.UnbindBankFailedException;
 import com.zlebank.zplatform.member.service.MemberBankCardService;
@@ -124,6 +125,16 @@ public class MemberCardServiceImpl implements MemberCardService{
 		if (retCode != 1) {
 			throw new RuntimeException("验证码错误");
 		}
+		// 查询实名认证信息
+		RealNameBean bean = new RealNameBean();
+		bean.setMemberId(individualMember.getMemberId());
+        RealNameBean realNameInfo = memberBankCardService.queryRealNameInfo(bean );
+        String realName = ""; // 真实姓名
+        if ( realNameInfo != null ) 
+            realName = realNameInfo.getRealname();
+        String cardName = bankCardInfo.getBankCardInfo().getCustomerName(); // 绑卡真实姓名
+        if (!realName.equals(cardName)) 
+            throw new RuntimeException("绑卡姓名和实名信息不一致");
 		QuickpayCustBean quickpayCustBean = new QuickpayCustBean();
 		quickpayCustBean.setCustomerno(individualMember.getInstiCode());
 		quickpayCustBean.setCardno(bankCardInfo.getBankCardInfo().getCardNo());
