@@ -33,6 +33,7 @@ import com.zlebank.zplatform.commons.bean.PagedResult;
 import com.zlebank.zplatform.commons.utils.DateUtil;
 import com.zlebank.zplatform.member.bean.MemberBean;
 import com.zlebank.zplatform.member.bean.enums.MemberType;
+import com.zlebank.zplatform.member.dao.CoopInstiDAO;
 import com.zlebank.zplatform.member.exception.DataCheckFailedException;
 import com.zlebank.zplatform.member.pojo.PojoMember;
 import com.zlebank.zplatform.member.service.MemberOperationService;
@@ -64,6 +65,8 @@ public class OrderServiceImpl implements OrderService {
     private ISMSService smsService;
     @Autowired
     private IQuickpayCustService quickpayCustService;
+    @Autowired
+    CoopInstiDAO coopInstiDAO;
     
 	/**
 	 *
@@ -196,7 +199,7 @@ public class OrderServiceImpl implements OrderService {
         try {
             MemberBean memberBean = new MemberBean();
             memberBean.setLoginName(member.getLoginName());
-            memberBean.setInstiCode(member.getInstiCode());
+            memberBean.setInstiId(member.getInstiId());
             memberBean.setPhone(member.getPhone());
             memberBean.setPaypwd(payPwd);
             // 校验支付密码

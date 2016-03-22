@@ -27,12 +27,14 @@ import com.zlebank.zplatform.member.bean.QuickpayCustBean;
 import com.zlebank.zplatform.member.bean.RealNameBean;
 import com.zlebank.zplatform.member.bean.enums.MemberType;
 import com.zlebank.zplatform.member.bean.enums.RealNameLvType;
+import com.zlebank.zplatform.member.dao.CoopInstiDAO;
 import com.zlebank.zplatform.member.dao.MemberDAO;
 import com.zlebank.zplatform.member.exception.CreateBusiAcctFailedException;
 import com.zlebank.zplatform.member.exception.CreateMemberFailedException;
 import com.zlebank.zplatform.member.exception.DataCheckFailedException;
 import com.zlebank.zplatform.member.exception.InvalidMemberDataException;
 import com.zlebank.zplatform.member.exception.LoginFailedException;
+import com.zlebank.zplatform.member.pojo.PojoCoopInsti;
 import com.zlebank.zplatform.member.pojo.PojoMember;
 import com.zlebank.zplatform.member.service.MemberBankCardService;
 import com.zlebank.zplatform.member.service.MemberOperationService;
@@ -65,6 +67,8 @@ public class MemberInfoServiceImpl implements MemberInfoService {
 	private IGateWayService gateWayService;
 	@Autowired
 	private CardBinDao cardBinDao;
+    @Autowired
+    CoopInstiDAO coopInstiDAO;
 	/**
 	 *
 	 * @param registerMemberInfo
@@ -83,6 +87,9 @@ public class MemberInfoServiceImpl implements MemberInfoService {
 		if (retCode != 1) {
 			throw new RuntimeException("验证码错误");
 		}
+		// 机构号转换为机构ID
+		PojoCoopInsti coopInsti = coopInstiDAO.getByInstiCode(registerMemberInfo.getInstiCode());
+		registerMemberInfo.setInstiId(coopInsti.getId());
 		String memberId = memberOperationService.registMember(
 				MemberType.INDIVIDUAL, registerMemberInfo);
 		return memberId;
@@ -97,15 +104,14 @@ public class MemberInfoServiceImpl implements MemberInfoService {
 	@Override
 	@Transactional(propagation=Propagation.REQUIRED,rollbackFor=Throwable.class)
 	public Member queryMember(String loginName, String coopInstiCode) {
-		PojoMember pm = memberDAO.getMemberByLoginNameAndCoopInsti(loginName,
-				coopInstiCode);
+	    PojoCoopInsti coopInsti = coopInstiDAO.getByInstiCode(coopInstiCode);
+		PojoMember pm = memberDAO.getMemberByLoginNameAndCoopInsti(loginName, coopInsti.getId());
 		if(pm==null){
 			return null;
 		}
 		Member member = new Member();
-		long memid = pm.getMemid();
+		long memid = pm.getMemId();
 		String memberId = pm.getMemberId();
-		String instiCode=pm.getInstiCode();
 		String memberName=pm.getMemberName();
 		String pwd=pm.getPwd();
 		String paypwd=pm.getPayPwd();
@@ -117,7 +123,7 @@ public class MemberInfoServiceImpl implements MemberInfoService {
 		String registerIdent=pm.getRegisterIdent();
 		member.setMemid(memid+"");
 		member.setMemberId(memberId);
-		member.setInstiCode(instiCode);
+		member.setInstiCode(coopInstiCode);
 		member.setMemberName(memberName);
 		member.setPwd(pwd);
 		member.setPaypwd(paypwd);
@@ -142,11 +148,11 @@ public class MemberInfoServiceImpl implements MemberInfoService {
 	@Override
 	public String login(String loginName, String pwd, String coopInstiCode)
 			throws DataCheckFailedException, LoginFailedException {
-		// TODO Auto-generated method stub
 		MemberBean member = new MemberBean();
 		member.setLoginName(loginName);
 		member.setPwd(pwd);
-		member.setInstiCode(coopInstiCode);
+		PojoCoopInsti coopInsti = coopInstiDAO.getByInstiCode(coopInstiCode);
+		member.setInstiId(coopInsti.getId());
 		String memberId = memberOperationService.login(MemberType.INDIVIDUAL,member);
 		if (StringUtil.isNotEmpty(memberId)) {
 			return memberId;
@@ -182,7 +188,8 @@ public class MemberInfoServiceImpl implements MemberInfoService {
 		WapCardBean cardBean = new WapCardBean(individualRealInfo.getCardNo(), individualRealInfo.getCardType(), individualRealInfo.getCustomerName(), 
 				individualRealInfo.getCertifType(), individualRealInfo.getCertifNo(), individualRealInfo.getPhoneNo(), individualRealInfo.getCvn2(), 
 				individualRealInfo.getExpired());
-		ResultBean resultBean = gateWayService.bindingBankCard(pm.getInstiCode(), memberId, cardBean);
+		PojoCoopInsti pojoCoopInsti = coopInstiDAO.get(pm.getInstiId());
+		ResultBean resultBean = gateWayService.bindingBankCard(pojoCoopInsti.getInstiCode(), memberId, cardBean);
 		if(realNameTypeEnum==RealNameTypeEnum.CARDREALNAME){
 			return resultBean.isResultBool();
 		}
@@ -203,7 +210,7 @@ public class MemberInfoServiceImpl implements MemberInfoService {
 			
 			//保存绑卡信息
 			QuickpayCustBean quickpayCustBean = new QuickpayCustBean();
-			quickpayCustBean.setCustomerno(pm.getInstiCode());
+			quickpayCustBean.setCustomerno(pojoCoopInsti.getInstiCode());
 			quickpayCustBean.setCardno(individualRealInfo.getCardNo());
 			quickpayCustBean.setCardtype(individualRealInfo.getCardType());
 			quickpayCustBean.setAccname(individualRealInfo.getCustomerName());
@@ -220,7 +227,7 @@ public class MemberInfoServiceImpl implements MemberInfoService {
 			//重置支付密码
 			MemberBean member = new MemberBean();
 			member.setLoginName(pm.getLoginName());
-			member.setInstiCode(pm.getInstiCode());
+			member.setInstiId(pojoCoopInsti.getId());
 			member.setPhone(pm.getPhone());
 			return memberOperationService.resetPayPwd(MemberType.INDIVIDUAL, member, payPwd, false);
 		}
@@ -243,7 +250,7 @@ public class MemberInfoServiceImpl implements MemberInfoService {
 		}
 		MemberBean member = new MemberBean();
 		member.setLoginName(pm.getLoginName());
-		member.setInstiCode(pm.getInstiCode());
+		member.setInstiId(pm.getInstiId());
 		member.setPhone(pm.getPhone());
 		member.setPaypwd(payPwd);
 		return memberOperationService.verifyPayPwd(MemberType.INDIVIDUAL, member);
@@ -266,7 +273,7 @@ public class MemberInfoServiceImpl implements MemberInfoService {
 		}
 		MemberBean member = new MemberBean();
 		member.setLoginName(pm.getLoginName());
-		member.setInstiCode(pm.getInstiCode());
+		member.setInstiId(pm.getInstiId());
 		member.setPhone(pm.getPhone());
 		member.setPwd(orgPwd);
 		return memberOperationService.resetLoginPwd(MemberType.INDIVIDUAL, member, pwd, true);
@@ -289,7 +296,7 @@ public class MemberInfoServiceImpl implements MemberInfoService {
 		}
 		MemberBean member = new MemberBean();
 		member.setLoginName(pm.getLoginName());
-		member.setInstiCode(pm.getInstiCode());
+		member.setInstiId(pm.getInstiId());
 		member.setPhone(pm.getPhone());
 		member.setPaypwd(orgPayPwd);
 		return memberOperationService.resetPayPwd(MemberType.INDIVIDUAL, member, payPwd, true);
@@ -317,7 +324,7 @@ public class MemberInfoServiceImpl implements MemberInfoService {
 		}
 		MemberBean member = new MemberBean();
 		member.setLoginName(pm.getLoginName());
-		member.setInstiCode(pm.getInstiCode());
+		member.setInstiId(pm.getInstiId());
 		member.setPhone(pm.getPhone());
 		return memberOperationService.resetLoginPwd(MemberType.INDIVIDUAL, member, pwd, false);
 	}
@@ -344,7 +351,7 @@ public class MemberInfoServiceImpl implements MemberInfoService {
 		}
 		MemberBean member = new MemberBean();
 		member.setLoginName(pm.getLoginName());
-		member.setInstiCode(pm.getInstiCode());
+		member.setInstiId(pm.getInstiId());
 		member.setPhone(pm.getPhone());
 		return memberOperationService.resetPayPwd(MemberType.INDIVIDUAL, member, payPwd, false);
 	}
@@ -367,7 +374,7 @@ public class MemberInfoServiceImpl implements MemberInfoService {
 		}
 		MemberBean member = new MemberBean();
 		member.setLoginName(pm.getLoginName());
-		member.setInstiCode(pm.getInstiCode());
+		member.setInstiId(pm.getInstiId());
 		member.setPhone(pm.getPhone());
 		member.setPwd(pwd);
 		if(StringUtil.isNotEmpty(memberOperationService.login(MemberType.INDIVIDUAL, member))){

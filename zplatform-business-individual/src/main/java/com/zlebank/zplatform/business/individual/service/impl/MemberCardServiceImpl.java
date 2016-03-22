@@ -22,17 +22,19 @@ import com.alibaba.fastjson.JSON;
 import com.zlebank.zplatform.business.individual.bean.Bank;
 import com.zlebank.zplatform.business.individual.bean.BankCardInfo;
 import com.zlebank.zplatform.business.individual.bean.IndividualRealInfo;
+import com.zlebank.zplatform.business.individual.bean.Member;
 import com.zlebank.zplatform.business.individual.bean.SupportedBankCardType;
 import com.zlebank.zplatform.business.individual.service.MemberCardService;
 import com.zlebank.zplatform.commons.bean.CardBin;
 import com.zlebank.zplatform.commons.bean.DefaultPageResult;
 import com.zlebank.zplatform.commons.bean.PagedResult;
 import com.zlebank.zplatform.commons.dao.CardBinDao;
-import com.zlebank.zplatform.member.bean.MemberBean;
 import com.zlebank.zplatform.member.bean.QuickpayCustBean;
 import com.zlebank.zplatform.member.bean.RealNameBean;
+import com.zlebank.zplatform.member.dao.CoopInstiDAO;
 import com.zlebank.zplatform.member.exception.DataCheckFailedException;
 import com.zlebank.zplatform.member.exception.UnbindBankFailedException;
+import com.zlebank.zplatform.member.pojo.PojoCoopInsti;
 import com.zlebank.zplatform.member.service.MemberBankCardService;
 import com.zlebank.zplatform.sms.pojo.enums.ModuleTypeEnum;
 import com.zlebank.zplatform.sms.service.ISMSService;
@@ -61,6 +63,8 @@ public class MemberCardServiceImpl implements MemberCardService{
 	private ICashBankService cashBankService;
 	@Autowired
 	private ISMSService smsService;
+    @Autowired
+    CoopInstiDAO coopInstiDAO;
 	
 	/**
 	 *
@@ -118,7 +122,7 @@ public class MemberCardServiceImpl implements MemberCardService{
 	 */
 	@Override
 	@Transactional(propagation=Propagation.REQUIRED,rollbackFor=Throwable.class)
-	public String bindBankCard(MemberBean individualMember,
+	public String bindBankCard(Member individualMember,
 			BankCardInfo bankCardInfo, String smsCode) {
 		int retCode = smsService.verifyCode(ModuleTypeEnum.BINDCARD,
 				individualMember.getPhone(), smsCode);
@@ -136,7 +140,8 @@ public class MemberCardServiceImpl implements MemberCardService{
         if (!realName.equals(cardName)) 
             throw new RuntimeException("绑卡姓名和实名信息不一致");
 		QuickpayCustBean quickpayCustBean = new QuickpayCustBean();
-		quickpayCustBean.setCustomerno(individualMember.getInstiCode());
+		 PojoCoopInsti pojoCoopInsti = coopInstiDAO.getByInstiCode(individualMember.getInstiCode());
+		quickpayCustBean.setCustomerno(pojoCoopInsti.getInstiCode());
 		quickpayCustBean.setCardno(bankCardInfo.getBankCardInfo().getCardNo());
 		quickpayCustBean.setCardtype(bankCardInfo.getBankCardInfo().getCardType());
 		quickpayCustBean.setAccname(bankCardInfo.getBankCardInfo().getCustomerName());
