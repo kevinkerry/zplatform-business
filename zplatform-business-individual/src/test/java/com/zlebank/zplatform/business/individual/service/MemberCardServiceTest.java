@@ -49,11 +49,11 @@ public class MemberCardServiceTest extends ApplicationContextAbled {
 		}
 	}
 
-	// @Test
+	 @Test
 	public void test_queryCardBin() {
 		MemberCardService memberCardService = (MemberCardService) getContext()
 				.getBean("memberCardService");
-		CardBin cardbin = memberCardService.queryCardBin("6228480018543668976");
+		CardBin cardbin = memberCardService.queryCardBin("123456789012");
 		System.out.println(JSON.toJSONString(cardbin));
 	}
 
@@ -105,7 +105,7 @@ public class MemberCardServiceTest extends ApplicationContextAbled {
 			e.printStackTrace();
 		}
 	}
-	@Test
+//	@Test
 	public void test_queryBank(){
 		MemberCardService memberCardService = (MemberCardService) getContext().getBean("memberCardService");
 		PagedResult<SupportedBankCardType> result=  memberCardService.queryBank(0, 10);

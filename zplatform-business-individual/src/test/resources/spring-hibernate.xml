@@ -16,8 +16,8 @@
 		destroy-method="close">
 		<property name="driverClass" value="oracle.jdbc.OracleDriver" />
 		<property name="jdbcUrl" value="jdbc:oracle:thin:@192.168.101.178:1521:oradb" />
-		<property name="user" value="PAYSERVICE" />
-		<property name="password" value="PAYSERVICE" />
+		<property name="user" value="payservice" />
+		<property name="password" value="payservice" />
 		<property name="maxPoolSize" value="40" />
 		<property name="minPoolSize" value="1" />
 		<property name="initialPoolSize" value="1" />

@@ -118,6 +118,8 @@ public class MemberCardServiceImpl implements MemberCardService{
 	@Transactional(propagation=Propagation.REQUIRED,rollbackFor=Throwable.class)
 	public CardBin queryCardBin(String bankCardNo) {
 		CardBin cardBin = cardBinDao.getCard(bankCardNo);
+		if (cardBin == null)
+		    return null;
 		cardBin.setBankCode(cardBin.getBankCode()+"0000");
 		return cardBin;
 	}
