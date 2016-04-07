@@ -10,6 +10,8 @@
  */
 package com.zlebank.zplatform.business.individual.service.impl;
 
+import java.util.List;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Propagation;
@@ -20,6 +22,7 @@ import com.zlebank.zplatform.business.individual.bean.Member;
 import com.zlebank.zplatform.business.individual.bean.enums.RealNameTypeEnum;
 import com.zlebank.zplatform.business.individual.service.MemberInfoService;
 import com.zlebank.zplatform.commons.bean.CardBin;
+import com.zlebank.zplatform.commons.bean.PagedResult;
 import com.zlebank.zplatform.commons.dao.CardBinDao;
 import com.zlebank.zplatform.commons.utils.StringUtil;
 import com.zlebank.zplatform.member.bean.MemberBean;
@@ -34,6 +37,7 @@ import com.zlebank.zplatform.member.exception.CreateMemberFailedException;
 import com.zlebank.zplatform.member.exception.DataCheckFailedException;
 import com.zlebank.zplatform.member.exception.InvalidMemberDataException;
 import com.zlebank.zplatform.member.exception.LoginFailedException;
+import com.zlebank.zplatform.member.exception.UnbindBankFailedException;
 import com.zlebank.zplatform.member.pojo.PojoCoopInsti;
 import com.zlebank.zplatform.member.pojo.PojoMember;
 import com.zlebank.zplatform.member.service.MemberBankCardService;
@@ -185,52 +189,83 @@ public class MemberInfoServiceImpl implements MemberInfoService {
 				throw new RuntimeException("验证码错误");
 			}
 		}
-		WapCardBean cardBean = new WapCardBean(individualRealInfo.getCardNo(), individualRealInfo.getCardType(), individualRealInfo.getCustomerName(), 
-				individualRealInfo.getCertifType(), individualRealInfo.getCertifNo(), individualRealInfo.getPhoneNo(), individualRealInfo.getCvn2(), 
-				individualRealInfo.getExpired());
-		PojoCoopInsti pojoCoopInsti = coopInstiDAO.get(pm.getInstiId());
-		ResultBean resultBean = gateWayService.bindingBankCard(pojoCoopInsti.getInstiCode(), memberId, cardBean);
-		if(realNameTypeEnum==RealNameTypeEnum.CARDREALNAME){
-			return resultBean.isResultBool();
-		}
-		if(resultBean.isResultBool()){
-			
-			
-			//保存实名认证信息
-			RealNameBean realNameBean = new RealNameBean();
-			realNameBean.setMemberId(memberId);
-			realNameBean.setRealname(individualRealInfo.getCustomerName());
-			realNameBean.setIdentiType(individualRealInfo.getCertifType());
-			realNameBean.setIdentiNum(individualRealInfo.getCertifNo());
-			realNameBean.setStatus("00");
-			RealNameBean nameBean = memberBankCardService.queryRealNameInfo(realNameBean);
-			if(nameBean==null){
-				memberBankCardService.saveRealNameInfo(realNameBean);
-			}
-			
-			//保存绑卡信息
-			QuickpayCustBean quickpayCustBean = new QuickpayCustBean();
-			quickpayCustBean.setCustomerno(pojoCoopInsti.getInstiCode());
-			quickpayCustBean.setCardno(individualRealInfo.getCardNo());
-			quickpayCustBean.setCardtype(individualRealInfo.getCardType());
-			quickpayCustBean.setAccname(individualRealInfo.getCustomerName());
-			quickpayCustBean.setPhone(individualRealInfo.getPhoneNo());
-			quickpayCustBean.setIdtype(individualRealInfo.getCertifType());
-			quickpayCustBean.setIdnum(individualRealInfo.getCertifNo());
-			quickpayCustBean.setCvv2(individualRealInfo.getCvn2());
-			quickpayCustBean.setValidtime(individualRealInfo.getExpired());
-			quickpayCustBean.setRelatememberno(memberId);
-			CardBin cardBin = cardBinDao.getCard(individualRealInfo.getCardNo());
-			quickpayCustBean.setBankcode(cardBin.getBankCode());
-			quickpayCustBean.setBankname(cardBin.getBankName());
-			memberBankCardService.saveQuickPayCust(quickpayCustBean);
-			//重置支付密码
-			MemberBean member = new MemberBean();
-			member.setLoginName(pm.getLoginName());
-			member.setInstiId(pojoCoopInsti.getId());
-			member.setPhone(pm.getPhone());
-			return memberOperationService.resetPayPwd(MemberType.INDIVIDUAL, member, payPwd, false);
-		}
+        
+        // 查询当前操作是【实名认证】还是【重置密码】
+        RealNameBean bean = new RealNameBean();
+        bean.setMemberId(memberId);
+        RealNameBean realNameInfo = memberBankCardService.queryRealNameInfo(bean );
+        // 【重置密码】时
+        if (realNameInfo!=null) {
+            if (!realNameInfo.getIdentiNum().equals(individualRealInfo.getCertifNo()) ||
+                    !realNameInfo.getRealname().equals(individualRealInfo.getCustomerName())) {
+                throw new RuntimeException("输入的实名信息不对");
+            }
+          // 检查输入银行卡信息
+          if(realNameTypeEnum != RealNameTypeEnum.CARDREALNAME){// 发送验证码时不解绑
+              PagedResult<QuickpayCustBean> queryMemberBankCard = memberBankCardService.queryMemberBankCard(memberId, "0", 0, 100);
+              try {
+                    List<QuickpayCustBean> pagedResult = queryMemberBankCard.getPagedResult();
+                    QuickpayCustBean quickpayCustBean = new QuickpayCustBean();
+                    for (QuickpayCustBean pojo : pagedResult) {
+                        // 解绑所有的银行卡
+                        quickpayCustBean.setId(Long.valueOf(pojo.getId()));
+                        quickpayCustBean.setRelatememberno(memberId);
+                        try {
+                            memberBankCardService.unbindQuickPayCust(quickpayCustBean);
+                        } catch (UnbindBankFailedException e) {
+                            throw new RuntimeException("解绑其它银行卡时发生错误");
+                        }
+                    }
+                } catch (IllegalAccessException e) {
+                    e.printStackTrace();
+                }
+          }
+        }
+
+        // 【实名认证】【重置密码】
+        PojoCoopInsti pojoCoopInsti = coopInstiDAO.get(pm.getInstiId());
+        WapCardBean cardBean = new WapCardBean(individualRealInfo.getCardNo(), individualRealInfo.getCardType(), individualRealInfo.getCustomerName(), 
+                individualRealInfo.getCertifType(), individualRealInfo.getCertifNo(), individualRealInfo.getPhoneNo(), individualRealInfo.getCvn2(), 
+                individualRealInfo.getExpired());
+        ResultBean resultBean = gateWayService.bindingBankCard(pojoCoopInsti.getInstiCode(), memberId, cardBean);
+        if(realNameTypeEnum==RealNameTypeEnum.CARDREALNAME){
+            return resultBean.isResultBool();
+        }
+        if(resultBean.isResultBool()){
+            //保存实名认证信息
+            RealNameBean realNameBean = new RealNameBean();
+            realNameBean.setMemberId(memberId);
+            realNameBean.setRealname(individualRealInfo.getCustomerName());
+            realNameBean.setIdentiType(individualRealInfo.getCertifType());
+            realNameBean.setIdentiNum(individualRealInfo.getCertifNo());
+            realNameBean.setStatus("00");
+            RealNameBean nameBean = memberBankCardService.queryRealNameInfo(realNameBean);
+            if(nameBean==null){
+                memberBankCardService.saveRealNameInfo(realNameBean);
+            }
+            //保存绑卡信息
+            QuickpayCustBean quickpayCustBean = new QuickpayCustBean();
+            quickpayCustBean.setCustomerno(pojoCoopInsti.getInstiCode());
+            quickpayCustBean.setCardno(individualRealInfo.getCardNo());
+            quickpayCustBean.setCardtype(individualRealInfo.getCardType());
+            quickpayCustBean.setAccname(individualRealInfo.getCustomerName());
+            quickpayCustBean.setPhone(individualRealInfo.getPhoneNo());
+            quickpayCustBean.setIdtype(individualRealInfo.getCertifType());
+            quickpayCustBean.setIdnum(individualRealInfo.getCertifNo());
+            quickpayCustBean.setCvv2(individualRealInfo.getCvn2());
+            quickpayCustBean.setValidtime(individualRealInfo.getExpired());
+            quickpayCustBean.setRelatememberno(memberId);
+            CardBin cardBin = cardBinDao.getCard(individualRealInfo.getCardNo());
+            quickpayCustBean.setBankcode(cardBin.getBankCode());
+            quickpayCustBean.setBankname(cardBin.getBankName());
+            memberBankCardService.saveQuickPayCust(quickpayCustBean);
+            //重置支付密码
+            MemberBean member = new MemberBean();
+            member.setLoginName(pm.getLoginName());
+            member.setInstiId(pojoCoopInsti.getId());
+            member.setPhone(pm.getPhone());
+            return memberOperationService.resetPayPwd(MemberType.INDIVIDUAL, member, payPwd, false);
+        }
 		return false;
 	}
 
