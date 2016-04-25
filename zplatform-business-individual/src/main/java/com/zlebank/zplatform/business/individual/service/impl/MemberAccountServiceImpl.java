@@ -31,6 +31,7 @@ import com.zlebank.zplatform.member.bean.MemberAccountBean;
 import com.zlebank.zplatform.member.bean.MemberBalanceDetailBean;
 import com.zlebank.zplatform.member.bean.MemberBean;
 import com.zlebank.zplatform.member.bean.enums.MemberType;
+import com.zlebank.zplatform.member.dao.CoopInstiDAO;
 import com.zlebank.zplatform.member.exception.DataCheckFailedException;
 import com.zlebank.zplatform.member.exception.GetAccountFailedException;
 import com.zlebank.zplatform.member.pojo.PojoMember;
@@ -61,6 +62,8 @@ public class MemberAccountServiceImpl implements MemberAccountService {
     private ISMSService smsService;
     @Autowired
     private OrderService orderServiceImpl;
+    @Autowired
+    CoopInstiDAO coopInstiDAO;
 
     @Override
     @Transactional(isolation = Isolation.READ_COMMITTED, propagation = Propagation.REQUIRED)

@@ -1,11 +1,11 @@
 package com.zlebank.zplatform.business.individual.service;
 
 import com.zlebank.zplatform.business.individual.bean.BankCardInfo;
+import com.zlebank.zplatform.business.individual.bean.Member;
 import com.zlebank.zplatform.business.individual.bean.SupportedBankCardType;
 import com.zlebank.zplatform.business.individual.exception.SmsCodeVerifyFailException;
 import com.zlebank.zplatform.commons.bean.CardBin;
 import com.zlebank.zplatform.commons.bean.PagedResult;
-import com.zlebank.zplatform.member.bean.MemberBean;
 import com.zlebank.zplatform.member.exception.DataCheckFailedException;
 import com.zlebank.zplatform.member.exception.UnbindBankFailedException;
 /**
@@ -36,7 +36,7 @@ public interface MemberCardService {
 	 * @param bankCardInfo 银行卡信息
 	 * @return
 	 */
-	public String bindBankCard(MemberBean individualMember,
+	public String bindBankCard(Member individualMember,
             BankCardInfo bankCardInfo,
             String smsCode) throws SmsCodeVerifyFailException;
 	/**

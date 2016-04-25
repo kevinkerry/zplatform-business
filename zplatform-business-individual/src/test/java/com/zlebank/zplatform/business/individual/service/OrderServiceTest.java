@@ -10,6 +10,7 @@ import com.alibaba.fastjson.JSON;
 import com.zlebank.zplatform.business.individual.bean.Bank;
 import com.zlebank.zplatform.business.individual.bean.BankCardInfo;
 import com.zlebank.zplatform.business.individual.bean.IndividualRealInfo;
+import com.zlebank.zplatform.business.individual.bean.Member;
 import com.zlebank.zplatform.business.individual.bean.Order;
 import com.zlebank.zplatform.business.individual.exception.AbstractIndividualBusinessException;
 import com.zlebank.zplatform.business.individual.exception.SmsCodeVerifyFailException;
@@ -17,7 +18,6 @@ import com.zlebank.zplatform.business.individual.exception.ValidateOrderExceptio
 import com.zlebank.zplatform.business.individual.util.ApplicationContextAbled;
 import com.zlebank.zplatform.commons.bean.PagedResult;
 import com.zlebank.zplatform.commons.utils.DateUtil;
-import com.zlebank.zplatform.member.bean.MemberBean;
 import com.zlebank.zplatform.sms.pojo.enums.ModuleTypeEnum;
 import com.zlebank.zplatform.trade.exception.TradeException;
 
@@ -67,8 +67,8 @@ public class OrderServiceTest extends ApplicationContextAbled {
     public void bindCard() throws SmsCodeVerifyFailException{
         MemberCardService memberCardService = (MemberCardService) getContext()
                 .getBean("memberCardService");
-        MemberBean individualMember = new MemberBean();
-        individualMember.setInstiCode("300000000000027");
+        Member individualMember = new Member();
+        individualMember.setInstiCode("25");
         individualMember.setMemberId("100000000000564");
         individualMember.setPhone("18500291365");
         BankCardInfo bankCardInfo = new BankCardInfo();

@@ -13,8 +13,6 @@ package com.zlebank.zplatform.business.individual.service.impl;
 import java.util.ArrayList;
 import java.util.List;
 
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Propagation;
@@ -24,8 +22,8 @@ import com.alibaba.fastjson.JSON;
 import com.zlebank.zplatform.business.individual.bean.Bank;
 import com.zlebank.zplatform.business.individual.bean.BankCardInfo;
 import com.zlebank.zplatform.business.individual.bean.IndividualRealInfo;
+import com.zlebank.zplatform.business.individual.bean.Member;
 import com.zlebank.zplatform.business.individual.bean.SupportedBankCardType;
-import com.zlebank.zplatform.business.individual.exception.SmsCodeVerifyFailException;
 import com.zlebank.zplatform.business.individual.service.MemberCardService;
 import com.zlebank.zplatform.commons.bean.CardBin;
 import com.zlebank.zplatform.commons.bean.DefaultPageResult;
@@ -33,9 +31,16 @@ import com.zlebank.zplatform.commons.bean.PagedResult;
 import com.zlebank.zplatform.commons.dao.CardBinDao;
 import com.zlebank.zplatform.member.bean.MemberBean;
 import com.zlebank.zplatform.member.bean.QuickpayCustBean;
+import com.zlebank.zplatform.member.bean.RealNameBean;
+import com.zlebank.zplatform.member.bean.enums.MemberType;
+import com.zlebank.zplatform.member.dao.CoopInstiDAO;
 import com.zlebank.zplatform.member.exception.DataCheckFailedException;
 import com.zlebank.zplatform.member.exception.UnbindBankFailedException;
+import com.zlebank.zplatform.member.pojo.PojoCoopInsti;
+import com.zlebank.zplatform.member.pojo.PojoMember;
 import com.zlebank.zplatform.member.service.MemberBankCardService;
+import com.zlebank.zplatform.member.service.MemberOperationService;
+import com.zlebank.zplatform.member.service.MemberService;
 import com.zlebank.zplatform.sms.pojo.enums.ModuleTypeEnum;
 import com.zlebank.zplatform.sms.service.ISMSService;
 import com.zlebank.zplatform.trade.model.CashBankModel;
@@ -53,7 +58,6 @@ import com.zlebank.zplatform.trade.service.IGateWayService;
 @Service("memberCardService")
 public class MemberCardServiceImpl implements MemberCardService{
 
-	private static final Log log = LogFactory.getLog(MemberCardServiceImpl.class);
 	@Autowired
 	private IGateWayService gateWayService;
 	@Autowired
@@ -64,6 +68,12 @@ public class MemberCardServiceImpl implements MemberCardService{
 	private ICashBankService cashBankService;
 	@Autowired
 	private ISMSService smsService;
+    @Autowired
+    CoopInstiDAO coopInstiDAO;
+    @Autowired
+    private MemberService memberServiceImpl;
+    @Autowired
+    private MemberOperationService memberOperationServiceImpl;
 	
 	/**
 	 *
@@ -75,7 +85,7 @@ public class MemberCardServiceImpl implements MemberCardService{
 	@Transactional(propagation=Propagation.REQUIRED,rollbackFor=Throwable.class)
 	public PagedResult<BankCardInfo> queryBankCard(String memberId,String cardType,int page,int pageSize) throws IllegalAccessException {
 		PagedResult<QuickpayCustBean> pagedResult = memberBankCardService.queryMemberBankCard(memberId, cardType, page, pageSize);
-		log.info(JSON.toJSON(pagedResult.getPagedResult()));
+		System.out.println(JSON.toJSON(pagedResult.getPagedResult()));
 		List<BankCardInfo> bankCardList = new ArrayList<BankCardInfo>();
 		for(QuickpayCustBean custBean :pagedResult.getPagedResult()){
 			BankCardInfo bankCardInfo = new BankCardInfo();
@@ -108,7 +118,9 @@ public class MemberCardServiceImpl implements MemberCardService{
 	@Transactional(propagation=Propagation.REQUIRED,rollbackFor=Throwable.class)
 	public CardBin queryCardBin(String bankCardNo) {
 		CardBin cardBin = cardBinDao.getCard(bankCardNo);
-		cardBin.setBankCode(cardBin.getBankCode()+"0000");//后补4个0
+		if (cardBin == null)
+		    return null;
+		cardBin.setBankCode(cardBin.getBankCode()+"0000");
 		return cardBin;
 	}
 
@@ -118,19 +130,29 @@ public class MemberCardServiceImpl implements MemberCardService{
 	 * @param bankCardInfo
 	 * @param smsCode
 	 * @return
-	 * @throws SmsCodeVerifyFailException 
 	 */
 	@Override
 	@Transactional(propagation=Propagation.REQUIRED,rollbackFor=Throwable.class)
-	public String bindBankCard(MemberBean individualMember,
-			BankCardInfo bankCardInfo, String smsCode) throws SmsCodeVerifyFailException {
+	public String bindBankCard(Member individualMember,
+			BankCardInfo bankCardInfo, String smsCode) {
 		int retCode = smsService.verifyCode(ModuleTypeEnum.BINDCARD,
 				individualMember.getPhone(), smsCode);
 		if (retCode != 1) {
-			throw new SmsCodeVerifyFailException();
+			throw new RuntimeException("验证码错误");
 		}
+		// 查询实名认证信息
+		RealNameBean bean = new RealNameBean();
+		bean.setMemberId(individualMember.getMemberId());
+        RealNameBean realNameInfo = memberBankCardService.queryRealNameInfo(bean );
+        String realName = ""; // 真实姓名
+        if ( realNameInfo != null ) 
+            realName = realNameInfo.getRealname();
+        String cardName = bankCardInfo.getBankCardInfo().getCustomerName(); // 绑卡真实姓名
+        if (!realName.equals(cardName)) 
+            throw new RuntimeException("绑卡姓名和实名信息不一致");
 		QuickpayCustBean quickpayCustBean = new QuickpayCustBean();
-		quickpayCustBean.setCustomerno(individualMember.getInstiCode());
+		 PojoCoopInsti pojoCoopInsti = coopInstiDAO.getByInstiCode(individualMember.getInstiCode());
+		quickpayCustBean.setCustomerno(pojoCoopInsti.getInstiCode());
 		quickpayCustBean.setCardno(bankCardInfo.getBankCardInfo().getCardNo());
 		quickpayCustBean.setCardtype(bankCardInfo.getBankCardInfo().getCardType());
 		quickpayCustBean.setAccname(bankCardInfo.getBankCardInfo().getCustomerName());
@@ -160,6 +182,19 @@ public class MemberCardServiceImpl implements MemberCardService{
 	public boolean unbindBankCard(String memberId, String bindcardid,
 			String payPwd) throws DataCheckFailedException, UnbindBankFailedException {
 		//校验支付密码
+	    PojoMember member = memberServiceImpl.getMbmberByMemberId(memberId, MemberType.INDIVIDUAL);
+        if (member == null) {// 资金账户不存在
+            throw new UnbindBankFailedException("会员不存在");
+        }
+	    MemberBean memberBean = new MemberBean();
+        memberBean.setLoginName(member.getLoginName());
+        memberBean.setInstiCode(member.getInstiCode());
+        memberBean.setPhone(member.getPhone());
+        memberBean.setPaypwd(payPwd);
+        // 校验支付密码
+        if (!memberOperationServiceImpl.verifyPayPwd(MemberType.INDIVIDUAL,  memberBean)) {
+            throw new UnbindBankFailedException("支付密码不对");
+        }
 		QuickpayCustBean quickpayCustBean = new QuickpayCustBean();
 		quickpayCustBean.setId(Long.valueOf(bindcardid));
 		quickpayCustBean.setRelatememberno(memberId);

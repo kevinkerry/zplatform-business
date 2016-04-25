@@ -23,8 +23,9 @@ import com.zlebank.zplatform.member.bean.*;
  * @since
  */
 public class Member extends Person{
-	 
-	/**
+    /** 合作机构 */
+    private String instiCode;
+    /**
 	 * 会员已绑定的银行卡列表
 	 */
 	private List<BankCardInfo> bankCardList;
@@ -44,8 +45,14 @@ public class Member extends Person{
 	public List<Order> getOrders() {
 		return orders;
 	}
-
 	public void setOrders(List<Order> orders) {
 		this.orders = orders;
 	}
+   public String getInstiCode() {
+        return instiCode;
+    }
+
+    public void setInstiCode(String instiCode) {
+        this.instiCode = instiCode;
+    }
 }

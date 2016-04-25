@@ -16,12 +16,12 @@ import com.alibaba.fastjson.JSON;
 import com.zlebank.zplatform.business.individual.bean.Bank;
 import com.zlebank.zplatform.business.individual.bean.BankCardInfo;
 import com.zlebank.zplatform.business.individual.bean.IndividualRealInfo;
+import com.zlebank.zplatform.business.individual.bean.Member;
 import com.zlebank.zplatform.business.individual.bean.SupportedBankCardType;
 import com.zlebank.zplatform.business.individual.exception.SmsCodeVerifyFailException;
 import com.zlebank.zplatform.business.individual.util.ApplicationContextAbled;
 import com.zlebank.zplatform.commons.bean.CardBin;
 import com.zlebank.zplatform.commons.bean.PagedResult;
-import com.zlebank.zplatform.member.bean.MemberBean;
 import com.zlebank.zplatform.member.exception.DataCheckFailedException;
 import com.zlebank.zplatform.member.exception.UnbindBankFailedException;
 import com.zlebank.zplatform.sms.pojo.enums.ModuleTypeEnum;
@@ -50,11 +50,11 @@ public class MemberCardServiceTest extends ApplicationContextAbled {
 		}
 	}
 
-	// @Test
+	 @Test
 	public void test_queryCardBin() {
 		MemberCardService memberCardService = (MemberCardService) getContext()
 				.getBean("memberCardService");
-		CardBin cardbin = memberCardService.queryCardBin("6228480018543668976");
+		CardBin cardbin = memberCardService.queryCardBin("123456789012");
 		System.out.println(JSON.toJSONString(cardbin));
 	}
 
@@ -68,8 +68,8 @@ public class MemberCardServiceTest extends ApplicationContextAbled {
 	public void test_bindBankCard() throws SmsCodeVerifyFailException {
 		MemberCardService memberCardService = (MemberCardService) getContext()
 				.getBean("memberCardService");
-		MemberBean individualMember = new MemberBean();
-		individualMember.setInstiCode("300000000000027");
+		Member individualMember = new Member();
+		individualMember.setInstiCode("25");
 		individualMember.setMemberId("100000000000572");
 		individualMember.setPhone("18600806796");
 		BankCardInfo bankCardInfo = new BankCardInfo();
@@ -106,7 +106,7 @@ public class MemberCardServiceTest extends ApplicationContextAbled {
 			e.printStackTrace();
 		}
 	}
-	@Test
+//	@Test
 	public void test_queryBank(){
 		MemberCardService memberCardService = (MemberCardService) getContext().getBean("memberCardService");
 		PagedResult<SupportedBankCardType> result=  memberCardService.queryBank(0, 10);
