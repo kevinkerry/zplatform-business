@@ -13,6 +13,8 @@ package com.zlebank.zplatform.business.individual.service.impl;
 import java.util.ArrayList;
 import java.util.List;
 
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Propagation;
@@ -23,6 +25,7 @@ import com.zlebank.zplatform.business.individual.bean.Bank;
 import com.zlebank.zplatform.business.individual.bean.BankCardInfo;
 import com.zlebank.zplatform.business.individual.bean.IndividualRealInfo;
 import com.zlebank.zplatform.business.individual.bean.SupportedBankCardType;
+import com.zlebank.zplatform.business.individual.exception.SmsCodeVerifyFailException;
 import com.zlebank.zplatform.business.individual.service.MemberCardService;
 import com.zlebank.zplatform.commons.bean.CardBin;
 import com.zlebank.zplatform.commons.bean.DefaultPageResult;
@@ -50,6 +53,7 @@ import com.zlebank.zplatform.trade.service.IGateWayService;
 @Service("memberCardService")
 public class MemberCardServiceImpl implements MemberCardService{
 
+	private static final Log log = LogFactory.getLog(MemberCardServiceImpl.class);
 	@Autowired
 	private IGateWayService gateWayService;
 	@Autowired
@@ -71,7 +75,7 @@ public class MemberCardServiceImpl implements MemberCardService{
 	@Transactional(propagation=Propagation.REQUIRED,rollbackFor=Throwable.class)
 	public PagedResult<BankCardInfo> queryBankCard(String memberId,String cardType,int page,int pageSize) throws IllegalAccessException {
 		PagedResult<QuickpayCustBean> pagedResult = memberBankCardService.queryMemberBankCard(memberId, cardType, page, pageSize);
-		System.out.println(JSON.toJSON(pagedResult.getPagedResult()));
+		log.info(JSON.toJSON(pagedResult.getPagedResult()));
 		List<BankCardInfo> bankCardList = new ArrayList<BankCardInfo>();
 		for(QuickpayCustBean custBean :pagedResult.getPagedResult()){
 			BankCardInfo bankCardInfo = new BankCardInfo();
@@ -104,7 +108,7 @@ public class MemberCardServiceImpl implements MemberCardService{
 	@Transactional(propagation=Propagation.REQUIRED,rollbackFor=Throwable.class)
 	public CardBin queryCardBin(String bankCardNo) {
 		CardBin cardBin = cardBinDao.getCard(bankCardNo);
-		cardBin.setBankCode(cardBin.getBankCode()+"0000");
+		cardBin.setBankCode(cardBin.getBankCode()+"0000");//后补4个0
 		return cardBin;
 	}
 
@@ -114,15 +118,16 @@ public class MemberCardServiceImpl implements MemberCardService{
 	 * @param bankCardInfo
 	 * @param smsCode
 	 * @return
+	 * @throws SmsCodeVerifyFailException 
 	 */
 	@Override
 	@Transactional(propagation=Propagation.REQUIRED,rollbackFor=Throwable.class)
 	public String bindBankCard(MemberBean individualMember,
-			BankCardInfo bankCardInfo, String smsCode) {
+			BankCardInfo bankCardInfo, String smsCode) throws SmsCodeVerifyFailException {
 		int retCode = smsService.verifyCode(ModuleTypeEnum.BINDCARD,
 				individualMember.getPhone(), smsCode);
 		if (retCode != 1) {
-			throw new RuntimeException("验证码错误");
+			throw new SmsCodeVerifyFailException();
 		}
 		QuickpayCustBean quickpayCustBean = new QuickpayCustBean();
 		quickpayCustBean.setCustomerno(individualMember.getInstiCode());

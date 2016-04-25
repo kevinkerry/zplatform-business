@@ -12,6 +12,7 @@ import com.zlebank.zplatform.business.individual.bean.BankCardInfo;
 import com.zlebank.zplatform.business.individual.bean.IndividualRealInfo;
 import com.zlebank.zplatform.business.individual.bean.Order;
 import com.zlebank.zplatform.business.individual.exception.AbstractIndividualBusinessException;
+import com.zlebank.zplatform.business.individual.exception.SmsCodeVerifyFailException;
 import com.zlebank.zplatform.business.individual.exception.ValidateOrderException;
 import com.zlebank.zplatform.business.individual.util.ApplicationContextAbled;
 import com.zlebank.zplatform.commons.bean.PagedResult;
@@ -63,7 +64,7 @@ public class OrderServiceTest extends ApplicationContextAbled {
         smsService.sendSmsCode("100000000000564", "18500291365", ModuleTypeEnum.BINDCARD);
     }
     
-    public void bindCard(){
+    public void bindCard() throws SmsCodeVerifyFailException{
         MemberCardService memberCardService = (MemberCardService) getContext()
                 .getBean("memberCardService");
         MemberBean individualMember = new MemberBean();

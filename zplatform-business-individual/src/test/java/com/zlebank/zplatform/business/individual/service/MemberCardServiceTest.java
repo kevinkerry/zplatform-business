@@ -17,6 +17,7 @@ import com.zlebank.zplatform.business.individual.bean.Bank;
 import com.zlebank.zplatform.business.individual.bean.BankCardInfo;
 import com.zlebank.zplatform.business.individual.bean.IndividualRealInfo;
 import com.zlebank.zplatform.business.individual.bean.SupportedBankCardType;
+import com.zlebank.zplatform.business.individual.exception.SmsCodeVerifyFailException;
 import com.zlebank.zplatform.business.individual.util.ApplicationContextAbled;
 import com.zlebank.zplatform.commons.bean.CardBin;
 import com.zlebank.zplatform.commons.bean.PagedResult;
@@ -64,7 +65,7 @@ public class MemberCardServiceTest extends ApplicationContextAbled {
 	}
 
 	// @Test
-	public void test_bindBankCard() {
+	public void test_bindBankCard() throws SmsCodeVerifyFailException {
 		MemberCardService memberCardService = (MemberCardService) getContext()
 				.getBean("memberCardService");
 		MemberBean individualMember = new MemberBean();
