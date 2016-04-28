@@ -2,12 +2,14 @@ package com.zlebank.zplatform.business.individual.service;
 
 import java.util.Date;
 
+import com.zlebank.zplatform.business.individual.bean.IndividualRealInfo;
 import com.zlebank.zplatform.business.individual.bean.Order;
 import com.zlebank.zplatform.business.individual.bean.enums.OrderStatus;
 import com.zlebank.zplatform.business.individual.bean.enums.PayWay;
 import com.zlebank.zplatform.business.individual.exception.AbstractIndividualBusinessException;
 import com.zlebank.zplatform.business.individual.exception.ValidateOrderException;
 import com.zlebank.zplatform.commons.bean.PagedResult;
+import com.zlebank.zplatform.trade.bean.ResultBean;
 import com.zlebank.zplatform.trade.exception.AbstractTradeDescribeException;
 import com.zlebank.zplatform.trade.exception.TradeException;
 
@@ -53,4 +55,26 @@ public interface OrderService {
             throws AbstractTradeDescribeException,
             AbstractIndividualBusinessException,TradeException;
 
+    /**
+     * 匿名支付
+     * @param order
+     * @param smsCode
+     * @param payPwd
+     * @return
+     * @throws AbstractTradeDescribeException
+     * @throws AbstractIndividualBusinessException
+     * @throws TradeException
+     */
+    public OrderStatus anonymousPay(String order,
+            String smsCode
+            ) throws AbstractTradeDescribeException,
+            AbstractIndividualBusinessException, TradeException;
+    
+    /**
+     * 匿名支付 实名认证
+     * @param individualRealInfo
+     * @param memberId
+     * @return
+     */
+    public ResultBean anonymousRealName(IndividualRealInfo individualRealInfo,String memberId);
 }

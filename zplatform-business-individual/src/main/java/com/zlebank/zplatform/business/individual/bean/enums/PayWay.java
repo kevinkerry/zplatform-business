@@ -20,7 +20,7 @@ public enum PayWay {
 
     public static PayWay fromValue(String code) {
         for (PayWay payWay : PayWay.values()) {
-            if (code != null && payWay.equals(code)) {
+            if (code != null && payWay.getCode().equals(code)) {
                 return payWay;
             }
         }

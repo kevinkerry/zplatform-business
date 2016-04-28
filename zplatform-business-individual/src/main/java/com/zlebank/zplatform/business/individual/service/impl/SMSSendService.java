@@ -10,16 +10,23 @@
  */
 package com.zlebank.zplatform.business.individual.service.impl;
 
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import com.alibaba.fastjson.JSON;
 import com.alibaba.fastjson.JSONObject;
+import com.zlebank.zplatform.business.individual.exception.InvalidBindIdException;
 import com.zlebank.zplatform.business.individual.service.SmsService;
 import com.zlebank.zplatform.sms.pojo.enums.ModuleTypeEnum;
 import com.zlebank.zplatform.sms.service.ISMSService;
 import com.zlebank.zplatform.trade.exception.TradeException;
+import com.zlebank.zplatform.trade.model.QuickpayCustModel;
 import com.zlebank.zplatform.trade.service.IGateWayService;
+import com.zlebank.zplatform.trade.service.IQuickpayCustService;
 
 /**
  * Class Description
@@ -36,6 +43,8 @@ public class SMSSendService implements SmsService{
 	private ISMSService smsSendService;
 	@Autowired 
 	private IGateWayService gateWayService;
+	@Autowired
+    private IQuickpayCustService quickpayCustService;
 	/**
 	 *
 	 * @param memberId
@@ -94,6 +103,31 @@ public class SMSSendService implements SmsService{
 				String tn = jsonObject.get("tn").toString();
 				retcode = smsSendService.sendSMS(moduleType, phoneNo, tn, "");
 				break;
+			case ANONYMOUSPAY:
+				 String tn_=jsonObject.get("tn").toString();
+				 String cardNo=jsonObject.get("cardNo").toString();
+				 String cardType=jsonObject.get("cardType").toString();
+				 String customerNm=jsonObject.get("customerNm").toString();
+				 String certifTp=jsonObject.get("certifTp").toString();
+				 String certifId=jsonObject.get("certifId").toString();
+				 phoneNo=jsonObject.get("phoneNo").toString();
+				 String cvn2=jsonObject.get("cvn2")+"";
+				 String expired=jsonObject.get("expired")+"";
+				 List<QuickpayCustModel> cardList = (List<QuickpayCustModel>) quickpayCustService.queryByHQL("from QuickpayCustModel where cardno=? and accname = ? and phone = ? and idnum = ? and relatememberno = ? and status = ?", new Object[]{cardNo,customerNm,phoneNo,certifId,"999999999999999","00"});
+	        	if(cardList.size()>0){
+	        		Map<String, Object> resultMap = new HashMap<String, Object>();
+	        		resultMap.put("tn", tn_);
+	        		resultMap.put("bindId", cardList.get(0).getId());
+	        		try {
+						gateWayService.sendSMSMessage(JSON.toJSONString(resultMap));
+						return true;
+					} catch (TradeException e) {
+						e.printStackTrace();
+						return false;
+					}
+	        	}else{
+	        		return false;
+	        	}
 			default:
 				
 				break;
@@ -104,4 +138,11 @@ public class SMSSendService implements SmsService{
 		return false;
 	}
 
+	public static void main(String[] args) {
+		Map<String, Object> resultMap = new HashMap<String, Object>();
+		resultMap.put("tn", "123");
+		resultMap.put("bindId", "123456");
+		
+		System.out.println(JSON.toJSONString(resultMap));
+	}
 }

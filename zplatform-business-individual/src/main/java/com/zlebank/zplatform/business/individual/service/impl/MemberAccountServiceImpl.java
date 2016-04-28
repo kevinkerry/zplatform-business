@@ -112,7 +112,7 @@ public class MemberAccountServiceImpl implements MemberAccountService {
         try {
             MemberBean memberBean = new MemberBean();
             memberBean.setLoginName(member.getLoginName());
-            memberBean.setInstiCode(member.getInstiCode());
+            memberBean.setInstiId(member.getInstiId());
             memberBean.setPhone(member.getPhone());
             memberBean.setPaypwd(payPwd);
             // 校验支付密码

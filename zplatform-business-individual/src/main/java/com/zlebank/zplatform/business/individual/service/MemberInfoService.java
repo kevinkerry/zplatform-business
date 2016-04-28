@@ -8,6 +8,7 @@ import com.zlebank.zplatform.member.exception.CreateMemberFailedException;
 import com.zlebank.zplatform.member.exception.DataCheckFailedException;
 import com.zlebank.zplatform.member.exception.InvalidMemberDataException;
 import com.zlebank.zplatform.member.exception.LoginFailedException;
+import com.zlebank.zplatform.member.exception.UnbindBankFailedException;
 
 
 public interface MemberInfoService {
@@ -50,7 +51,7 @@ public interface MemberInfoService {
 	public boolean realName(IndividualRealInfo individualRealInfo,
             String smsCode,
             String payPwd,
-            String memberId,RealNameTypeEnum realNameTypeEnum) throws DataCheckFailedException;
+            String memberId,RealNameTypeEnum realNameTypeEnum) throws DataCheckFailedException, UnbindBankFailedException;
 	/**
 	 * 验证支付密码  Verify the pay password
 	 * @param memberId 会员号

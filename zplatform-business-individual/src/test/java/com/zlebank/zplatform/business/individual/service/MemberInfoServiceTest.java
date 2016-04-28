@@ -23,6 +23,7 @@ import com.zlebank.zplatform.member.exception.CreateMemberFailedException;
 import com.zlebank.zplatform.member.exception.DataCheckFailedException;
 import com.zlebank.zplatform.member.exception.InvalidMemberDataException;
 import com.zlebank.zplatform.member.exception.LoginFailedException;
+import com.zlebank.zplatform.member.exception.UnbindBankFailedException;
 import com.zlebank.zplatform.sms.pojo.enums.ModuleTypeEnum;
 
 /**
@@ -151,6 +152,9 @@ public class MemberInfoServiceTest extends ApplicationContextAbled{
 			boolean flag = memberInfoService.realName(individualRealInfo, "679519", "654321", "100000000000572",RealNameTypeEnum.CARDREALNAME);
 			System.out.println(flag);
 		} catch (DataCheckFailedException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		} catch (UnbindBankFailedException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}

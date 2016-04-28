@@ -5,6 +5,7 @@ import java.text.ParseException;
 import org.junit.Assert;
 import org.junit.Ignore;
 import org.junit.Test;
+import org.springframework.transaction.annotation.Transactional;
 
 import com.alibaba.fastjson.JSON;
 import com.zlebank.zplatform.business.individual.bean.Bank;
@@ -19,11 +20,12 @@ import com.zlebank.zplatform.business.individual.util.ApplicationContextAbled;
 import com.zlebank.zplatform.commons.bean.PagedResult;
 import com.zlebank.zplatform.commons.utils.DateUtil;
 import com.zlebank.zplatform.sms.pojo.enums.ModuleTypeEnum;
+import com.zlebank.zplatform.trade.bean.ResultBean;
 import com.zlebank.zplatform.trade.exception.TradeException;
 
 public class OrderServiceTest extends ApplicationContextAbled {
     
-    @Test
+    
     @Ignore
     public void testCreateOrder() {
         OrderService orderService = (OrderService) getContext().getBean(
@@ -126,7 +128,7 @@ public class OrderServiceTest extends ApplicationContextAbled {
 		System.out.println(JSON.toJSONString(order));
 	}
     
-	@Test
+	
 	@Ignore
 	public void test_queryOrderList(){
 		OrderService orderService = (OrderService) getContext().getBean("orderServiceImpl");
@@ -138,5 +140,36 @@ public class OrderServiceTest extends ApplicationContextAbled {
 			e.printStackTrace();
 		}
 		System.out.println(JSON.toJSONString(orderList));
+	}
+	
+	@Test
+	@Transactional
+	public void test_anonymousRealName(){
+		OrderService orderService = (OrderService) getContext().getBean("orderServiceImpl");
+		Member individualMember = new Member();
+        individualMember.setInstiCode("25");
+        individualMember.setMemberId("100000000000564");
+        individualMember.setPhone("18500291365");
+        BankCardInfo bankCardInfo = new BankCardInfo();
+
+        Bank bank = new Bank();
+        bank.setBankCode("03080000");
+        bank.setBankName("招商银行");
+        bankCardInfo.setBank(bank);
+        IndividualRealInfo individualRealInfo = new IndividualRealInfo();
+        individualRealInfo.setCardNo("6228480028543668952");
+        individualRealInfo.setCardType("1");
+        individualRealInfo.setCustomerName("测试3");
+        individualRealInfo.setCertifType("01");
+        individualRealInfo.setCertifNo("360729198610280337");
+        individualRealInfo.setPhoneNo("18500291365");
+        individualRealInfo.setCvn2("");
+        individualRealInfo.setExpired("");
+        individualRealInfo.setDevId("1234567");
+        bankCardInfo.setBankCardInfo(individualRealInfo);
+		String memberId = "200000000000613";
+		
+		ResultBean anonymousRealName = orderService.anonymousRealName(individualRealInfo, memberId);
+		System.out.println(JSON.toJSON(anonymousRealName));
 	}
 }

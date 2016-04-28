@@ -38,7 +38,7 @@ public enum RealNameTypeEnum {
 
     public static RealNameTypeEnum fromValue(String code) {
         for (RealNameTypeEnum nameTypeEnum : RealNameTypeEnum.values()) {
-            if (code != null && nameTypeEnum.equals(code)) {
+            if (code != null && nameTypeEnum.getCode().equals(code)) {
                 return nameTypeEnum;
             }
         }

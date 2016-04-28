@@ -28,7 +28,7 @@ public enum OrderType {
 
     public static OrderType fromValue(String code) {
         for (OrderType orderType : OrderType.values()) {
-            if (code != null && orderType.equals(code)) {
+            if (code != null && orderType.getCode().equals(code)) {
                 return orderType;
             }
         }

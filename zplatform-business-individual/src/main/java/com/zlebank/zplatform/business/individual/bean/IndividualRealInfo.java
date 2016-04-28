@@ -35,6 +35,10 @@ public class IndividualRealInfo {
 	 * 信用卡有效期
 	 */
 	private String expired;
+	
+	/**设备标示**/
+	private String devId;
+	
 	public String getCardNo() {
 		return cardNo;
 	}
@@ -112,6 +116,18 @@ public class IndividualRealInfo {
 	public IndividualRealInfo() {
 		super();
 		// TODO Auto-generated constructor stub
+	}
+	/**
+	 * @return the devId
+	 */
+	public String getDevId() {
+		return devId;
+	}
+	/**
+	 * @param devId the devId to set
+	 */
+	public void setDevId(String devId) {
+		this.devId = devId;
 	}
 	
 	

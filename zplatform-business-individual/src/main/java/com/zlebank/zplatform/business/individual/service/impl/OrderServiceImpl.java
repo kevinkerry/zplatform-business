@@ -14,11 +14,17 @@ import org.springframework.transaction.annotation.Transactional;
 
 import com.alibaba.fastjson.JSON;
 import com.zlebank.zplatform.acc.bean.BusiAcctQuery;
+import com.zlebank.zplatform.acc.bean.TradeInfo;
 import com.zlebank.zplatform.acc.bean.enums.Usage;
+import com.zlebank.zplatform.acc.exception.AbstractBusiAcctException;
+import com.zlebank.zplatform.acc.exception.AccBussinessException;
 import com.zlebank.zplatform.acc.pojo.Money;
+import com.zlebank.zplatform.acc.service.AccEntryService;
+import com.zlebank.zplatform.business.individual.bean.IndividualRealInfo;
 import com.zlebank.zplatform.business.individual.bean.Order;
 import com.zlebank.zplatform.business.individual.bean.enums.OrderStatus;
 import com.zlebank.zplatform.business.individual.bean.enums.PayWay;
+import com.zlebank.zplatform.business.individual.bean.enums.RealNameTypeEnum;
 import com.zlebank.zplatform.business.individual.exception.AbstractIndividualBusinessException;
 import com.zlebank.zplatform.business.individual.exception.InvalidBindIdException;
 import com.zlebank.zplatform.business.individual.exception.PayPwdVerifyFailException;
@@ -28,25 +34,40 @@ import com.zlebank.zplatform.business.individual.exception.UnknowPayWayException
 import com.zlebank.zplatform.business.individual.exception.ValidateOrderException;
 import com.zlebank.zplatform.business.individual.service.OrderService;
 import com.zlebank.zplatform.business.individual.utils.Constants;
+import com.zlebank.zplatform.commons.bean.CardBin;
 import com.zlebank.zplatform.commons.bean.DefaultPageResult;
 import com.zlebank.zplatform.commons.bean.PagedResult;
+import com.zlebank.zplatform.commons.dao.CardBinDao;
+import com.zlebank.zplatform.commons.enums.BusinessCodeEnum;
 import com.zlebank.zplatform.commons.utils.DateUtil;
+import com.zlebank.zplatform.commons.utils.StringUtil;
 import com.zlebank.zplatform.member.bean.MemberBean;
+import com.zlebank.zplatform.member.bean.QuickpayCustBean;
+import com.zlebank.zplatform.member.bean.RealNameBean;
 import com.zlebank.zplatform.member.bean.enums.MemberType;
 import com.zlebank.zplatform.member.dao.CoopInstiDAO;
+import com.zlebank.zplatform.member.dao.MemberDAO;
 import com.zlebank.zplatform.member.exception.DataCheckFailedException;
+import com.zlebank.zplatform.member.pojo.PojoCoopInsti;
 import com.zlebank.zplatform.member.pojo.PojoMember;
+import com.zlebank.zplatform.member.service.MemberBankCardService;
 import com.zlebank.zplatform.member.service.MemberOperationService;
 import com.zlebank.zplatform.member.service.MemberService;
 import com.zlebank.zplatform.sms.service.ISMSService;
+import com.zlebank.zplatform.trade.bean.ResultBean;
+import com.zlebank.zplatform.trade.bean.enums.ChannelEnmu;
+import com.zlebank.zplatform.trade.bean.wap.WapCardBean;
+import com.zlebank.zplatform.trade.dao.ConfigInfoDAO;
 import com.zlebank.zplatform.trade.exception.AbstractTradeDescribeException;
 import com.zlebank.zplatform.trade.exception.BalanceNotEnoughException;
 import com.zlebank.zplatform.trade.exception.FailToGetAccountInfoException;
 import com.zlebank.zplatform.trade.exception.TradeException;
+import com.zlebank.zplatform.trade.model.ConfigInfoModel;
 import com.zlebank.zplatform.trade.model.QuickpayCustModel;
 import com.zlebank.zplatform.trade.model.TxnsOrderinfoModel;
 import com.zlebank.zplatform.trade.service.IGateWayService;
 import com.zlebank.zplatform.trade.service.IQuickpayCustService;
+import com.zlebank.zplatform.trade.utils.OrderNumber;
 
 @Service
 public class OrderServiceImpl implements OrderService {
@@ -67,7 +88,17 @@ public class OrderServiceImpl implements OrderService {
     private IQuickpayCustService quickpayCustService;
     @Autowired
     CoopInstiDAO coopInstiDAO;
-    
+    @Autowired
+	private MemberDAO memberDAO;
+    @Autowired
+	private MemberBankCardService memberBankCardService;
+    @Autowired
+    private CardBinDao cardBinDao;
+    @Autowired
+    private ConfigInfoDAO configInfoDAO;
+
+    @Autowired
+    private AccEntryService accEntryService;
 	/**
 	 *
 	 * @param memberId
@@ -199,7 +230,7 @@ public class OrderServiceImpl implements OrderService {
         try {
             MemberBean memberBean = new MemberBean();
             memberBean.setLoginName(member.getLoginName());
-            memberBean.setInstiCode(member.getInstiCode());
+            memberBean.setInstiId(member.getInstiId());
             memberBean.setPhone(member.getPhone());
             memberBean.setPaypwd(payPwd);
             // 校验支付密码
@@ -252,4 +283,116 @@ public class OrderServiceImpl implements OrderService {
         Order orderRet = queryOrder(member.getMemberId(),orderObj.getTn());
         return orderRet.getStatus();
     }
+    
+    
+    public OrderStatus anonymousPay(String order,String smsCode) throws AbstractTradeDescribeException,
+            AbstractIndividualBusinessException, TradeException {
+        Order orderObj = JSON.parseObject(order, Order.class);
+        String memberId = "999999999999999";
+        String bindId = orderObj.getBindId();
+        String cardNo = orderObj.getCardNo();
+        String phoneNo = "";
+        QuickpayCustModel card = null;
+        if(StringUtil.isNotEmpty(bindId)&&StringUtil.isNotEmpty(cardNo)){//绑卡标示和卡信息同时不为空时
+        	card = quickpayCustService.getCardByBindId(orderObj.getBindId());
+        	if (card == null) {
+                throw new InvalidBindIdException();
+            }
+        	//绑卡表中的卡信息和参数卡信息进行比较
+        	if(!card.getAccname().equals(orderObj.getAccNo())||!card.getCardno().equals(orderObj.getCardNo())||
+        			!card.getIdnum().equals(orderObj.getCertifId())||!card.getPhone().equals(orderObj.getPhoneNo())){
+        		throw new InvalidBindIdException();
+        	}
+        	phoneNo = card.getPhone();
+        }else if(StringUtil.isNotEmpty(bindId)){
+        	card = quickpayCustService.getCardByBindId(orderObj.getBindId());
+        	phoneNo = card.getPhone();
+        }else if(StringUtil.isNotEmpty(cardNo)){
+        	List<QuickpayCustModel> cardList = (List<QuickpayCustModel>) quickpayCustService.queryByHQL("from QuickpayCustModel where cardno=? and accname = ? and phone = ? and idnum = ? and relatememberno = ? and status = ?", new Object[]{cardNo,orderObj.getCustomerNm(),orderObj.getPhoneNo(),orderObj.getCertifId(),memberId,"00"});
+        	if(cardList.size()>0){
+        		orderObj.setBindId(cardList.get(0).getId()+"");
+        	}else{
+        		throw new InvalidBindIdException();
+        	}
+        }
+        // 校验手机短信验证码
+        /*if (smsService.verifyCode(phoneNo,orderObj.getTn(),smsCode)!=1) {
+            throw new SmsCodeVerifyFailException();
+        }*/
+        orderObj.setSmsCode(smsCode);
+        gateWayService.submitPay(JSON.toJSONString(orderObj));
+        Order orderRet = queryOrder(memberId,orderObj.getTn());
+        return orderRet.getStatus();
+    }
+    
+    /**
+     * 匿名支付 实名认证
+     * @param individualRealInfo 卡实名认证信息
+     * @param memberId 商户号
+     * @return
+     * @throws DataCheckFailedException
+     */
+    @Transactional(propagation=Propagation.REQUIRED,rollbackFor=Throwable.class)
+	public ResultBean anonymousRealName(IndividualRealInfo individualRealInfo,String memberId) {
+    	ResultBean resultBean = null;
+    	try {
+			PojoMember pm = memberDAO.getMemberByMemberId(memberId, null);
+			// 【实名认证】
+			PojoCoopInsti pojoCoopInsti = coopInstiDAO.get(pm.getInstiId());
+			WapCardBean cardBean = new WapCardBean(individualRealInfo.getCardNo(), individualRealInfo.getCardType(), individualRealInfo.getCustomerName(), 
+			        individualRealInfo.getCertifType(), individualRealInfo.getCertifNo(), individualRealInfo.getPhoneNo(), individualRealInfo.getCvn2(), 
+			        individualRealInfo.getExpired());
+			resultBean = gateWayService.bindingBankCard(pojoCoopInsti.getInstiCode(), memberId, cardBean);
+			if(resultBean.isResultBool()){
+			    //保存绑卡信息
+			    QuickpayCustBean quickpayCustBean = new QuickpayCustBean();
+			    quickpayCustBean.setCustomerno(pojoCoopInsti.getInstiCode());
+			    quickpayCustBean.setCardno(individualRealInfo.getCardNo());
+			    quickpayCustBean.setCardtype(individualRealInfo.getCardType());
+			    quickpayCustBean.setAccname(individualRealInfo.getCustomerName());
+			    quickpayCustBean.setPhone(individualRealInfo.getPhoneNo());
+			    quickpayCustBean.setIdtype(individualRealInfo.getCertifType());
+			    quickpayCustBean.setIdnum(individualRealInfo.getCertifNo());
+			    quickpayCustBean.setCvv2(individualRealInfo.getCvn2());
+			    quickpayCustBean.setValidtime(individualRealInfo.getExpired());
+			    quickpayCustBean.setRelatememberno("999999999999999");
+			    //新增设备ID支持匿名支付
+			    quickpayCustBean.setDevId(individualRealInfo.getDevId());
+			    CardBin cardBin = cardBinDao.getCard(individualRealInfo.getCardNo());
+			    quickpayCustBean.setBankcode(cardBin.getBankCode());
+			    quickpayCustBean.setBankname(cardBin.getBankName());
+			    long bindId = memberBankCardService.saveQuickPayCust(quickpayCustBean);
+			    
+			    boolean isCost = false;
+			    BusinessCodeEnum busiCode = isCost ? BusinessCodeEnum.REALNAME_AUTH_COST : BusinessCodeEnum.REALNAME_AUTH_NO_COST;
+			    //记录实名认证手续费
+			    ConfigInfoModel startTime = configInfoDAO.getConfigByParaName("REALNAME_AUTH_PRICE");
+			    // 记录分录流水
+			    TradeInfo tradeInfo = new TradeInfo();
+			    tradeInfo.setTxnseqno(OrderNumber.getInstance().generateTxnseqno("8000"));
+			    tradeInfo.setAmount(BigDecimal.ZERO);
+			    tradeInfo.setCommission(BigDecimal.ZERO);
+			    tradeInfo.setAmountD(BigDecimal.ZERO);
+			    tradeInfo.setAmountE(BigDecimal.ZERO);
+			    tradeInfo.setBusiCode(busiCode.getBusiCode());
+			    tradeInfo.setPayMemberId(memberId);
+			    tradeInfo.setCharge(new BigDecimal(startTime.getPara()));// 手续费
+			    //tradeInfo.setChannelId(ChannelEnmu.CMBCWITHHOLDING.getChnlcode());
+			    accEntryService.accEntryProcess(tradeInfo);
+			    resultBean = new ResultBean(bindId);
+			}
+		} catch (AccBussinessException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+			resultBean = new ResultBean(e.getCode(), e.getMessage());
+		} catch (AbstractBusiAcctException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+			resultBean = new ResultBean(e.getCode(), e.getMessage());
+		} catch (NumberFormatException e) {
+			// TODO Auto-generated catch block
+			resultBean = new ResultBean("", "数字格式化异常");
+		}
+		return resultBean;
+	}
 }

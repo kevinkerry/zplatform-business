@@ -15,7 +15,7 @@
 	<bean id="dataSource" class="com.mchange.v2.c3p0.ComboPooledDataSource"
 		destroy-method="close">
 		<property name="driverClass" value="oracle.jdbc.OracleDriver" />
-		<property name="jdbcUrl" value="jdbc:oracle:thin:@192.168.101.178:1521:oradb" />
+		<property name="jdbcUrl" value="jdbc:oracle:thin:@192.168.101.178:1521:primary" />
 		<property name="user" value="payservice" />
 		<property name="password" value="payservice" />
 		<property name="maxPoolSize" value="40" />
