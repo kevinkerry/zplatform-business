@@ -83,8 +83,8 @@ public class MemberCardServiceImpl implements MemberCardService{
 	 */
 	@Override
 	@Transactional(propagation=Propagation.REQUIRED,rollbackFor=Throwable.class)
-	public PagedResult<BankCardInfo> queryBankCard(String memberId,String cardType,int page,int pageSize) throws IllegalAccessException {
-		PagedResult<QuickpayCustBean> pagedResult = memberBankCardService.queryMemberBankCard(memberId, cardType, page, pageSize);
+	public PagedResult<BankCardInfo> queryBankCard(String memberId,String cardType,String devId,int page,int pageSize) throws IllegalAccessException {
+		PagedResult<QuickpayCustBean> pagedResult = memberBankCardService.queryMemberBankCard(memberId, cardType,devId, page, pageSize);
 		System.out.println(JSON.toJSON(pagedResult.getPagedResult()));
 		List<BankCardInfo> bankCardList = new ArrayList<BankCardInfo>();
 		for(QuickpayCustBean custBean :pagedResult.getPagedResult()){
@@ -103,6 +103,7 @@ public class MemberCardServiceImpl implements MemberCardService{
 			individualRealInfo.setPhoneNo(custBean.getPhone());
 			individualRealInfo.setCvn2(custBean.getCvv2());
 			individualRealInfo.setExpired(custBean.getValidtime());
+			individualRealInfo.setDevId(custBean.getDevId());
 			bankCardInfo.setBankCardInfo(individualRealInfo);
 			bankCardList.add(bankCardInfo);
 		}
@@ -164,8 +165,8 @@ public class MemberCardServiceImpl implements MemberCardService{
 		quickpayCustBean.setRelatememberno(individualMember.getMemberId());
 		quickpayCustBean.setBankcode(bankCardInfo.getBank().getBankCode());
 		quickpayCustBean.setBankname(bankCardInfo.getBank().getBankName());
-		memberBankCardService.saveQuickPayCust(quickpayCustBean);
-		return "";
+		long bindId=memberBankCardService.saveQuickPayCust(quickpayCustBean);
+		return bindId+"";
 	}
 
 	/**

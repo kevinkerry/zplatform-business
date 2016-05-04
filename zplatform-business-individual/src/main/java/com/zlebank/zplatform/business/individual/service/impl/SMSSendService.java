@@ -19,10 +19,18 @@ import org.springframework.stereotype.Service;
 
 import com.alibaba.fastjson.JSON;
 import com.alibaba.fastjson.JSONObject;
+import com.zlebank.zplatform.business.individual.bean.enums.RealNameTypeEnum;
 import com.zlebank.zplatform.business.individual.exception.InvalidBindIdException;
 import com.zlebank.zplatform.business.individual.service.SmsService;
+import com.zlebank.zplatform.commons.bean.CardBin;
+import com.zlebank.zplatform.commons.dao.CardBinDao;
+import com.zlebank.zplatform.member.bean.QuickpayCustBean;
+import com.zlebank.zplatform.member.pojo.PojoCoopInsti;
+import com.zlebank.zplatform.member.service.MemberBankCardService;
 import com.zlebank.zplatform.sms.pojo.enums.ModuleTypeEnum;
 import com.zlebank.zplatform.sms.service.ISMSService;
+import com.zlebank.zplatform.trade.bean.ResultBean;
+import com.zlebank.zplatform.trade.bean.wap.WapCardBean;
 import com.zlebank.zplatform.trade.exception.TradeException;
 import com.zlebank.zplatform.trade.model.QuickpayCustModel;
 import com.zlebank.zplatform.trade.service.IGateWayService;
@@ -45,6 +53,10 @@ public class SMSSendService implements SmsService{
 	private IGateWayService gateWayService;
 	@Autowired
     private IQuickpayCustService quickpayCustService;
+	@Autowired
+	private CardBinDao cardBinDao;
+	@Autowired
+	private MemberBankCardService memberBankCardService;
 	/**
 	 *
 	 * @param memberId
@@ -113,8 +125,11 @@ public class SMSSendService implements SmsService{
 				 phoneNo=jsonObject.get("phoneNo").toString();
 				 String cvn2=jsonObject.get("cvn2")+"";
 				 String expired=jsonObject.get("expired")+"";
+				 String bindFlag = jsonObject.get("bindFlag")+"";
+				 String instiCode = jsonObject.get("instiCode")+"";
+				 String devId = jsonObject.get("devId")+"";
 				 List<QuickpayCustModel> cardList = (List<QuickpayCustModel>) quickpayCustService.queryByHQL("from QuickpayCustModel where cardno=? and accname = ? and phone = ? and idnum = ? and relatememberno = ? and status = ?", new Object[]{cardNo,customerNm,phoneNo,certifId,"999999999999999","00"});
-	        	if(cardList.size()>0){
+	        	if(cardList.size()>0){//已绑卡
 	        		Map<String, Object> resultMap = new HashMap<String, Object>();
 	        		resultMap.put("tn", tn_);
 	        		resultMap.put("bindId", cardList.get(0).getId());
@@ -126,7 +141,46 @@ public class SMSSendService implements SmsService{
 						return false;
 					}
 	        	}else{
-	        		return false;
+	        		if("1".equals(bindFlag)){//需要进行绑卡签约
+	        	       
+	        	        WapCardBean cardBean = new WapCardBean(cardNo,cardType , customerNm,certifTp, certifId, phoneNo, cvn2, expired);
+	        	        ResultBean resultBean = gateWayService.bindingBankCard(instiCode, "999999999999999", cardBean);
+	        	        if(resultBean.isResultBool()){
+	        	        	//保存绑卡信息
+	        	            QuickpayCustBean quickpayCustBean = new QuickpayCustBean();
+	        	            quickpayCustBean.setCustomerno(instiCode);
+	        	            quickpayCustBean.setCardno(cardNo);
+	        	            quickpayCustBean.setCardtype(cardType);
+	        	            quickpayCustBean.setAccname(customerNm);
+	        	            quickpayCustBean.setPhone(phoneNo);
+	        	            quickpayCustBean.setIdtype(certifTp);
+	        	            quickpayCustBean.setIdnum(certifId);
+	        	            quickpayCustBean.setCvv2(cvn2);
+	        	            quickpayCustBean.setValidtime(expired);
+	        	            quickpayCustBean.setRelatememberno("999999999999999");
+	        	            //新增设备ID支持匿名支付
+	        	            quickpayCustBean.setDevId(devId);
+	        	            CardBin cardBin = cardBinDao.getCard(cardNo);
+	        	            quickpayCustBean.setBankcode(cardBin.getBankCode());
+	        	            quickpayCustBean.setBankname(cardBin.getBankName());
+	        	            long bindId = memberBankCardService.saveQuickPayCust(quickpayCustBean);
+	        	            
+	        	            Map<String, Object> resultMap = new HashMap<String, Object>();
+	    	        		resultMap.put("tn", tn_);
+	    	        		resultMap.put("bindId", bindId+"");
+	    	        		try {
+	    						gateWayService.sendSMSMessage(JSON.toJSONString(resultMap));
+	    						return true;
+	    					} catch (TradeException e) {
+	    						e.printStackTrace();
+	    						return false;
+	    					}
+	        	            
+	        	        }
+	        		}else{
+	        			return false;
+	        		}
+	        		
 	        	}
 			default:
 				

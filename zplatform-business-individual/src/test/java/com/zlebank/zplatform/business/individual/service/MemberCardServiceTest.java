@@ -35,13 +35,13 @@ import com.zlebank.zplatform.sms.pojo.enums.ModuleTypeEnum;
  * @since
  */
 public class MemberCardServiceTest extends ApplicationContextAbled {
-
+	@Test
 	public void test_queryBankCard() {
 		MemberCardService memberCardService = (MemberCardService) getContext()
 				.getBean("memberCardService");
 		try {
 			PagedResult<BankCardInfo> result = memberCardService.queryBankCard(
-					"100000000000572", "1", 0, 10);
+					"100000000000572", "1","1234", 0, 10);
 			System.out.println("result: "
 					+ JSON.toJSONString(result.getPagedResult()));
 		} catch (IllegalAccessException e) {
@@ -50,7 +50,7 @@ public class MemberCardServiceTest extends ApplicationContextAbled {
 		}
 	}
 
-	 @Test
+	 
 	public void test_queryCardBin() {
 		MemberCardService memberCardService = (MemberCardService) getContext()
 				.getBean("memberCardService");
@@ -112,5 +112,7 @@ public class MemberCardServiceTest extends ApplicationContextAbled {
 		PagedResult<SupportedBankCardType> result=  memberCardService.queryBank(0, 10);
 		System.out.println(JSON.toJSONString(result));
 	}
+	
+	
 
 }

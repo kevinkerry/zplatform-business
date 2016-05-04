@@ -204,7 +204,7 @@ public class MemberInfoServiceImpl implements MemberInfoService {
             }
           // 检查输入银行卡信息
           if(realNameTypeEnum != RealNameTypeEnum.CARDREALNAME){// 发送验证码时不解绑
-              PagedResult<QuickpayCustBean> queryMemberBankCard = memberBankCardService.queryMemberBankCard(memberId, "0", 0, 100);
+              PagedResult<QuickpayCustBean> queryMemberBankCard = memberBankCardService.queryMemberBankCard(memberId, "0", individualRealInfo.getDevId(),0, 100);
               try {
                     List<QuickpayCustBean> pagedResult = queryMemberBankCard.getPagedResult();
                     QuickpayCustBean quickpayCustBean = new QuickpayCustBean();

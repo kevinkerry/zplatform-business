@@ -23,7 +23,7 @@ public interface MemberCardService {
 	 * @return
 	 * @throws IllegalAccessException 
 	 */
-	public PagedResult<BankCardInfo> queryBankCard(String memberId,String cardType,int page,int pageSize) throws IllegalAccessException;
+	public PagedResult<BankCardInfo> queryBankCard(String memberId,String cardType,String devId,int page,int pageSize) throws IllegalAccessException;
 	/**
 	 * 查询银行卡bin信息 Query bank card info by bank card no.
 	 * @param bankCardNo 银行卡号
