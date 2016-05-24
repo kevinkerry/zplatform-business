@@ -20,6 +20,7 @@ import com.zlebank.zplatform.acc.exception.AbstractBusiAcctException;
 import com.zlebank.zplatform.acc.exception.AccBussinessException;
 import com.zlebank.zplatform.acc.pojo.Money;
 import com.zlebank.zplatform.acc.service.AccEntryService;
+import com.zlebank.zplatform.acc.service.entry.EntryEvent;
 import com.zlebank.zplatform.business.individual.bean.IndividualRealInfo;
 import com.zlebank.zplatform.business.individual.bean.Order;
 import com.zlebank.zplatform.business.individual.bean.enums.OrderStatus;
@@ -64,9 +65,11 @@ import com.zlebank.zplatform.trade.exception.FailToGetAccountInfoException;
 import com.zlebank.zplatform.trade.exception.TradeException;
 import com.zlebank.zplatform.trade.model.ConfigInfoModel;
 import com.zlebank.zplatform.trade.model.QuickpayCustModel;
+import com.zlebank.zplatform.trade.model.TxnsLogModel;
 import com.zlebank.zplatform.trade.model.TxnsOrderinfoModel;
 import com.zlebank.zplatform.trade.service.IGateWayService;
 import com.zlebank.zplatform.trade.service.IQuickpayCustService;
+import com.zlebank.zplatform.trade.service.ITxnsLogService;
 import com.zlebank.zplatform.trade.utils.OrderNumber;
 
 @Service
@@ -99,6 +102,8 @@ public class OrderServiceImpl implements OrderService {
 
     @Autowired
     private AccEntryService accEntryService;
+    @Autowired
+    private ITxnsLogService txnsLogService;
 	/**
 	 *
 	 * @param memberId
@@ -139,6 +144,7 @@ public class OrderServiceImpl implements OrderService {
 	@Transactional(propagation=Propagation.REQUIRED,rollbackFor=Throwable.class)
 	public Order queryOrder(String memberId, String tn) {
 		TxnsOrderinfoModel orderinfoModel = gateWayService.getOrderinfoByTN(tn);
+		TxnsLogModel txnsLog = txnsLogService.getTxnsLogByTxnseqno(orderinfoModel.getRelatetradetxn());
 		Order order = new Order();
 		order.setMerId(orderinfoModel.getFirmemberno());
 		order.setMerName(orderinfoModel.getFirmembername());
@@ -150,6 +156,7 @@ public class OrderServiceImpl implements OrderService {
 		order.setOrderDesc(orderinfoModel.getOrderdesc());
 		order.setCurrencyCode(orderinfoModel.getCurrencycode());
 		order.setTn(orderinfoModel.getTn());
+		order.setBankCode(txnsLog.getCardinstino());
 		return order;
 	}
 
@@ -193,9 +200,17 @@ public class OrderServiceImpl implements OrderService {
         order.setRiskRateInfo("merUserId=" + order.getMemberId()
                 + "&commodityQty=0&commodityUnitPrice=0&");
         // 前台通知地址，非空
-        order.setFrontUrl(Constants.WALLET_MISSING_FIELD_STR);
+        if(StringUtil.isEmpty(order.getFrontUrl())){
+        	order.setFrontUrl(Constants.WALLET_MISSING_FIELD_STR);
+        }else{
+        	order.setFrontUrl(order.getFrontUrl());
+        }
         // 后台通知地址，非空
-        order.setBackUrl(Constants.WALLET_MISSING_FIELD_STR);
+        if(StringUtil.isEmpty(order.getBackUrl())){
+        	 order.setBackUrl(Constants.WALLET_MISSING_FIELD_STR);
+        }else{
+            order.setBackUrl(order.getBackUrl());
+        }
         // 证书ID，非空
         order.setCertId(String.valueOf(Constants.WALLET_MISSING_FIELD_INT));
         return order;
@@ -266,7 +281,7 @@ public class OrderServiceImpl implements OrderService {
                 }
 
                 gateWayService.accountPay(order);
-
+                updateAnonOrderToMemberOrder( orderObj);
                 break;
             case QUICK :
                 QuickpayCustModel card = quickpayCustService
@@ -275,6 +290,7 @@ public class OrderServiceImpl implements OrderService {
                     throw new InvalidBindIdException();
                 }
                 gateWayService.submitPay(order);
+                updateAnonOrderToMemberOrder( orderObj);
                 break;
             default :
                 throw new UnknowPayWayException();
@@ -282,6 +298,25 @@ public class OrderServiceImpl implements OrderService {
 
         Order orderRet = queryOrder(member.getMemberId(),orderObj.getTn());
         return orderRet.getStatus();
+    }
+    
+    /**
+     * 更新匿名订单但是登陆支付的订单信息
+     * @param order
+     */
+    @Transactional(propagation=Propagation.REQUIRED,rollbackFor=Throwable.class)
+    private void updateAnonOrderToMemberOrder(Order order){
+    	TxnsOrderinfoModel orderinfo = gateWayService.getOrderinfoByTN(order.getTn());
+    	TxnsLogModel txnsLog = txnsLogService.getTxnsLogByTxnseqno(orderinfo.getRelatetradetxn());
+    	String memberId = order.getMemberId();
+    	String old_order_member = txnsLog.getAccmemberid();
+    	if("999999999999999".equals(old_order_member)){
+    		txnsLog.setAccmemberid(memberId);
+    		txnsLogService.update(txnsLog);
+    	}
+    	
+    	
+    	
     }
     
     
@@ -377,10 +412,15 @@ public class OrderServiceImpl implements OrderService {
 			    tradeInfo.setBusiCode(busiCode.getBusiCode());
 			    tradeInfo.setPayMemberId(memberId);
 			    tradeInfo.setCharge(new BigDecimal(startTime.getPara()));// 手续费
-			    //tradeInfo.setChannelId(ChannelEnmu.CMBCWITHHOLDING.getChnlcode());
-			    accEntryService.accEntryProcess(tradeInfo);
+			    
+			    tradeInfo.setChannelId(ChannelEnmu.CMBCWITHHOLDING.getChnlcode());
+			    tradeInfo.setCoopInstCode(pojoCoopInsti.getInstiCode());
+			    accEntryService.accEntryProcess(tradeInfo,EntryEvent.TRADE_SUCCESS);
 			    resultBean = new ResultBean(bindId);
 			}
+		} catch (NumberFormatException e) {
+			// TODO Auto-generated catch block
+			resultBean = new ResultBean("", "数字格式化异常");
 		} catch (AccBussinessException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
@@ -389,10 +429,37 @@ public class OrderServiceImpl implements OrderService {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
 			resultBean = new ResultBean(e.getCode(), e.getMessage());
-		} catch (NumberFormatException e) {
-			// TODO Auto-generated catch block
-			resultBean = new ResultBean("", "数字格式化异常");
 		}
 		return resultBean;
 	}
+    
+    @Transactional(isolation = Isolation.READ_COMMITTED, propagation = Propagation.REQUIRED)
+    public String createRefundOrder(Order order) throws ValidateOrderException,
+    TradeException, AbstractIndividualBusinessException{
+    	
+    	String tn = null;
+        fullNonWalletData(order);
+
+        Map<String, String> validateResult = orderValidator
+                .validateOrder(order);
+        String retCode = validateResult.get(IOrderValidator.RET_CODE);
+        if (retCode != null
+                && !retCode.equals(IOrderValidator.RET_CODE_SUCCESS)) {
+            throw new ValidateOrderException(
+                    validateResult.get(IOrderValidator.RET_CODE),
+                    validateResult.get(IOrderValidator.RET_MESSAGE));
+        }
+        try {
+            tn = gateWayService.refund(JSON.toJSONString(order));
+        } catch (TradeException e) {
+            e.printStackTrace();
+        } catch (Exception e) {
+            e.printStackTrace();
+            throw new UnCheckedSystemException();
+        }
+        if (tn == null || tn.equals("")) {
+            throw new UnCheckedSystemException();
+        }
+        return tn;
+    }
 }

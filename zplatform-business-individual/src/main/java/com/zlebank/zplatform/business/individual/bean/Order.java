@@ -31,6 +31,10 @@ public class Order extends OrderBean implements Bean{
     private String cvn2;
     private String expired;
     private String smsCode;
+    private String bankCode;
+    
+    /**原交易订单号**/
+    private String origOrderId;
     
     public PayWay getPayWay() {
         return payWay;
@@ -222,6 +226,34 @@ public class Order extends OrderBean implements Bean{
 	 */
 	public void setSmsCode(String smsCode) {
 		this.smsCode = smsCode;
+	}
+
+	/**
+	 * @return the origOrderId
+	 */
+	public String getOrigOrderId() {
+		return origOrderId;
+	}
+
+	/**
+	 * @param origOrderId the origOrderId to set
+	 */
+	public void setOrigOrderId(String origOrderId) {
+		this.origOrderId = origOrderId;
+	}
+
+	/**
+	 * @return the bankCode
+	 */
+	public String getBankCode() {
+		return bankCode;
+	}
+
+	/**
+	 * @param bankCode the bankCode to set
+	 */
+	public void setBankCode(String bankCode) {
+		this.bankCode = bankCode;
 	}
 	
 	

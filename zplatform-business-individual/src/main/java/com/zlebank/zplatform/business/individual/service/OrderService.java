@@ -77,4 +77,15 @@ public interface OrderService {
      * @return
      */
     public ResultBean anonymousRealName(IndividualRealInfo individualRealInfo,String memberId);
+    
+    /**
+     * 创建退款交易订单
+     * @param order
+     * @return
+     * @throws ValidateOrderException
+     * @throws TradeException
+     * @throws AbstractIndividualBusinessException
+     */
+    public String createRefundOrder(Order order) throws ValidateOrderException,
+    TradeException, AbstractIndividualBusinessException;
 }

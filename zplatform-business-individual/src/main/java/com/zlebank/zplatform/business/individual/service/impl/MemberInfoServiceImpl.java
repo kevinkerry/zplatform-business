@@ -95,6 +95,7 @@ public class MemberInfoServiceImpl implements MemberInfoService {
 		// 机构号转换为机构ID
 		PojoCoopInsti coopInsti = coopInstiDAO.getByInstiCode(registerMemberInfo.getInstiCode());
 		registerMemberInfo.setInstiCode(coopInsti.getInstiCode());
+		registerMemberInfo.setInstiId(coopInsti.getId());
 		String memberId = memberOperationService.registMember(
 				MemberType.INDIVIDUAL, registerMemberInfo);
 		return memberId;
