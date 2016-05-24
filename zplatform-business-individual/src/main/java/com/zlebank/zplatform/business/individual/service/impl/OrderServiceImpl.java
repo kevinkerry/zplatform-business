@@ -311,8 +311,12 @@ public class OrderServiceImpl implements OrderService {
     	String memberId = order.getMemberId();
     	String old_order_member = txnsLog.getAccmemberid();
     	if("999999999999999".equals(old_order_member)){
+    		//更新交易流水
     		txnsLog.setAccmemberid(memberId);
     		txnsLogService.update(txnsLog);
+    		//更新交易订单
+    		orderinfo.setMemberid(memberId);
+    		gateWayService.update(orderinfo);
     	}
     	
     	
