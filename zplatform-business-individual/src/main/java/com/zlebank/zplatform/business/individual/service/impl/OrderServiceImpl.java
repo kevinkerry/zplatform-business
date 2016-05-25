@@ -25,7 +25,6 @@ import com.zlebank.zplatform.business.individual.bean.IndividualRealInfo;
 import com.zlebank.zplatform.business.individual.bean.Order;
 import com.zlebank.zplatform.business.individual.bean.enums.OrderStatus;
 import com.zlebank.zplatform.business.individual.bean.enums.PayWay;
-import com.zlebank.zplatform.business.individual.bean.enums.RealNameTypeEnum;
 import com.zlebank.zplatform.business.individual.exception.AbstractIndividualBusinessException;
 import com.zlebank.zplatform.business.individual.exception.InvalidBindIdException;
 import com.zlebank.zplatform.business.individual.exception.PayPwdVerifyFailException;
@@ -44,7 +43,6 @@ import com.zlebank.zplatform.commons.utils.DateUtil;
 import com.zlebank.zplatform.commons.utils.StringUtil;
 import com.zlebank.zplatform.member.bean.MemberBean;
 import com.zlebank.zplatform.member.bean.QuickpayCustBean;
-import com.zlebank.zplatform.member.bean.RealNameBean;
 import com.zlebank.zplatform.member.bean.enums.MemberType;
 import com.zlebank.zplatform.member.dao.CoopInstiDAO;
 import com.zlebank.zplatform.member.dao.MemberDAO;
@@ -403,7 +401,7 @@ public class OrderServiceImpl implements OrderService {
 			    long bindId = memberBankCardService.saveQuickPayCust(quickpayCustBean);
 			    
 			    boolean isCost = false;
-			    BusinessCodeEnum busiCode = isCost ? BusinessCodeEnum.REALNAME_AUTH_COST : BusinessCodeEnum.REALNAME_AUTH_NO_COST;
+			    BusinessCodeEnum busiCode = BusinessCodeEnum.REALNAME_AUTH_COST;
 			    //记录实名认证手续费
 			    ConfigInfoModel startTime = configInfoDAO.getConfigByParaName("REALNAME_AUTH_PRICE");
 			    // 记录分录流水
