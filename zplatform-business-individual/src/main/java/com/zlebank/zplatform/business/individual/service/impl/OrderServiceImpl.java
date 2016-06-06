@@ -407,7 +407,7 @@ public class OrderServiceImpl implements OrderService {
 			    long bindId = memberBankCardService.saveQuickPayCust(quickpayCustBean);
 			    
 			    boolean isCost = false;
-			    BusinessCodeEnum busiCode = isCost ? BusinessCodeEnum.REALNAME_AUTH_COST : BusinessCodeEnum.REALNAME_AUTH_COST;
+			    BusinessCodeEnum busiCode = BusinessCodeEnum.REALNAME_AUTH_COST;
 			    //记录实名认证手续费
 			    ConfigInfoModel startTime = configInfoDAO.getConfigByParaName("REALNAME_AUTH_PRICE");
 			    // 记录分录流水

@@ -20,7 +20,6 @@ import org.springframework.transaction.annotation.Transactional;
 import com.zlebank.zplatform.business.individual.bean.IndividualRealInfo;
 import com.zlebank.zplatform.business.individual.bean.Member;
 import com.zlebank.zplatform.business.individual.bean.enums.RealNameTypeEnum;
-import com.zlebank.zplatform.business.individual.exception.UnbindQuickPayCustException;
 import com.zlebank.zplatform.business.individual.service.MemberInfoService;
 import com.zlebank.zplatform.commons.bean.CardBin;
 import com.zlebank.zplatform.commons.bean.PagedResult;
@@ -339,12 +338,13 @@ public class MemberInfoServiceImpl implements MemberInfoService {
 		member.setInstiId(pm.getInstiId());
 		member.setPhone(pm.getPhone());
 		member.setPaypwd(orgPayPwd);
+
 		if(StringUtil.isEmpty(orgPayPwd)){
 			return memberOperationService.resetPayPwd(MemberType.INDIVIDUAL, member, payPwd, false);	
 		} else {
 			return memberOperationService.resetPayPwd(MemberType.INDIVIDUAL, member, payPwd, true);
 		}
-		
+
 	}
 
 	/**
