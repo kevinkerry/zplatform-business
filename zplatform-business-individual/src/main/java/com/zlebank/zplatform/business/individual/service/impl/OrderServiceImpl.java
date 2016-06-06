@@ -6,6 +6,8 @@ import java.util.Date;
 import java.util.List;
 import java.util.Map;
 
+import net.sf.json.JSONObject;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Isolation;
@@ -25,7 +27,6 @@ import com.zlebank.zplatform.business.individual.bean.IndividualRealInfo;
 import com.zlebank.zplatform.business.individual.bean.Order;
 import com.zlebank.zplatform.business.individual.bean.enums.OrderStatus;
 import com.zlebank.zplatform.business.individual.bean.enums.PayWay;
-import com.zlebank.zplatform.business.individual.bean.enums.RealNameTypeEnum;
 import com.zlebank.zplatform.business.individual.exception.AbstractIndividualBusinessException;
 import com.zlebank.zplatform.business.individual.exception.InvalidBindIdException;
 import com.zlebank.zplatform.business.individual.exception.PayPwdVerifyFailException;
@@ -44,7 +45,6 @@ import com.zlebank.zplatform.commons.utils.DateUtil;
 import com.zlebank.zplatform.commons.utils.StringUtil;
 import com.zlebank.zplatform.member.bean.MemberBean;
 import com.zlebank.zplatform.member.bean.QuickpayCustBean;
-import com.zlebank.zplatform.member.bean.RealNameBean;
 import com.zlebank.zplatform.member.bean.enums.MemberType;
 import com.zlebank.zplatform.member.dao.CoopInstiDAO;
 import com.zlebank.zplatform.member.dao.MemberDAO;
@@ -71,6 +71,7 @@ import com.zlebank.zplatform.trade.service.IGateWayService;
 import com.zlebank.zplatform.trade.service.IQuickpayCustService;
 import com.zlebank.zplatform.trade.service.ITxnsLogService;
 import com.zlebank.zplatform.trade.utils.OrderNumber;
+import com.zlebank.zplatform.wechat.service.WeChatService;
 
 @Service
 public class OrderServiceImpl implements OrderService {
@@ -104,6 +105,9 @@ public class OrderServiceImpl implements OrderService {
     private AccEntryService accEntryService;
     @Autowired
     private ITxnsLogService txnsLogService;
+    @Autowired
+    private WeChatService weChatService;
+    
 	/**
 	 *
 	 * @param memberId
@@ -403,7 +407,7 @@ public class OrderServiceImpl implements OrderService {
 			    long bindId = memberBankCardService.saveQuickPayCust(quickpayCustBean);
 			    
 			    boolean isCost = false;
-			    BusinessCodeEnum busiCode = isCost ? BusinessCodeEnum.REALNAME_AUTH_COST : BusinessCodeEnum.REALNAME_AUTH_NO_COST;
+			    BusinessCodeEnum busiCode = isCost ? BusinessCodeEnum.REALNAME_AUTH_COST : BusinessCodeEnum.REALNAME_AUTH_COST;
 			    //记录实名认证手续费
 			    ConfigInfoModel startTime = configInfoDAO.getConfigByParaName("REALNAME_AUTH_PRICE");
 			    // 记录分录流水
@@ -465,5 +469,13 @@ public class OrderServiceImpl implements OrderService {
             throw new UnCheckedSystemException();
         }
         return tn;
+    }
+    
+    public JSONObject createWeChatOrder(String tn){
+    	return weChatService.creatOrder(tn);
+    }
+    
+    public Long getRefundFee(String txnseqno,String merchNo,String txnAmt,String busicode){
+    	return gateWayService.getRefundFee(txnseqno, merchNo, txnAmt, busicode);
     }
 }

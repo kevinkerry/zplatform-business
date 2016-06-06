@@ -339,7 +339,12 @@ public class MemberInfoServiceImpl implements MemberInfoService {
 		member.setInstiId(pm.getInstiId());
 		member.setPhone(pm.getPhone());
 		member.setPaypwd(orgPayPwd);
-		return memberOperationService.resetPayPwd(MemberType.INDIVIDUAL, member, payPwd, true);
+		if(StringUtil.isEmpty(orgPayPwd)){
+			return memberOperationService.resetPayPwd(MemberType.INDIVIDUAL, member, payPwd, false);	
+		} else {
+			return memberOperationService.resetPayPwd(MemberType.INDIVIDUAL, member, payPwd, true);
+		}
+		
 	}
 
 	/**

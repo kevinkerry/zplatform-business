@@ -2,6 +2,8 @@ package com.zlebank.zplatform.business.individual.service;
 
 import java.util.Date;
 
+import net.sf.json.JSONObject;
+
 import com.zlebank.zplatform.business.individual.bean.IndividualRealInfo;
 import com.zlebank.zplatform.business.individual.bean.Order;
 import com.zlebank.zplatform.business.individual.bean.enums.OrderStatus;
@@ -88,4 +90,21 @@ public interface OrderService {
      */
     public String createRefundOrder(Order order) throws ValidateOrderException,
     TradeException, AbstractIndividualBusinessException;
+    
+    /**
+     * 创建微信订单
+     * @param tn
+     * @return
+     */
+    public JSONObject createWeChatOrder(String tn);
+    
+    /**
+     * 获取退款手续费
+     * @param txnseqno
+     * @param merchNo
+     * @param txnAmt
+     * @param busicode
+     * @return
+     */
+    public Long getRefundFee(String txnseqno,String merchNo,String txnAmt,String busicode);
 }

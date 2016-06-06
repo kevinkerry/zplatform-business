@@ -17,6 +17,7 @@ public enum OrderStatus {
      */
     PAYFAILED("03"),
     
+    FAILURE("04"),
     UNKNOW("");
     private String code;
     private OrderStatus(String code) {
