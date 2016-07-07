@@ -26,7 +26,7 @@ import com.zlebank.zplatform.trade.exception.TradeException;
 public class OrderServiceTest extends ApplicationContextAbled {
     
     
-    @Ignore
+    @Test
     public void testCreateOrder() {
         OrderService orderService = (OrderService) getContext().getBean(
                 "orderServiceImpl");
@@ -35,7 +35,7 @@ public class OrderServiceTest extends ApplicationContextAbled {
         try {
             // test recharge order
             orderGenerator = new RechargeOrderGenerator();
-            Order order = orderGenerator.generate(false);
+            Order order = orderGenerator.generate(true);
             tn = orderService.createOrder(order);
             System.out.println(tn);
             Assert.assertNotNull(tn);
@@ -124,7 +124,7 @@ public class OrderServiceTest extends ApplicationContextAbled {
     
     public void test_queryOrder(){
 		OrderService orderService = (OrderService) getContext().getBean("orderServiceImpl");
-		Order order = orderService.queryOrder("100000000000564", "dGVWwxSCU68267726142181273");
+		Order order = orderService.queryOrder("100000000000576", "160608001400052051");
 		System.out.println(JSON.toJSONString(order));
 	}
     
@@ -142,8 +142,8 @@ public class OrderServiceTest extends ApplicationContextAbled {
 		System.out.println(JSON.toJSONString(orderList));
 	}
 	
-	@Test
-	@Transactional
+	/*@Test
+	@Transactional*/
 	public void test_anonymousRealName(){
 		OrderService orderService = (OrderService) getContext().getBean("orderServiceImpl");
 		Member individualMember = new Member();

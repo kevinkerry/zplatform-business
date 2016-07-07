@@ -152,7 +152,7 @@ public class MemberCardServiceImpl implements MemberCardService{
         if (!realName.equals(cardName)) 
             throw new RuntimeException("绑卡姓名和实名信息不一致");
 		QuickpayCustBean quickpayCustBean = new QuickpayCustBean();
-		 PojoCoopInsti pojoCoopInsti = coopInstiDAO.getByInstiCode(individualMember.getInstiCode());
+		PojoCoopInsti pojoCoopInsti = coopInstiDAO.getByInstiCode(individualMember.getInstiCode());
 		quickpayCustBean.setCustomerno(pojoCoopInsti.getInstiCode());
 		quickpayCustBean.setCardno(bankCardInfo.getBankCardInfo().getCardNo());
 		quickpayCustBean.setCardtype(bankCardInfo.getBankCardInfo().getCardType());

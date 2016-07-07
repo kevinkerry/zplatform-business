@@ -8,6 +8,8 @@ import java.util.Map;
 
 import net.sf.json.JSONObject;
 
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Isolation;
@@ -20,6 +22,7 @@ import com.zlebank.zplatform.acc.bean.TradeInfo;
 import com.zlebank.zplatform.acc.bean.enums.Usage;
 import com.zlebank.zplatform.acc.exception.AbstractBusiAcctException;
 import com.zlebank.zplatform.acc.exception.AccBussinessException;
+import com.zlebank.zplatform.acc.exception.IllegalEntryRequestException;
 import com.zlebank.zplatform.acc.pojo.Money;
 import com.zlebank.zplatform.acc.service.AccEntryService;
 import com.zlebank.zplatform.acc.service.entry.EntryEvent;
@@ -55,14 +58,19 @@ import com.zlebank.zplatform.member.service.MemberBankCardService;
 import com.zlebank.zplatform.member.service.MemberOperationService;
 import com.zlebank.zplatform.member.service.MemberService;
 import com.zlebank.zplatform.sms.service.ISMSService;
+import com.zlebank.zplatform.trade.adapter.quickpay.IQuickPayTrade;
+import com.zlebank.zplatform.trade.bean.ReaPayResultBean;
 import com.zlebank.zplatform.trade.bean.ResultBean;
+import com.zlebank.zplatform.trade.bean.TradeBean;
 import com.zlebank.zplatform.trade.bean.enums.ChannelEnmu;
 import com.zlebank.zplatform.trade.bean.wap.WapCardBean;
 import com.zlebank.zplatform.trade.dao.ConfigInfoDAO;
+import com.zlebank.zplatform.trade.dao.ITxnsOrderinfoDAO;
 import com.zlebank.zplatform.trade.exception.AbstractTradeDescribeException;
 import com.zlebank.zplatform.trade.exception.BalanceNotEnoughException;
 import com.zlebank.zplatform.trade.exception.FailToGetAccountInfoException;
 import com.zlebank.zplatform.trade.exception.TradeException;
+import com.zlebank.zplatform.trade.factory.TradeAdapterFactory;
 import com.zlebank.zplatform.trade.model.ConfigInfoModel;
 import com.zlebank.zplatform.trade.model.QuickpayCustModel;
 import com.zlebank.zplatform.trade.model.TxnsLogModel;
@@ -70,12 +78,15 @@ import com.zlebank.zplatform.trade.model.TxnsOrderinfoModel;
 import com.zlebank.zplatform.trade.service.IGateWayService;
 import com.zlebank.zplatform.trade.service.IQuickpayCustService;
 import com.zlebank.zplatform.trade.service.ITxnsLogService;
+import com.zlebank.zplatform.trade.service.ITxnsQuickpayService;
+import com.zlebank.zplatform.trade.utils.ConsUtil;
 import com.zlebank.zplatform.trade.utils.OrderNumber;
 import com.zlebank.zplatform.wechat.service.WeChatService;
 
 @Service
 public class OrderServiceImpl implements OrderService {
 
+	private static final Log log = LogFactory.getLog(OrderServiceImpl.class);
     @Autowired
     private IGateWayService gateWayService;
     @Autowired
@@ -107,6 +118,10 @@ public class OrderServiceImpl implements OrderService {
     private ITxnsLogService txnsLogService;
     @Autowired
     private WeChatService weChatService;
+    @Autowired
+    private ITxnsQuickpayService txnsQuickpayService;
+    @Autowired
+    private ITxnsOrderinfoDAO txnsOrderinfoDAO;
     
 	/**
 	 *
@@ -161,6 +176,71 @@ public class OrderServiceImpl implements OrderService {
 		order.setCurrencyCode(orderinfoModel.getCurrencycode());
 		order.setTn(orderinfoModel.getTn());
 		order.setBankCode(txnsLog.getCardinstino());
+		
+		if(ChannelEnmu.REAPAY==ChannelEnmu.fromValue(txnsLog.getPayinst())){//支付渠道为融宝时
+			if(OrderStatus.fromValue(orderinfoModel.getStatus())==OrderStatus.PAYING){//订单状态为正在支付
+				//调用融宝查询方法
+				IQuickPayTrade quickPayTrade = null;
+		        try {
+		            quickPayTrade = TradeAdapterFactory.getInstance()
+		                    .getQuickPayTrade(ChannelEnmu.REAPAY.getChnlcode());
+		        } catch (TradeException e) {
+		            // TODO Auto-generated catch block
+		            e.printStackTrace();
+		        } catch (ClassNotFoundException e) {
+		            // TODO Auto-generated catch block
+		            e.printStackTrace();
+		        } catch (InstantiationException e) {
+		            // TODO Auto-generated catch block
+		            e.printStackTrace();
+		        } catch (IllegalAccessException e) {
+		            // TODO Auto-generated catch block
+		            e.printStackTrace();
+		        }
+		        String reapayOrderNo = txnsQuickpayService.getReapayOrderNo(orderinfoModel.getRelatetradetxn());
+		        TradeBean trade = new TradeBean();
+		        trade.setReaPayOrderNo(reapayOrderNo);
+		        ResultBean queryResultBean = null;
+		        ReaPayResultBean payResult = null;
+		        for (int i = 0; i < 5; i++) {
+		        	txnsLog = txnsLogService.getTxnsLogByTxnseqno(orderinfoModel.getRelatetradetxn());
+		        	if("0000".equals(txnsLog.getPayretcode())||"3006".equals(txnsLog.getPayretcode())||"3053".equals(txnsLog.getPayretcode())||"3054".equals(txnsLog.getPayretcode())||
+	                        "3056".equals(txnsLog.getPayretcode())||"3083".equals(txnsLog.getPayretcode())||"3081".equals(txnsLog.getPayretcode())){
+	                    //返回这些信息时，表示融宝已经接受到交易请求，但是没有同步处理，等待异步通知
+		        		
+		        		try {
+							Thread.sleep(1000);
+						} catch (InterruptedException e) {
+							// TODO Auto-generated catch block
+							e.printStackTrace();
+						}
+		                queryResultBean = quickPayTrade.queryTrade(trade);
+		                payResult = (ReaPayResultBean) queryResultBean.getResultObj();
+		                if ("completed".equalsIgnoreCase(payResult.getStatus())) {//交易完成
+		                	order.setStatus(OrderStatus.SUCCESS);
+		                    break;
+		                }
+		                if ("failed".equalsIgnoreCase(payResult.getStatus())) {//交易失败
+		                	order.setStatus(OrderStatus.PAYFAILED);
+		                    break;
+		                }
+		                if ("wait".equalsIgnoreCase(payResult.getStatus())) {//等待支付，也就是未支付，比如验证码错误，或者交易金额超限等错误，此时状态为支付失败
+		                	order.setStatus(OrderStatus.PAYFAILED);
+		                    break;
+		                }
+		                if ("processing".equalsIgnoreCase(payResult.getStatus())) {
+		                    
+		                }
+	                }else{
+	                    //订单状态更新为失败
+	                	break;
+	                }
+	                
+		        }
+			}
+		}
+		
+		
 		return order;
 	}
 
@@ -270,14 +350,12 @@ public class OrderServiceImpl implements OrderService {
             QuickpayCustModel card = quickpayCustService.getCardByBindId(orderObj.getBindId());
             phoneNo = card.getPhone();
         }
-
-        // 校验手机短信验证码
-        if (smsService.verifyCode(phoneNo,orderObj.getTn(),smsCode)!=1) {
-            throw new SmsCodeVerifyFailException();
-        }
-
         switch (payWay) {
             case ACCOUNT :
+            	// 校验手机短信验证码
+                if (smsService.verifyCode(phoneNo,orderObj.getTn(),smsCode)!=1) {
+                    throw new SmsCodeVerifyFailException();
+                }
                 Money amount = Money.valueOf(new BigDecimal(orderObj
                         .getTxnAmt()));
                 if (basicFund.getBalance().minus(amount).compareTo(Money.ZERO) < 0) {// 余额不足
@@ -309,18 +387,23 @@ public class OrderServiceImpl implements OrderService {
      * @param order
      */
     @Transactional(propagation=Propagation.REQUIRED,rollbackFor=Throwable.class)
-    private void updateAnonOrderToMemberOrder(Order order){
+    public void updateAnonOrderToMemberOrder(Order order){
+    	log.info("order json:"+JSON.toJSONString(order));
     	TxnsOrderinfoModel orderinfo = gateWayService.getOrderinfoByTN(order.getTn());
     	TxnsLogModel txnsLog = txnsLogService.getTxnsLogByTxnseqno(orderinfo.getRelatetradetxn());
     	String memberId = order.getMemberId();
     	String old_order_member = txnsLog.getAccmemberid();
     	if("999999999999999".equals(old_order_member)){
-    		//更新交易流水
+    		log.info("memberId:"+memberId);
+    		log.info("old_order_member:"+old_order_member);
+    		/*//更新交易流水
     		txnsLog.setAccmemberid(memberId);
-    		txnsLogService.update(txnsLog);
+    		txnsLogService.updateTxnsLog(txnsLog);
     		//更新交易订单
     		orderinfo.setMemberid(memberId);
-    		gateWayService.update(orderinfo);
+    		txnsOrderinfoDAO.updateOrderinfo(orderinfo);*/
+    		txnsLogService.updateAnonOrderToMemberOrder(orderinfo.getRelatetradetxn(), memberId);
+    		
     	}
     	
     	
@@ -437,6 +520,9 @@ public class OrderServiceImpl implements OrderService {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
 			resultBean = new ResultBean(e.getCode(), e.getMessage());
+		} catch (IllegalEntryRequestException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
 		}
 		return resultBean;
 	}

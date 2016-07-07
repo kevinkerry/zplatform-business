@@ -128,7 +128,7 @@ public class MemberAccountServiceImpl implements MemberAccountService {
 
         String tn = null;
         try {
-            tn = gateWayService.withdraw(json);
+            tn = gateWayService.withdraw(json);//.withdraw(json);
         } catch (TradeException e) {
             e.printStackTrace();
         } catch (Exception e) {

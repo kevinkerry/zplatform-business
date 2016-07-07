@@ -1,5 +1,7 @@
 package com.zlebank.zplatform.business.individual.bean.enums;
 
+import com.zlebank.zplatform.trade.bean.enums.RefundStatusEnum;
+
 public enum OrderType {
     /**
      * recharge
@@ -16,6 +18,7 @@ public enum OrderType {
     /**
      * unknow
      */
+    REFUND("0003"),
     UNKNOW("");
     private String code;
     private OrderType(String code) {

@@ -6,6 +6,7 @@ import java.util.Calendar;
 import com.zlebank.zplatform.business.individual.bean.Order;
 import com.zlebank.zplatform.business.individual.bean.enums.OrderType;
 import com.zlebank.zplatform.business.individual.utils.Constants;
+import com.zlebank.zplatform.trade.utils.DateUtil;
 
 public class ConsumeOrderGenerator extends OrderGenerator {
     private final String txnType = "17";//
@@ -27,11 +28,11 @@ public class ConsumeOrderGenerator extends OrderGenerator {
         order.setChannelType(channelType);
         order.setMerId(merchId);
         order.setOrderId(randomAlphabetic() + randomNumber(17));
-        SimpleDateFormat dateFormat = new SimpleDateFormat("YYYYMMDDHHmmss");
+        SimpleDateFormat dateFormat = new SimpleDateFormat("yyyyMMddHHmmss");
         Calendar calendar = Calendar.getInstance();
-        order.setTxnTime(dateFormat.format(calendar.getTime()));
+        order.setTxnTime(DateUtil.getCurrentDateTime());
         calendar.add(Calendar.MINUTE, 45);
-        order.setPayTimeout(new SimpleDateFormat("YYYYMMDDHHmmss")
+        order.setPayTimeout(new SimpleDateFormat("yyyyMMddHHmmss")
                 .format(calendar.getTime()));
         order.setTxnAmt(randomNumber(3));
         order.setCurrencyCode("156");

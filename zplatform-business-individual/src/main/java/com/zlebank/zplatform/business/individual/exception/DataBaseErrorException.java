@@ -1,6 +1,6 @@
 package com.zlebank.zplatform.business.individual.exception;
 
-public class UnknowPayWayException extends AbstractIndividualBusinessException {
+public class DataBaseErrorException extends AbstractIndividualBusinessException {
     /**
      * serialVersionUID
      */
@@ -8,6 +8,6 @@ public class UnknowPayWayException extends AbstractIndividualBusinessException {
 
     @Override
     public String getCode() {
-        return "EBUBI0007";
+        return "EBUBI0009";
     }
 }

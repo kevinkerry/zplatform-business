@@ -13,7 +13,7 @@ public abstract class OrderGenerator {
     protected final String channelType = "08";
     protected final String accessType = "0";
     protected final String coopInstiCode = "300000000000027";
-    protected final String individualMemberId = "100000000000564";
+    protected final String individualMemberId = "999999999999999";
     protected final String merchId = "200000000000568";
     protected final String signMethod = "01";// 01-RSA
 

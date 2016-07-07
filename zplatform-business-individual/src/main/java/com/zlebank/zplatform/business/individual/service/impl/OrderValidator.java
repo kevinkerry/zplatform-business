@@ -68,9 +68,8 @@ public class OrderValidator implements IOrderValidator {
 
 
         // 业务验证 
-        if (order.getOrderType() != OrderType.CONSUME) {//非消费类订单
-            if (StringUtils.isEmpty(order.getMemberId())
-                    || order.getMemberId().equals(Constants.ANONYMOUS_MERCH_ID)) {
+        /*if (order.getOrderType() != OrderType.CONSUME&&order.getOrderType()!=OrderType.REFUND) {//非消费类订单
+            if (StringUtils.isEmpty(order.getMemberId()) || order.getMemberId().equals(Constants.ANONYMOUS_MERCH_ID)) {
                 resultBean = new ResultBean("GW19", "非消费类订单不支持匿名支付");
                 resultMap.put(RET_MESSAGE, resultBean.getErrMsg());
                 resultMap.put(RET_CODE, resultBean.getErrCode());
@@ -83,7 +82,39 @@ public class OrderValidator implements IOrderValidator {
                 resultMap.put(RET_CODE, resultBean.getErrCode());
                 return resultMap;
             }
+        }*/
+        if(order.getOrderType() == OrderType.CONSUME){//消费类订单
+        	if (StringUtils.isEmpty(order.getMerId())) {
+                resultBean = new ResultBean("GW20", "消费类订单商户代码不能为空");
+                resultMap.put(RET_MESSAGE, resultBean.getErrMsg());
+                resultMap.put(RET_CODE, resultBean.getErrCode());
+                return resultMap;
+            }
+        }else if(order.getOrderType()==OrderType.RECHARGE){//充值类订单
+        	if(StringUtils.isEmpty(order.getMemberId())) {
+                resultBean = new ResultBean("GW20", "充值类订单会员号不能为空");
+                resultMap.put(RET_MESSAGE, resultBean.getErrMsg());
+                resultMap.put(RET_CODE, resultBean.getErrCode());
+                return resultMap;
+            }
+        }else if(order.getOrderType() == OrderType.REFUND){
+        	//退款订单商户号和会员号不可为空
+        	if(StringUtils.isEmpty(order.getMerId())||StringUtils.isEmpty(order.getMemberId())) {
+                resultBean = new ResultBean("GW20", "退款类订单商户号和会员号不能为空");
+                resultMap.put(RET_MESSAGE, resultBean.getErrMsg());
+                resultMap.put(RET_CODE, resultBean.getErrCode());
+                return resultMap;
+            }
+        }else if(order.getOrderType() == OrderType.WITHDRAW){
+        	if(StringUtils.isEmpty(order.getMemberId())) {
+                resultBean = new ResultBean("GW20", "提现类订单会员号不能为空");
+                resultMap.put(RET_MESSAGE, resultBean.getErrMsg());
+                resultMap.put(RET_CODE, resultBean.getErrCode());
+                return resultMap;
+            }
         }
+        
+        
         resultMap.put(RET_MESSAGE,RET_MESSAGE_SUCCESS );
         resultMap.put(RET_CODE, RET_CODE_SUCCESS);
         return resultMap;

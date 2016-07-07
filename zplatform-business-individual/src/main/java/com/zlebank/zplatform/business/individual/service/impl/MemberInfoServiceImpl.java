@@ -389,7 +389,7 @@ public class MemberInfoServiceImpl implements MemberInfoService {
 		if(pm==null){
 			return false;
 		}
-		int retCode = smsService.verifyCode(ModuleTypeEnum.CHANGEPAYPWD,
+		int retCode = smsService.verifyCode(ModuleTypeEnum.RESETPAYPWD,
 				pm.getPhone(), smsCode);
 		if (retCode != 1) {
 			throw new RuntimeException("验证码错误");
