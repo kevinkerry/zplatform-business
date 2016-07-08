@@ -564,4 +564,12 @@ public class OrderServiceImpl implements OrderService {
     public Long getRefundFee(String txnseqno,String merchNo,String txnAmt,String busicode){
     	return gateWayService.getRefundFee(txnseqno, merchNo, txnAmt, busicode);
     }
+
+	@Override
+	@Transactional(isolation = Isolation.READ_COMMITTED, propagation = Propagation.REQUIRED)
+	public ResultBean queryWechatOrder(String tn) {
+		TradeBean trade = new TradeBean();
+		trade.setTn(tn);
+		return this.weChatService.queryWechatOrder(trade);
+	}
 }

@@ -107,4 +107,10 @@ public interface OrderService {
      * @return
      */
     public Long getRefundFee(String txnseqno,String merchNo,String txnAmt,String busicode);
+    /***
+     * 查询微信订单
+     * @param tn
+     * @return
+     */
+    public ResultBean queryWechatOrder(String tn);
 }
