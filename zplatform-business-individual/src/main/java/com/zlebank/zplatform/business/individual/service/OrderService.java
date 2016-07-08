@@ -1,6 +1,7 @@
 package com.zlebank.zplatform.business.individual.service;
 
 import java.util.Date;
+import java.util.Map;
 
 import net.sf.json.JSONObject;
 
@@ -107,4 +108,11 @@ public interface OrderService {
      * @return
      */
     public Long getRefundFee(String txnseqno,String merchNo,String txnAmt,String busicode);
+
+    /***
+     * 查询微信订单状态
+     * @param map
+     * @return
+     */
+    public ResultBean queryWechatOrder(String tn);
 }

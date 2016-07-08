@@ -1,6 +1,7 @@
 package com.zlebank.zplatform.business.individual.service.impl;
 
 import java.math.BigDecimal;
+import java.net.URLEncoder;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
@@ -8,6 +9,8 @@ import java.util.Map;
 
 import net.sf.json.JSONObject;
 
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Isolation;
@@ -40,12 +43,15 @@ import com.zlebank.zplatform.commons.bean.CardBin;
 import com.zlebank.zplatform.commons.bean.DefaultPageResult;
 import com.zlebank.zplatform.commons.bean.PagedResult;
 import com.zlebank.zplatform.commons.dao.CardBinDao;
+import com.zlebank.zplatform.commons.dao.pojo.BusiTypeEnum;
 import com.zlebank.zplatform.commons.enums.BusinessCodeEnum;
 import com.zlebank.zplatform.commons.utils.DateUtil;
+import com.zlebank.zplatform.commons.utils.RSAUtils;
 import com.zlebank.zplatform.commons.utils.StringUtil;
 import com.zlebank.zplatform.member.bean.MemberBean;
 import com.zlebank.zplatform.member.bean.QuickpayCustBean;
 import com.zlebank.zplatform.member.bean.enums.MemberType;
+import com.zlebank.zplatform.member.bean.enums.TerminalAccessType;
 import com.zlebank.zplatform.member.dao.CoopInstiDAO;
 import com.zlebank.zplatform.member.dao.MemberDAO;
 import com.zlebank.zplatform.member.exception.DataCheckFailedException;
@@ -55,14 +61,24 @@ import com.zlebank.zplatform.member.service.MemberBankCardService;
 import com.zlebank.zplatform.member.service.MemberOperationService;
 import com.zlebank.zplatform.member.service.MemberService;
 import com.zlebank.zplatform.sms.service.ISMSService;
+import com.zlebank.zplatform.trade.adapter.accounting.IAccounting;
+import com.zlebank.zplatform.trade.bean.AppPartyBean;
 import com.zlebank.zplatform.trade.bean.ResultBean;
+import com.zlebank.zplatform.trade.bean.TradeBean;
 import com.zlebank.zplatform.trade.bean.enums.ChannelEnmu;
+import com.zlebank.zplatform.trade.bean.enums.OrderStatusEnum;
+import com.zlebank.zplatform.trade.bean.gateway.AnonOrderAsynRespBean;
+import com.zlebank.zplatform.trade.bean.gateway.OrderAsynRespBean;
 import com.zlebank.zplatform.trade.bean.wap.WapCardBean;
+import com.zlebank.zplatform.trade.chanpay.enums.TradeStatusEnum;
 import com.zlebank.zplatform.trade.dao.ConfigInfoDAO;
+import com.zlebank.zplatform.trade.dao.ITxnsOrderinfoDAO;
+import com.zlebank.zplatform.trade.dao.impl.TxnsOrderinfoDAOImpl;
 import com.zlebank.zplatform.trade.exception.AbstractTradeDescribeException;
 import com.zlebank.zplatform.trade.exception.BalanceNotEnoughException;
 import com.zlebank.zplatform.trade.exception.FailToGetAccountInfoException;
 import com.zlebank.zplatform.trade.exception.TradeException;
+import com.zlebank.zplatform.trade.factory.AccountingAdapterFactory;
 import com.zlebank.zplatform.trade.model.ConfigInfoModel;
 import com.zlebank.zplatform.trade.model.QuickpayCustModel;
 import com.zlebank.zplatform.trade.model.TxnsLogModel;
@@ -70,12 +86,19 @@ import com.zlebank.zplatform.trade.model.TxnsOrderinfoModel;
 import com.zlebank.zplatform.trade.service.IGateWayService;
 import com.zlebank.zplatform.trade.service.IQuickpayCustService;
 import com.zlebank.zplatform.trade.service.ITxnsLogService;
+import com.zlebank.zplatform.trade.utils.ObjectDynamic;
 import com.zlebank.zplatform.trade.utils.OrderNumber;
+import com.zlebank.zplatform.trade.utils.UUIDUtil;
+import com.zlebank.zplatform.wechat.enums.ResultCodeEnum;
 import com.zlebank.zplatform.wechat.service.WeChatService;
+import com.zlebank.zplatform.wechat.service.impl.WeChatServiceImpl;
+import com.zlebank.zplatform.wechat.wx.WXApplication;
+import com.zlebank.zplatform.wechat.wx.bean.QueryOrderBean;
+import com.zlebank.zplatform.wechat.wx.bean.QueryOrderResultBean;
 
 @Service
 public class OrderServiceImpl implements OrderService {
-
+	private static final Log log = LogFactory.getLog(WeChatServiceImpl.class);
     @Autowired
     private IGateWayService gateWayService;
     @Autowired
@@ -107,6 +130,8 @@ public class OrderServiceImpl implements OrderService {
     private ITxnsLogService txnsLogService;
     @Autowired
     private WeChatService weChatService;
+    @Autowired
+    private ITxnsOrderinfoDAO txnsOrderinfoDAO;
     
 	/**
 	 *
@@ -478,4 +503,16 @@ public class OrderServiceImpl implements OrderService {
     public Long getRefundFee(String txnseqno,String merchNo,String txnAmt,String busicode){
     	return gateWayService.getRefundFee(txnseqno, merchNo, txnAmt, busicode);
     }
+
+
+	@Override
+	 @Transactional(isolation = Isolation.READ_COMMITTED, propagation = Propagation.REQUIRED)
+	public ResultBean queryWechatOrder(String tn) {
+		TradeBean trade = new TradeBean();
+		trade.setTn(tn);
+		return this.weChatService.queryWechatOrder(trade);
+	}
+	
+	
+	
 }
