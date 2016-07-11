@@ -29,6 +29,7 @@ import com.zlebank.zplatform.acc.service.entry.EntryEvent;
 import com.zlebank.zplatform.business.individual.bean.IndividualRealInfo;
 import com.zlebank.zplatform.business.individual.bean.Order;
 import com.zlebank.zplatform.business.individual.bean.enums.OrderStatus;
+import com.zlebank.zplatform.business.individual.bean.enums.OrderType;
 import com.zlebank.zplatform.business.individual.bean.enums.PayWay;
 import com.zlebank.zplatform.business.individual.exception.AbstractIndividualBusinessException;
 import com.zlebank.zplatform.business.individual.exception.InvalidBindIdException;
@@ -43,6 +44,7 @@ import com.zlebank.zplatform.commons.bean.CardBin;
 import com.zlebank.zplatform.commons.bean.DefaultPageResult;
 import com.zlebank.zplatform.commons.bean.PagedResult;
 import com.zlebank.zplatform.commons.dao.CardBinDao;
+import com.zlebank.zplatform.commons.dao.pojo.BusiTypeEnum;
 import com.zlebank.zplatform.commons.enums.BusinessCodeEnum;
 import com.zlebank.zplatform.commons.utils.DateUtil;
 import com.zlebank.zplatform.commons.utils.StringUtil;
@@ -176,7 +178,18 @@ public class OrderServiceImpl implements OrderService {
 		order.setCurrencyCode(orderinfoModel.getCurrencycode());
 		order.setTn(orderinfoModel.getTn());
 		order.setBankCode(txnsLog.getCardinstino());
-		
+		BusiTypeEnum busitype = BusiTypeEnum.fromValue(txnsLog.getBusitype());
+		String code=OrderType.UNKNOW.getCode();
+		if(busitype.equals(BusiTypeEnum.consumption)){
+			code=OrderType.CONSUME.getCode();
+		}else if(busitype.equals(BusiTypeEnum.refund)){
+			code=OrderType.REFUND.getCode();
+		}else if(busitype.equals(BusiTypeEnum.charge)){
+			code=OrderType.RECHARGE.getCode();
+		}else if(busitype.equals(BusiTypeEnum.withdrawal)){
+			code=OrderType.WITHDRAW.getCode();
+		}
+		order.setOrderType( OrderType.fromValue(code));
 		if(ChannelEnmu.REAPAY==ChannelEnmu.fromValue(txnsLog.getPayinst())){//支付渠道为融宝时
 			if(OrderStatus.fromValue(orderinfoModel.getStatus())==OrderStatus.PAYING){//订单状态为正在支付
 				//调用融宝查询方法
