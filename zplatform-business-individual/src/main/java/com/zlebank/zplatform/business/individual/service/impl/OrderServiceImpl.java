@@ -190,6 +190,8 @@ public class OrderServiceImpl implements OrderService {
 			code=OrderType.WITHDRAW.getCode();
 		}
 		order.setOrderType( OrderType.fromValue(code));
+		//交易类型
+		order.setBusiType(txnsLog.getBusitype());
 		if(ChannelEnmu.REAPAY==ChannelEnmu.fromValue(txnsLog.getPayinst())){//支付渠道为融宝时
 			if(OrderStatus.fromValue(orderinfoModel.getStatus())==OrderStatus.PAYING){//订单状态为正在支付
 				//调用融宝查询方法

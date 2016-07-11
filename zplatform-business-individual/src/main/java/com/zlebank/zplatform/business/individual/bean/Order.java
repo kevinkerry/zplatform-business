@@ -32,11 +32,23 @@ public class Order extends OrderBean implements Bean{
     private String expired;
     private String smsCode;
     private String bankCode;
+    private String busiType;
+    
     
     /**原交易订单号**/
     private String origOrderId;
     
-    public PayWay getPayWay() {
+    
+    
+    public String getBusiType() {
+		return busiType;
+	}
+
+	public void setBusiType(String busiType) {
+		this.busiType = busiType;
+	}
+
+	public PayWay getPayWay() {
         return payWay;
     }
 
