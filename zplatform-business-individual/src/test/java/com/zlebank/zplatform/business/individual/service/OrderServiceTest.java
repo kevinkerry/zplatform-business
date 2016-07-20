@@ -13,6 +13,7 @@ import com.zlebank.zplatform.business.individual.bean.BankCardInfo;
 import com.zlebank.zplatform.business.individual.bean.IndividualRealInfo;
 import com.zlebank.zplatform.business.individual.bean.Member;
 import com.zlebank.zplatform.business.individual.bean.Order;
+import com.zlebank.zplatform.business.individual.bean.enums.PayWay;
 import com.zlebank.zplatform.business.individual.exception.AbstractIndividualBusinessException;
 import com.zlebank.zplatform.business.individual.exception.SmsCodeVerifyFailException;
 import com.zlebank.zplatform.business.individual.exception.ValidateOrderException;
@@ -21,12 +22,13 @@ import com.zlebank.zplatform.commons.bean.PagedResult;
 import com.zlebank.zplatform.commons.utils.DateUtil;
 import com.zlebank.zplatform.sms.pojo.enums.ModuleTypeEnum;
 import com.zlebank.zplatform.trade.bean.ResultBean;
+import com.zlebank.zplatform.trade.exception.AbstractTradeDescribeException;
 import com.zlebank.zplatform.trade.exception.TradeException;
 
 public class OrderServiceTest extends ApplicationContextAbled {
     
     
-    @Test
+   // @Test
     public void testCreateOrder() {
         OrderService orderService = (OrderService) getContext().getBean(
                 "orderServiceImpl");
@@ -121,7 +123,24 @@ public class OrderServiceTest extends ApplicationContextAbled {
             e.printStackTrace();
         }
     }*/
-    
+    @Test
+    @Transactional
+    public void testPayOrder(){
+        OrderService orderService = (OrderService) getContext().getBean("orderServiceImpl");
+        Order order = orderService.queryOrder("100000000000576", "160708001400053579");
+        try {
+            orderService.pay(JSON.toJSONString(order), "", "e10adc3949ba59abbe56e057f20f883e", PayWay.ACCOUNT);
+        } catch (AbstractTradeDescribeException e) {
+            // TODO Auto-generated catch block
+            e.printStackTrace();
+        } catch (AbstractIndividualBusinessException e) {
+            // TODO Auto-generated catch block
+            e.printStackTrace();
+        } catch (TradeException e) {
+            // TODO Auto-generated catch block
+            e.printStackTrace();
+        }
+    }
     public void test_queryOrder(){
 		OrderService orderService = (OrderService) getContext().getBean("orderServiceImpl");
 		Order order = orderService.queryOrder("100000000000576", "160608001400052051");

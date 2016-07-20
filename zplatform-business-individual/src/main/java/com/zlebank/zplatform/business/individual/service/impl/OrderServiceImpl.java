@@ -361,9 +361,8 @@ public class OrderServiceImpl implements OrderService {
                 if (basicFund.getBalance().minus(amount).compareTo(Money.ZERO) < 0) {// 余额不足
                     throw new BalanceNotEnoughException();
                 }
-
                 gateWayService.accountPay(order);
-                updateAnonOrderToMemberOrder( orderObj);
+                updateAnonOrderToMemberOrder(orderObj);
                 break;
             case QUICK :
                 QuickpayCustModel card = quickpayCustService
@@ -372,7 +371,7 @@ public class OrderServiceImpl implements OrderService {
                     throw new InvalidBindIdException();
                 }
                 gateWayService.submitPay(order);
-                updateAnonOrderToMemberOrder( orderObj);
+                updateAnonOrderToMemberOrder(orderObj);
                 break;
             default :
                 throw new UnknowPayWayException();
@@ -390,9 +389,9 @@ public class OrderServiceImpl implements OrderService {
     public void updateAnonOrderToMemberOrder(Order order){
     	log.info("order json:"+JSON.toJSONString(order));
     	TxnsOrderinfoModel orderinfo = gateWayService.getOrderinfoByTN(order.getTn());
-    	TxnsLogModel txnsLog = txnsLogService.getTxnsLogByTxnseqno(orderinfo.getRelatetradetxn());
+    	//TxnsLogModel txnsLog = txnsLogService.getTxnsLogByTxnseqno(orderinfo.getRelatetradetxn());
     	String memberId = order.getMemberId();
-    	String old_order_member = txnsLog.getAccmemberid();
+    	String old_order_member = orderinfo.getMemberid();
     	if("999999999999999".equals(old_order_member)){
     		log.info("memberId:"+memberId);
     		log.info("old_order_member:"+old_order_member);
