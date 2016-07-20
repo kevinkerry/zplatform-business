@@ -141,6 +141,7 @@ public class OrderServiceTest extends ApplicationContextAbled {
             e.printStackTrace();
         }
     }
+
     public void test_queryOrder(){
 		OrderService orderService = (OrderService) getContext().getBean("orderServiceImpl");
 		Order order = orderService.queryOrder("100000000000576", "160608001400052051");
