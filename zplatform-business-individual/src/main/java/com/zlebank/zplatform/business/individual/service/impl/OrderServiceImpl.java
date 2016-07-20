@@ -461,7 +461,7 @@ public class OrderServiceImpl implements OrderService {
             throw new SmsCodeVerifyFailException();
         }*/
         orderObj.setSmsCode(smsCode);
-     //   gateWayService.submitPay(JSON.toJSONString(orderObj));
+        gateWayService.submitPay(JSON.toJSONString(orderObj));
         Order orderRet = queryOrder(memberId,orderObj.getTn());
         return orderRet.getStatus();
     }
