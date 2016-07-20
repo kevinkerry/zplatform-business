@@ -448,7 +448,8 @@ public class OrderServiceImpl implements OrderService {
         	card = quickpayCustService.getCardByBindId(orderObj.getBindId());
         	phoneNo = card.getPhone();
         }else if(StringUtil.isNotEmpty(cardNo)){
-        	List<QuickpayCustModel> cardList = (List<QuickpayCustModel>) quickpayCustService.queryByHQL("from QuickpayCustModel where cardno=? and accname = ? and phone = ? and idnum = ? and relatememberno = ? and status = ?", new Object[]{cardNo,orderObj.getCustomerNm(),orderObj.getPhoneNo(),orderObj.getCertifId(),memberId,"00"});
+        	List<QuickpayCustModel> cardList =this.quickpayCustService.getCardList(cardNo,orderObj.getCustomerNm(),orderObj.getPhoneNo(),orderObj.getCertifId(),memberId);
+        			//(List<QuickpayCustModel>) quickpayCustService.queryByHQL("from QuickpayCustModel where cardno=? and accname = ? and phone = ? and idnum = ? and relatememberno = ? and status = ?", new Object[]{cardNo,orderObj.getCustomerNm(),orderObj.getPhoneNo(),orderObj.getCertifId(),memberId,"00"});
         	if(cardList.size()>0){
         		orderObj.setBindId(cardList.get(0).getId()+"");
         	}else{
@@ -460,7 +461,7 @@ public class OrderServiceImpl implements OrderService {
             throw new SmsCodeVerifyFailException();
         }*/
         orderObj.setSmsCode(smsCode);
-        gateWayService.submitPay(JSON.toJSONString(orderObj));
+     //   gateWayService.submitPay(JSON.toJSONString(orderObj));
         Order orderRet = queryOrder(memberId,orderObj.getTn());
         return orderRet.getStatus();
     }

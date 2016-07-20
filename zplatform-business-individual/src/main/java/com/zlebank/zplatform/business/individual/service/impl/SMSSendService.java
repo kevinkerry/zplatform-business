@@ -128,7 +128,8 @@ public class SMSSendService implements SmsService{
 				 String bindFlag = jsonObject.get("bindFlag")+"";
 				 String instiCode = jsonObject.get("instiCode")+"";
 				 String devId = jsonObject.get("devId")+"";
-				 List<QuickpayCustModel> cardList = (List<QuickpayCustModel>) quickpayCustService.queryByHQL("from QuickpayCustModel where cardno=? and accname = ? and phone = ? and idnum = ? and relatememberno = ? and status = ?", new Object[]{cardNo,customerNm,phoneNo,certifId,"999999999999999","00"});
+				 List<QuickpayCustModel> cardList = this.quickpayCustService.getCardList(cardNo, customerNm, phoneNo, certifId, "999999999999999");
+				//(List<QuickpayCustModel>) quickpayCustService.queryByHQL("from QuickpayCustModel where cardno=? and accname = ? and phone = ? and idnum = ? and relatememberno = ? and status = ?", new Object[]{cardNo,customerNm,phoneNo,certifId,"999999999999999","00"});
 	        	if(cardList.size()>0){//已绑卡
 	        		Map<String, Object> resultMap = new HashMap<String, Object>();
 	        		resultMap.put("tn", tn_);
