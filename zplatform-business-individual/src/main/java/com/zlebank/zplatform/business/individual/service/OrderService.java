@@ -113,4 +113,12 @@ public interface OrderService {
      * @return
      */
     public ResultBean queryWechatOrder(String tn);
+    /***
+     * 收银台支付
+     * @param order
+     * @param smsCode
+     * @param memberId 
+     * @return
+     */
+	public ResultBean cashPay(Order order, String smsCode, String memberId);
 }

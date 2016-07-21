@@ -27,13 +27,14 @@ import com.zlebank.zplatform.trade.exception.TradeException;
 @RunWith(SpringJUnit4ClassRunner.class)
 @ContextConfiguration("/*.xml")
 public class GatewayTest {
-	private static String tn="160719002700054080";
+	private static String tn="160721002700054139";
 	@Autowired
 	private OrderService orderSerivce;
 	@Autowired
 	private MemberCardService  memberCardService;
 	@Autowired
 	private SmsService  smsService;
+	
 	@Test
 	public void test_getOrderInfo(){
 		Order order = orderSerivce.queryOrder(null, tn);
@@ -115,10 +116,14 @@ public class GatewayTest {
 		json.put("devId", "");
 		json.put("txnAmt", "1");
 		try {
-			OrderStatus orderStatus = this.orderSerivce.anonymousPay(json.toString(), "183590");
-			System.out.println(orderStatus.getCode());
-		} catch (AbstractTradeDescribeException
-				| AbstractIndividualBusinessException | TradeException e) {
+			Order orderObj = JSON.parseObject(json.toString(), Order.class);
+			ResultBean result = this.orderSerivce.cashPay(orderObj, "668228",null);
+			if(result.isResultBool()){
+				System.out.println(result.getResultObj());
+			}else{
+				System.out.println(result.getResultObj());
+			}
+		} catch (Exception e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
