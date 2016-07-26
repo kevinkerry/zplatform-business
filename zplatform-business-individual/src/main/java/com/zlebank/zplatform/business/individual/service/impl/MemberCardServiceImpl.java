@@ -46,6 +46,7 @@ import com.zlebank.zplatform.sms.service.ISMSService;
 import com.zlebank.zplatform.trade.model.CashBankModel;
 import com.zlebank.zplatform.trade.service.ICashBankService;
 import com.zlebank.zplatform.trade.service.IGateWayService;
+import com.zlebank.zplatform.trade.service.IQuickpayCustService;
 
 /**
  * Class Description
@@ -74,6 +75,8 @@ public class MemberCardServiceImpl implements MemberCardService{
     private MemberService memberServiceImpl;
     @Autowired
     private MemberOperationService memberOperationServiceImpl;
+    @Autowired
+    private IQuickpayCustService quickpayCustService;
 	
 	/**
 	 *
@@ -200,6 +203,7 @@ public class MemberCardServiceImpl implements MemberCardService{
 		quickpayCustBean.setId(Long.valueOf(bindcardid));
 		quickpayCustBean.setRelatememberno(memberId);
 		memberBankCardService.unbindQuickPayCust(quickpayCustBean);
+		
 		return true;
 	}
 
