@@ -266,6 +266,7 @@ public class MemberCardServiceImpl implements MemberCardService{
 			Bank bank = new Bank();
 			bank.setBankCode(casebank.getBankcode());
 			bank.setBankName(casebank.getBankname());
+			bank.setBankIcon(casebank.getIco());
 			supportedBankCardType.setBank(bank);
 			supportBankList.add(supportedBankCardType);
 		}
