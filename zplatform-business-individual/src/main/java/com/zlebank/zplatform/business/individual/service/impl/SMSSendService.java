@@ -14,6 +14,8 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -46,7 +48,7 @@ import com.zlebank.zplatform.trade.service.IQuickpayCustService;
  */
 @Service("smsSendService")
 public class SMSSendService implements SmsService{
-
+	private static final Log log = LogFactory.getLog(SMSSendService.class);
 	@Autowired
 	private ISMSService smsSendService;
 	@Autowired 
@@ -139,11 +141,11 @@ public class SMSSendService implements SmsService{
 						return true;
 					} catch (TradeException e) {
 						e.printStackTrace();
+						log.error("发送短信失败"+e.getMessage());
 						return false;
 					}
 	        	}else{
 	        		if("1".equals(bindFlag)){//需要进行绑卡签约
-	        	       
 	        	        WapCardBean cardBean = new WapCardBean(cardNo,cardType , customerNm,certifTp, certifId, phoneNo, cvn2, expired);
 	        	        ResultBean resultBean = gateWayService.bindingBankCard(instiCode, "999999999999999", cardBean);
 	        	        if(resultBean.isResultBool()){
@@ -174,11 +176,13 @@ public class SMSSendService implements SmsService{
 	    						return true;
 	    					} catch (TradeException e) {
 	    						e.printStackTrace();
+	    						log.error("发送短信失败"+e.getMessage());
 	    						return false;
 	    					}
 	        	            
 	        	        }
 	        		}else{
+	        			log.error("bindFlag is null");
 	        			return false;
 	        		}
 	        		
@@ -190,6 +194,7 @@ public class SMSSendService implements SmsService{
 		if(retcode==100||retcode==105){
 			return true;
 		}
+		log.error("moduleType is error");
 		return false;
 	}
 
