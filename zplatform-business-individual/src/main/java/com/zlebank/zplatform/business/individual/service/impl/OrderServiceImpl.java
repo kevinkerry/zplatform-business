@@ -180,6 +180,7 @@ public class OrderServiceImpl implements OrderService {
 		order.setOrderId(orderinfoModel.getOrderno());
 		order.setTxnAmt(orderinfoModel.getOrderamt()+"");
 		order.setTxnTime(orderinfoModel.getOrdercommitime());
+		order.setOrderTime(txnsLog.getTxndate()+txnsLog.getTxntime());
 		order.setStatus(OrderStatus.fromValue(orderinfoModel.getStatus()));
 		order.setOrderDesc(orderinfoModel.getOrderdesc());
 		order.setCurrencyCode(orderinfoModel.getCurrencycode());

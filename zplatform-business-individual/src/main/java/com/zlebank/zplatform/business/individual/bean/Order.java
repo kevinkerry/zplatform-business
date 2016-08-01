@@ -33,6 +33,7 @@ public class Order extends OrderBean implements Bean{
     private String smsCode;
     private String bankCode;
     private String busiType;
+    private String orderTime;
     
     
     /**原交易订单号**/
@@ -40,7 +41,15 @@ public class Order extends OrderBean implements Bean{
     
     
     
-    public String getBusiType() {
+    public String getOrderTime() {
+		return orderTime;
+	}
+
+	public void setOrderTime(String orderTime) {
+		this.orderTime = orderTime;
+	}
+
+	public String getBusiType() {
 		return busiType;
 	}
 
