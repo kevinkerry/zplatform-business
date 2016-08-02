@@ -35,8 +35,11 @@ import com.zlebank.zplatform.trade.bean.ResultBean;
 import com.zlebank.zplatform.trade.bean.wap.WapCardBean;
 import com.zlebank.zplatform.trade.exception.TradeException;
 import com.zlebank.zplatform.trade.model.QuickpayCustModel;
+import com.zlebank.zplatform.trade.model.TxnsLogModel;
+import com.zlebank.zplatform.trade.model.TxnsOrderinfoModel;
 import com.zlebank.zplatform.trade.service.IGateWayService;
 import com.zlebank.zplatform.trade.service.IQuickpayCustService;
+import com.zlebank.zplatform.trade.service.ITxnsLogService;
 
 /**
  * Class Description
@@ -59,6 +62,8 @@ public class SMSSendService implements SmsService{
 	private CardBinDao cardBinDao;
 	@Autowired
 	private MemberBankCardService memberBankCardService;
+	@Autowired
+	private ITxnsLogService txnsLogService;
 	/**
 	 *
 	 * @param memberId
@@ -118,83 +123,89 @@ public class SMSSendService implements SmsService{
 				retcode = smsSendService.sendSMS(moduleType, phoneNo, tn, "");
 				break;
 			case ANONYMOUSPAY:
-				 String tn_=jsonObject.get("tn").toString();
-				 String cardNo=jsonObject.get("cardNo").toString();
-				 String cardType=jsonObject.get("cardType").toString();
-				 String customerNm=jsonObject.get("customerNm").toString();
-				 String certifTp=jsonObject.get("certifTp").toString();
-				 String certifId=jsonObject.get("certifId").toString();
-				 phoneNo=jsonObject.get("phoneNo").toString();
-				 String cvn2=jsonObject.get("cvn2")+"";
-				 String expired=jsonObject.get("expired")+"";
-				 String bindFlag = jsonObject.get("bindFlag")+"";
-				 String instiCode = jsonObject.get("instiCode")+"";
-				 String devId = jsonObject.get("devId")+"";
-				 List<QuickpayCustModel> cardList = this.quickpayCustService.getCardList(cardNo, customerNm, phoneNo, certifId, "999999999999999");
-				//(List<QuickpayCustModel>) quickpayCustService.queryByHQL("from QuickpayCustModel where cardno=? and accname = ? and phone = ? and idnum = ? and relatememberno = ? and status = ?", new Object[]{cardNo,customerNm,phoneNo,certifId,"999999999999999","00"});
-	        	if(cardList.size()>0){//已绑卡
-	        		Map<String, Object> resultMap = new HashMap<String, Object>();
-	        		resultMap.put("tn", tn_);
-	        		resultMap.put("bindId", cardList.get(0).getId());
-	        		try {
-						gateWayService.sendSMSMessage(JSON.toJSONString(resultMap));
-						return true;
-					} catch (TradeException e) {
-						e.printStackTrace();
-						log.error("发送短信失败"+e.getMessage());
-						return false;
-					}
-	        	}else{
-	        		if("1".equals(bindFlag)){//需要进行绑卡签约
-	        	        WapCardBean cardBean = new WapCardBean(cardNo,cardType , customerNm,certifTp, certifId, phoneNo, cvn2, expired);
-	        	        ResultBean resultBean = gateWayService.bindingBankCard(instiCode, "999999999999999", cardBean);
-	        	        if(resultBean.isResultBool()){
-	        	        	//保存绑卡信息
-	        	            QuickpayCustBean quickpayCustBean = new QuickpayCustBean();
-	        	            quickpayCustBean.setCustomerno(instiCode);
-	        	            quickpayCustBean.setCardno(cardNo);
-	        	            quickpayCustBean.setCardtype(cardType);
-	        	            quickpayCustBean.setAccname(customerNm);
-	        	            quickpayCustBean.setPhone(phoneNo);
-	        	            quickpayCustBean.setIdtype(certifTp);
-	        	            quickpayCustBean.setIdnum(certifId);
-	        	            quickpayCustBean.setCvv2(cvn2);
-	        	            quickpayCustBean.setValidtime(expired);
-	        	            quickpayCustBean.setRelatememberno("999999999999999");
-	        	            //新增设备ID支持匿名支付
-	        	            quickpayCustBean.setDevId(devId);
-	        	            CardBin cardBin = cardBinDao.getCard(cardNo);
-	        	            quickpayCustBean.setBankcode(cardBin.getBankCode());
-	        	            quickpayCustBean.setBankname(cardBin.getBankName());
-	        	            long bindId = memberBankCardService.saveQuickPayCust(quickpayCustBean);
-	        	            
-	        	            Map<String, Object> resultMap = new HashMap<String, Object>();
-	    	        		resultMap.put("tn", tn_);
-	    	        		resultMap.put("bindId", bindId+"");
-	    	        		try {
-	    						gateWayService.sendSMSMessage(JSON.toJSONString(resultMap));
-	    						return true;
-	    					} catch (TradeException e) {
-	    						e.printStackTrace();
-	    						log.error("发送短信失败"+e.getMessage());
-	    						return false;
-	    					}
-	        	            
-	        	        }
-	        		}else{
-	        			log.error("bindFlag is null");
-	        			return false;
-	        		}
-	        		
-	        	}
-			default:
-				
-				break;
+				try {
+					String tn_=jsonObject.get("tn").toString();
+					 String cardNo=jsonObject.get("cardNo").toString();
+					 String cardType=jsonObject.get("cardType").toString();
+					 String customerNm=jsonObject.get("customerNm").toString();
+					 String certifTp=jsonObject.get("certifTp").toString();
+					 String certifId=jsonObject.get("certifId").toString();
+					 phoneNo=jsonObject.get("phoneNo").toString();
+					 String cvn2=jsonObject.get("cvn2")+"";
+					 String expired=jsonObject.get("expired")+"";
+					 String bindFlag = jsonObject.get("bindFlag")+"";
+					 String instiCode = jsonObject.get("instiCode")+"";
+					 String devId = jsonObject.get("devId")+"";
+					 List<QuickpayCustModel> cardList = this.quickpayCustService.getCardList(cardNo, customerNm, phoneNo, certifId, "999999999999999");
+					//(List<QuickpayCustModel>) quickpayCustService.queryByHQL("from QuickpayCustModel where cardno=? and accname = ? and phone = ? and idnum = ? and relatememberno = ? and status = ?", new Object[]{cardNo,customerNm,phoneNo,certifId,"999999999999999","00"});
+			        	if(cardList.size()>0){//已绑卡
+			        		Map<String, Object> resultMap = new HashMap<String, Object>();
+			        		resultMap.put("tn", tn_);
+			        		resultMap.put("bindId", cardList.get(0).getId());
+			        		try {
+								gateWayService.sendSMSMessage(JSON.toJSONString(resultMap));
+								return true;
+							} catch (TradeException e) {
+								e.printStackTrace();
+								log.error("发送短信失败"+e.getMessage());
+								return false;
+							}
+			        	}else{
+			        		if("1".equals(bindFlag)){//需要进行绑卡签约
+			        			 TxnsOrderinfoModel orderinfo = gateWayService.getOrderinfoByTN(tn_);
+			        			 TxnsLogModel txnsLog = txnsLogService.getTxnsLogByTxnseqno(orderinfo.getRelatetradetxn());
+			        			 instiCode = txnsLog.getAcccoopinstino();
+			        	        WapCardBean cardBean = new WapCardBean(cardNo,cardType , customerNm,certifTp, certifId, phoneNo, cvn2, expired);
+			        	        ResultBean resultBean = gateWayService.bindingBankCard(instiCode, "999999999999999", cardBean);
+			        	        if(resultBean==null){
+			        	        	log.error("绑卡签约失败"+JSON.toJSONString(cardBean));
+			        	        	return false;
+			        	        }
+			        	        if(resultBean.isResultBool()){
+			        	        	//保存绑卡信息
+			        	            QuickpayCustBean quickpayCustBean = new QuickpayCustBean();
+			        	            quickpayCustBean.setCustomerno(instiCode);
+			        	            quickpayCustBean.setCardno(cardNo);
+			        	            quickpayCustBean.setCardtype(cardType);
+			        	            quickpayCustBean.setAccname(customerNm);
+			        	            quickpayCustBean.setPhone(phoneNo);
+			        	            quickpayCustBean.setIdtype(certifTp);
+			        	            quickpayCustBean.setIdnum(certifId);
+			        	            quickpayCustBean.setCvv2(cvn2);
+			        	            quickpayCustBean.setValidtime(expired);
+			        	            quickpayCustBean.setRelatememberno("999999999999999");
+			        	            //新增设备ID支持匿名支付
+			        	            quickpayCustBean.setDevId(devId);
+			        	            CardBin cardBin = cardBinDao.getCard(cardNo);
+			        	            quickpayCustBean.setBankcode(cardBin.getBankCode());
+			        	            quickpayCustBean.setBankname(cardBin.getBankName());
+			        	            long bindId = memberBankCardService.saveQuickPayCust(quickpayCustBean);
+			        	            
+			        	            Map<String, Object> resultMap = new HashMap<String, Object>();
+			    	        		resultMap.put("tn", tn_);
+			    	        		resultMap.put("bindId", bindId+"");
+			    	        		try {
+			    						gateWayService.sendSMSMessage(JSON.toJSONString(resultMap));
+			    						return true;
+			    					} catch (TradeException e) {
+			    						e.printStackTrace();
+			    						log.error("发送短信失败"+e.getMessage());
+			    						return false;
+			    					}
+			        	            
+			        	        }
+			        		}else{
+			        			log.error("发送短信失败 :bindFlag is null");
+			        			return false;
+			        		}
+			        	}
+				} catch (Exception e) {
+					log.error("发送短信失败"+e.getMessage());
+					return false;
+				}
+				 
 		}
-		if(retcode==100||retcode==105){
-			return true;
-		}
-		log.error("moduleType is error");
+		log.error("发送短信失败：modelType is null ");
 		return false;
 	}
 
