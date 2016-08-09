@@ -121,4 +121,11 @@ public interface OrderService {
      * @return
      */
 	public ResultBean cashPay(Order order, String smsCode, String memberId);
+	
+	/**
+	 * 创建微信扫描支付订单
+	 * @param tn
+	 * @return
+	 */
+	public JSONObject createWeChatOrderQR(String tn);
 }

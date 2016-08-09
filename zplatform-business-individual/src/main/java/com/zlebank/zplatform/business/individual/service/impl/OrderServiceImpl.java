@@ -88,6 +88,7 @@ import com.zlebank.zplatform.trade.service.ITxnsQuickpayService;
 import com.zlebank.zplatform.trade.utils.ConsUtil;
 import com.zlebank.zplatform.trade.utils.ObjectDynamic;
 import com.zlebank.zplatform.trade.utils.OrderNumber;
+import com.zlebank.zplatform.wechat.qr.service.WeChatQRService;
 import com.zlebank.zplatform.wechat.service.WeChatService;
 
 @Service
@@ -131,6 +132,8 @@ public class OrderServiceImpl implements OrderService {
     private ITxnsOrderinfoDAO txnsOrderinfoDAO;
     @Autowired
     private ITxnsNotifyTaskService txnsNotifyTaskService;
+    @Autowired
+    private WeChatQRService weChatQRService;
     
 	/**
 	 *
@@ -680,5 +683,23 @@ public class OrderServiceImpl implements OrderService {
         }
         //返回url及状态
         return new ResultBean(map);
+	}
+
+	/**
+	 *
+	 * @param tn
+	 * @return
+	 */
+	@Override
+	public JSONObject createWeChatOrderQR(String tn) {
+		// TODO Auto-generated method stub
+		JSONObject creatOrder = null;
+		try {
+			creatOrder = weChatQRService.creatOrder(tn);
+		} catch (TradeException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+		return creatOrder;
 	}
 }
