@@ -724,7 +724,6 @@ public class OrderServiceImpl implements OrderService {
 		}else if(typeId.equals(WechatType.RQCODE.getTypeId())){
 			result=this.weChatQRService.queryWechatOrder(trade);
 		}
-		
 		return result;
 	}
 }
