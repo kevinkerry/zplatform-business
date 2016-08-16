@@ -3,7 +3,7 @@
 	<parent>
 		<groupId>com.zlebank.zplatform</groupId>
 		<artifactId>zplatform-business-deploy</artifactId>
-		<version>1.4.0</version>
+		<version>1.5.0-SNAPSHOT</version>
 		<relativePath>../zplatform-business-deploy/pom.xml</relativePath>
 	</parent>
 	<artifactId>zplatform-business-individual</artifactId>
