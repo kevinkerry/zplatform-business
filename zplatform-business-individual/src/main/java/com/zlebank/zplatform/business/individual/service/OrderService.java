@@ -121,6 +121,7 @@ public interface OrderService {
      * @return
      */
 	public ResultBean cashPay(Order order, String smsCode, String memberId);
+
 	
 	/**
 	 * 创建微信扫描支付订单
@@ -128,4 +129,22 @@ public interface OrderService {
 	 * @return
 	 */
 	public JSONObject createWeChatOrderQR(String tn);
+
+	/****
+	 * 微信统一下单
+	 * @param tn
+	 * @param typeId
+	 * @return
+	 */
+	public JSONObject createWechatOrder(String tn , String typeId)throws TradeException;
+	
+	
+	 /***
+     * 查询微信订单
+     * @param tn
+     * @return
+     */
+    public ResultBean queryWechatOrder(String tn,String typeId)throws TradeException;
+	
+	
 }

@@ -32,6 +32,7 @@ import com.zlebank.zplatform.business.individual.bean.Order;
 import com.zlebank.zplatform.business.individual.bean.enums.OrderStatus;
 import com.zlebank.zplatform.business.individual.bean.enums.OrderType;
 import com.zlebank.zplatform.business.individual.bean.enums.PayWay;
+import com.zlebank.zplatform.business.individual.bean.enums.WechatType;
 import com.zlebank.zplatform.business.individual.exception.AbstractIndividualBusinessException;
 import com.zlebank.zplatform.business.individual.exception.InvalidBindIdException;
 import com.zlebank.zplatform.business.individual.exception.PayPwdVerifyFailException;
@@ -85,7 +86,6 @@ import com.zlebank.zplatform.trade.service.IQuickpayCustService;
 import com.zlebank.zplatform.trade.service.ITxnsLogService;
 import com.zlebank.zplatform.trade.service.ITxnsNotifyTaskService;
 import com.zlebank.zplatform.trade.service.ITxnsQuickpayService;
-import com.zlebank.zplatform.trade.utils.ConsUtil;
 import com.zlebank.zplatform.trade.utils.ObjectDynamic;
 import com.zlebank.zplatform.trade.utils.OrderNumber;
 import com.zlebank.zplatform.wechat.qr.service.WeChatQRService;
@@ -685,6 +685,7 @@ public class OrderServiceImpl implements OrderService {
         return new ResultBean(map);
 	}
 
+
 	/**
 	 *
 	 * @param tn
@@ -701,5 +702,40 @@ public class OrderServiceImpl implements OrderService {
 			e.printStackTrace();
 		}
 		return creatOrder;
+	}
+	@Override
+	@Transactional(propagation=Propagation.REQUIRED,rollbackFor=Throwable.class)
+	public JSONObject createWechatOrder(String tn, String typeId) throws TradeException {
+		JSONObject result = null;
+		if(StringUtil.isEmpty(typeId)||StringUtil.isEmpty(tn)){
+			throw new TradeException("", "tn或typeId不能为空！");
+		}
+		//微信APP支付
+		if(typeId.equals(WechatType.APP.getTypeId())){
+			result= weChatService.creatOrder(tn);
+		//扫码支付	
+		}else if(typeId.equals(WechatType.RQCODE.getTypeId())){
+			result=this.weChatQRService.creatOrder(tn);
+		}
+		return result;
+		
+	}
+
+	@Override
+	public ResultBean queryWechatOrder(String tn, String typeId)throws TradeException {
+		ResultBean result = null;
+		if(StringUtil.isEmpty(typeId)||StringUtil.isEmpty(tn)){
+			throw new TradeException("", "tn或typeId不能为空！");
+		}
+		TradeBean trade = new TradeBean();
+		trade.setTn(tn);
+		//微信APP支付
+		if(typeId.equals(WechatType.APP.getTypeId())){
+			result =this.weChatService.queryWechatOrder(trade);
+		//扫码支付	
+		}else if(typeId.equals(WechatType.RQCODE.getTypeId())){
+			result=this.weChatQRService.queryWechatOrder(trade);
+		}
+		return result;
 	}
 }
