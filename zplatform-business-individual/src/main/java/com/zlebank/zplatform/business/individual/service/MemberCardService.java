@@ -1,5 +1,7 @@
 package com.zlebank.zplatform.business.individual.service;
 
+import java.util.Map;
+
 import com.zlebank.zplatform.business.individual.bean.BankCardInfo;
 import com.zlebank.zplatform.business.individual.bean.Member;
 import com.zlebank.zplatform.business.individual.bean.SupportedBankCardType;
@@ -8,6 +10,9 @@ import com.zlebank.zplatform.commons.bean.CardBin;
 import com.zlebank.zplatform.commons.bean.PagedResult;
 import com.zlebank.zplatform.member.exception.DataCheckFailedException;
 import com.zlebank.zplatform.member.exception.UnbindBankFailedException;
+import com.zlebank.zplatform.trade.bean.ResultBean;
+import com.zlebank.zplatform.trade.common.page.PageVo;
+import com.zlebank.zplatform.trade.model.CashBankModel;
 /**
  * Member bank card service
  * 
@@ -53,6 +58,27 @@ public interface MemberCardService {
 	 * @return
 	 */
 	public PagedResult<SupportedBankCardType> queryBank(int page, int pageSize);
+	/***
+	 * 查询所支持的银行卡列表 Query list of bank
+	 * @param map
+	 * @param pageNo
+	 * @param pageSize
+	 * @return
+	 */
+	public PageVo<SupportedBankCardType> queryCardList(Map<String, Object> map,
+			Integer pageNo, Integer pageSize);
+	
+	/***
+	 * 匿名用户绑卡  
+	 * @param json
+	 * @return
+	 */
+	public ResultBean anonymousBindCard(String json);
+	
+	
+	
+	
+	
 
 	
 }
