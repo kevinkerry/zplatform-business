@@ -134,6 +134,8 @@ public class OrderServiceImpl implements OrderService {
     private ITxnsNotifyTaskService txnsNotifyTaskService;
     @Autowired
     private WeChatQRService weChatQRService;
+    @Autowired
+    private IGateWayService webGateWayService;
     
 	/**
 	 *
@@ -600,7 +602,6 @@ public class OrderServiceImpl implements OrderService {
 	}
 
 	@Override
-	@Transactional(propagation=Propagation.REQUIRED,rollbackFor=Throwable.class)
 	public ResultBean cashPay(Order orderObj,String smsCode,String memberId)  {
         ResultBean result= null;
         Map<String,Object> map = new HashMap<String, Object>();
@@ -651,7 +652,7 @@ public class OrderServiceImpl implements OrderService {
         }
         orderObj.setSmsCode(smsCode);
         try {
-			gateWayService.submitPay(JSON.toJSONString(orderObj));
+        	gateWayService.submitPay(JSON.toJSONString(orderObj));
 		} catch (TradeException e) {
 			log.error(e.getMessage());
 			e.printStackTrace();
