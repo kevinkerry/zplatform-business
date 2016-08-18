@@ -33,12 +33,14 @@ import com.zlebank.zplatform.member.pojo.PojoCoopInsti;
 import com.zlebank.zplatform.member.service.MemberBankCardService;
 import com.zlebank.zplatform.sms.pojo.enums.ModuleTypeEnum;
 import com.zlebank.zplatform.sms.service.ISMSService;
+import com.zlebank.zplatform.trade.bean.CardBinBean;
 import com.zlebank.zplatform.trade.bean.ResultBean;
 import com.zlebank.zplatform.trade.bean.wap.WapCardBean;
 import com.zlebank.zplatform.trade.exception.TradeException;
 import com.zlebank.zplatform.trade.model.QuickpayCustModel;
 import com.zlebank.zplatform.trade.model.TxnsLogModel;
 import com.zlebank.zplatform.trade.model.TxnsOrderinfoModel;
+import com.zlebank.zplatform.trade.service.CardBinService;
 import com.zlebank.zplatform.trade.service.IGateWayService;
 import com.zlebank.zplatform.trade.service.IQuickpayCustService;
 import com.zlebank.zplatform.trade.service.ITxnsLogService;
@@ -61,7 +63,8 @@ public class SMSSendService implements SmsService{
 	@Autowired
     private IQuickpayCustService quickpayCustService;
 	@Autowired
-	private CardBinDao cardBinDao;
+	//private CardBinDao cardBinDao;
+	private CardBinService cardBinService;
 	@Autowired
 	private MemberBankCardService memberBankCardService;
 	@Autowired
@@ -185,7 +188,7 @@ public class SMSSendService implements SmsService{
 		        	            quickpayCustBean.setRelatememberno("999999999999999");
 		        	            //新增设备ID支持匿名支付
 		        	            quickpayCustBean.setDevId(devId);
-		        	            CardBin cardBin = cardBinDao.getCard(cardNo);
+		        	            CardBinBean cardBin = cardBinService.getCard(cardNo);
 		        	            quickpayCustBean.setBankcode(cardBin.getBankCode());
 		        	            quickpayCustBean.setBankname(cardBin.getBankName());
 		        	            long bindId = memberBankCardService.saveQuickPayCustExt(quickpayCustBean);

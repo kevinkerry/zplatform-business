@@ -20,17 +20,17 @@ import com.zlebank.zplatform.business.individual.exception.MerchMKNotExistExcept
 import com.zlebank.zplatform.business.individual.exception.MerchWhiteListNotExistException;
 import com.zlebank.zplatform.business.individual.service.MerchBusinessService;
 import com.zlebank.zplatform.member.bean.MemberBean;
+import com.zlebank.zplatform.member.bean.MerchMK;
 import com.zlebank.zplatform.member.bean.enums.MemberType;
 import com.zlebank.zplatform.member.dao.MemberDAO;
-import com.zlebank.zplatform.member.dao.MerchMKDAO;
 import com.zlebank.zplatform.member.exception.DataCheckFailedException;
 import com.zlebank.zplatform.member.pojo.PojoMember;
-import com.zlebank.zplatform.member.pojo.PojoMerchMK;
 import com.zlebank.zplatform.member.service.MemberOperationService;
-import com.zlebank.zplatform.sms.pojo.enums.ModuleTypeEnum;
-import com.zlebank.zplatform.sms.service.ISMSService;
+import com.zlebank.zplatform.member.service.MemberService;
+import com.zlebank.zplatform.member.service.MerchMKService;
 import com.zlebank.zplatform.trade.dao.MerchWhiteListDAO;
 import com.zlebank.zplatform.trade.model.PojoMerchWhiteList;
+import com.zlebank.zplatform.trade.service.MerchWhiteListService;
 
 /**
  * Class Description
@@ -44,13 +44,16 @@ import com.zlebank.zplatform.trade.model.PojoMerchWhiteList;
 public class MerchBusinessServiceImpl implements MerchBusinessService{
 	
 	@Autowired
-	private MerchMKDAO merchMKDAO;
+	//private MerchMKDAO merchMKDAO;
+	private MerchMKService merchMKService;
 	@Autowired
-	private MerchWhiteListDAO merchWhiteListDAO;
+	//private MerchWhiteListDAO merchWhiteListDAO;
+	private MerchWhiteListService merchWhiteListService;
 	@Autowired
 	private MemberOperationService memberOperationService;
 	@Autowired
-	private MemberDAO memberDAO;
+	//private MemberDAO memberDAO;
+	private MemberService memberService;
 
 	/**
 	 *
@@ -63,14 +66,15 @@ public class MerchBusinessServiceImpl implements MerchBusinessService{
 	public boolean updateMerchPubKey(String memberId, String pub_key) throws MerchMKNotExistException,DataBaseErrorException {
 		// TODO Auto-generated method stub
 		
-		PojoMerchMK merchMK = merchMKDAO.get(memberId);
+		MerchMK merchMK = merchMKService.get(memberId);
 		if(merchMK==null){
 			//商户秘钥不存在异常
 			throw new MerchMKNotExistException();
 		}
 		merchMK.setMemberPubKey(pub_key);
 		try {
-			merchMKDAO.update(merchMK);
+			//merchMKDAO.update(merchMK);
+			merchMKService.updateMerchMK(merchMK);
 		} catch (Exception e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
@@ -89,7 +93,7 @@ public class MerchBusinessServiceImpl implements MerchBusinessService{
 	public boolean saveWhiteList(PojoMerchWhiteList merchWhiteList) throws DataBaseErrorException {
 		// TODO Auto-generated method stub
 		try {
-			merchWhiteListDAO.merge(merchWhiteList);
+			merchWhiteListService.merge(merchWhiteList);
 		} catch (Exception e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
@@ -105,7 +109,7 @@ public class MerchBusinessServiceImpl implements MerchBusinessService{
 	 */
 	@Transactional(propagation=Propagation.REQUIRED,rollbackFor=Throwable.class)
 	public boolean updateWhiteList(PojoMerchWhiteList merchWhiteList)  throws DataBaseErrorException,MerchWhiteListNotExistException{
-		PojoMerchWhiteList merchWhite = merchWhiteListDAO.getMerchWhiteListById(merchWhiteList.getId());
+		PojoMerchWhiteList merchWhite = merchWhiteListService.getMerchWhiteListById(merchWhiteList.getId());
 		if(merchWhite==null){
 			throw new MerchWhiteListNotExistException();
 		}
@@ -118,7 +122,7 @@ public class MerchBusinessServiceImpl implements MerchBusinessService{
 			merchWhite.setStatus(merchWhiteList.getStatus());
 			merchWhite.setUptime(merchWhiteList.getUptime());
 			merchWhite.setUpuser(merchWhiteList.getUpuser());
-			merchWhiteListDAO.update(merchWhite);
+			merchWhiteListService.merge(merchWhite);
 		} catch (Exception e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
@@ -136,13 +140,13 @@ public class MerchBusinessServiceImpl implements MerchBusinessService{
 	@Transactional(propagation=Propagation.REQUIRED,rollbackFor=Throwable.class)
 	public boolean deleteWhiteList(Long id)  throws DataBaseErrorException, MerchWhiteListNotExistException{
 		// TODO Auto-generated method stub
-		PojoMerchWhiteList merchWhiteList = merchWhiteListDAO.getMerchWhiteListById(id);
+		PojoMerchWhiteList merchWhiteList = merchWhiteListService.getMerchWhiteListById(id);
 		if(merchWhiteList==null){
 			throw new MerchWhiteListNotExistException();
 		}
 		merchWhiteList.setStatus("9");
 		try {
-			merchWhiteListDAO.merge(merchWhiteList);
+			merchWhiteListService.merge(merchWhiteList);
 		} catch (Exception e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
@@ -153,7 +157,7 @@ public class MerchBusinessServiceImpl implements MerchBusinessService{
 
 	@Transactional(propagation=Propagation.REQUIRED,rollbackFor=Throwable.class)
 	public boolean resetPayPwd(String memberId, String payPwd) throws DataCheckFailedException {
-		PojoMember pm = memberDAO.getMemberByMemberId(memberId, MemberType.ENTERPRISE);
+		PojoMember pm = memberService.getMbmberByMemberId(memberId, MemberType.ENTERPRISE);
 		if(pm==null){
 			return false;
 		}

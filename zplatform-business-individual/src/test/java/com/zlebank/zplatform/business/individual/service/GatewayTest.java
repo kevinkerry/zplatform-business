@@ -19,6 +19,7 @@ import com.zlebank.zplatform.business.individual.bean.enums.OrderStatus;
 import com.zlebank.zplatform.business.individual.exception.AbstractIndividualBusinessException;
 import com.zlebank.zplatform.commons.bean.CardBin;
 import com.zlebank.zplatform.sms.pojo.enums.ModuleTypeEnum;
+import com.zlebank.zplatform.trade.bean.CardBinBean;
 import com.zlebank.zplatform.trade.bean.ResultBean;
 import com.zlebank.zplatform.trade.common.page.PageVo;
 import com.zlebank.zplatform.trade.exception.AbstractTradeDescribeException;
@@ -59,7 +60,7 @@ public class GatewayTest {
 	
 	@Test
 	public void test_getCardBin(){
-		CardBin card = this.memberCardService.queryCardBin("6225768749734008");
+		CardBinBean card = this.memberCardService.queryCardBin("6225768749734008");
 		System.out.println(JSON.toJSONString(card));
 	}
 	

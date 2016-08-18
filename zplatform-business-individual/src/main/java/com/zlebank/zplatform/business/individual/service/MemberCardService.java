@@ -10,6 +10,7 @@ import com.zlebank.zplatform.commons.bean.CardBin;
 import com.zlebank.zplatform.commons.bean.PagedResult;
 import com.zlebank.zplatform.member.exception.DataCheckFailedException;
 import com.zlebank.zplatform.member.exception.UnbindBankFailedException;
+import com.zlebank.zplatform.trade.bean.CardBinBean;
 import com.zlebank.zplatform.trade.bean.ResultBean;
 import com.zlebank.zplatform.trade.common.page.PageVo;
 import com.zlebank.zplatform.trade.model.CashBankModel;
@@ -34,7 +35,7 @@ public interface MemberCardService {
 	 * @param bankCardNo 银行卡号
 	 * @return
 	 */
-	public CardBin queryCardBin(String bankCardNo);
+	public CardBinBean queryCardBin(String bankCardNo);
 	/**
 	 * 绑定银行卡 bind a bank card to member
 	 * @param member 会员信息

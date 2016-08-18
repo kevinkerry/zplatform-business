@@ -45,44 +45,41 @@ import com.zlebank.zplatform.business.individual.utils.Constants;
 import com.zlebank.zplatform.commons.bean.CardBin;
 import com.zlebank.zplatform.commons.bean.DefaultPageResult;
 import com.zlebank.zplatform.commons.bean.PagedResult;
-import com.zlebank.zplatform.commons.dao.CardBinDao;
 import com.zlebank.zplatform.commons.dao.pojo.BusiTypeEnum;
 import com.zlebank.zplatform.commons.enums.BusinessCodeEnum;
 import com.zlebank.zplatform.commons.utils.DateUtil;
 import com.zlebank.zplatform.commons.utils.StringUtil;
+import com.zlebank.zplatform.member.bean.CoopInsti;
 import com.zlebank.zplatform.member.bean.MemberBean;
 import com.zlebank.zplatform.member.bean.QuickpayCustBean;
 import com.zlebank.zplatform.member.bean.enums.MemberType;
-import com.zlebank.zplatform.member.dao.CoopInstiDAO;
-import com.zlebank.zplatform.member.dao.MemberDAO;
 import com.zlebank.zplatform.member.exception.DataCheckFailedException;
-import com.zlebank.zplatform.member.pojo.PojoCoopInsti;
 import com.zlebank.zplatform.member.pojo.PojoMember;
+import com.zlebank.zplatform.member.service.CoopInstiService;
 import com.zlebank.zplatform.member.service.MemberBankCardService;
 import com.zlebank.zplatform.member.service.MemberOperationService;
 import com.zlebank.zplatform.member.service.MemberService;
 import com.zlebank.zplatform.sms.service.ISMSService;
 import com.zlebank.zplatform.trade.adapter.quickpay.IQuickPayTrade;
+import com.zlebank.zplatform.trade.bean.CardBinBean;
 import com.zlebank.zplatform.trade.bean.ReaPayResultBean;
 import com.zlebank.zplatform.trade.bean.ResultBean;
 import com.zlebank.zplatform.trade.bean.TradeBean;
 import com.zlebank.zplatform.trade.bean.enums.ChannelEnmu;
 import com.zlebank.zplatform.trade.bean.gateway.OrderAsynRespBean;
 import com.zlebank.zplatform.trade.bean.wap.WapCardBean;
-import com.zlebank.zplatform.trade.dao.ConfigInfoDAO;
-import com.zlebank.zplatform.trade.dao.ITxnsOrderinfoDAO;
 import com.zlebank.zplatform.trade.exception.AbstractTradeDescribeException;
 import com.zlebank.zplatform.trade.exception.BalanceNotEnoughException;
 import com.zlebank.zplatform.trade.exception.FailToGetAccountInfoException;
 import com.zlebank.zplatform.trade.exception.TradeException;
 import com.zlebank.zplatform.trade.factory.TradeAdapterFactory;
 import com.zlebank.zplatform.trade.model.ConfigInfoModel;
-import com.zlebank.zplatform.trade.model.QuickpayCustModel;
 import com.zlebank.zplatform.trade.model.TxnsLogModel;
 import com.zlebank.zplatform.trade.model.TxnsNotifyTaskModel;
 import com.zlebank.zplatform.trade.model.TxnsOrderinfoModel;
+import com.zlebank.zplatform.trade.service.CardBinService;
+import com.zlebank.zplatform.trade.service.ConfigInfoService;
 import com.zlebank.zplatform.trade.service.IGateWayService;
-import com.zlebank.zplatform.trade.service.IQuickpayCustService;
 import com.zlebank.zplatform.trade.service.ITxnsLogService;
 import com.zlebank.zplatform.trade.service.ITxnsNotifyTaskService;
 import com.zlebank.zplatform.trade.service.ITxnsQuickpayService;
@@ -107,19 +104,23 @@ public class OrderServiceImpl implements OrderService {
     private com.zlebank.zplatform.member.service.MemberAccountService memberAccountServiceImpl;
     @Autowired
     private ISMSService smsService;
+   // @Autowired
+   //private IQuickpayCustService quickpayCustService;
+   
+    /*@Autowired
+	private MemberDAO memberDAO;*/
+    
     @Autowired
-    private IQuickpayCustService quickpayCustService;
-    @Autowired
-    CoopInstiDAO coopInstiDAO;
-    @Autowired
-	private MemberDAO memberDAO;
+    private MemberService memberService;
+    
     @Autowired
 	private MemberBankCardService memberBankCardService;
     @Autowired
-    private CardBinDao cardBinDao;
+    //private CardBinDao cardBinDao;
+    private CardBinService cardBinService;
     @Autowired
-    private ConfigInfoDAO configInfoDAO;
-
+    //private ConfigInfoDAO configInfoDAO;
+    private ConfigInfoService configInfoService;
     @Autowired
     private AccEntryService accEntryService;
     @Autowired
@@ -128,12 +129,14 @@ public class OrderServiceImpl implements OrderService {
     private WeChatService weChatService;
     @Autowired
     private ITxnsQuickpayService txnsQuickpayService;
-    @Autowired
-    private ITxnsOrderinfoDAO txnsOrderinfoDAO;
+    
     @Autowired
     private ITxnsNotifyTaskService txnsNotifyTaskService;
     @Autowired
     private WeChatQRService weChatQRService;
+    @Autowired
+    private CoopInstiService coopInstiService;
+   
     
 	/**
 	 *
@@ -373,8 +376,10 @@ public class OrderServiceImpl implements OrderService {
         if (payWay == PayWay.ACCOUNT) {
             phoneNo = member.getPhone();
         } else if (payWay == PayWay.QUICK){
-            QuickpayCustModel card = quickpayCustService.getCardByBindId(orderObj.getBindId());
-            phoneNo = card.getPhone();
+            //QuickpayCustModel card = quickpayCustService.getCardByBindId(orderObj.getBindId());
+        	QuickpayCustBean memberBankCard = memberBankCardService.getMemberBankCardById(Long.valueOf(orderObj.getBindId()));
+        			//quickpayCustService.getCardByBindId(orderObj.getBindId());
+            phoneNo = memberBankCard.getPhone();
         }
         switch (payWay) {
             case ACCOUNT :
@@ -391,9 +396,9 @@ public class OrderServiceImpl implements OrderService {
                 updateAnonOrderToMemberOrder(orderObj);
                 break;
             case QUICK :
-                QuickpayCustModel card = quickpayCustService
-                        .getCardByBindId(orderObj.getBindId());
-                if (card == null) {
+                //QuickpayCustModel card = quickpayCustService.getCardByBindId(orderObj.getBindId());
+                QuickpayCustBean memberBankCard = memberBankCardService.getMemberBankCardById(Long.valueOf(orderObj.getBindId()));
+                if (memberBankCard == null) {
                     throw new InvalidBindIdException();
                 }
                 gateWayService.submitPay(order);
@@ -443,26 +448,27 @@ public class OrderServiceImpl implements OrderService {
         String bindId = orderObj.getBindId();
         String cardNo = orderObj.getCardNo();
         String phoneNo = "";
-        QuickpayCustModel card = null;
+        QuickpayCustBean memberBankCard = null;
         if(StringUtil.isNotEmpty(bindId)&&StringUtil.isNotEmpty(cardNo)){//绑卡标示和卡信息同时不为空时
-        	card = quickpayCustService.getCardByBindId(orderObj.getBindId());
-        	if (card == null) {
+        	 memberBankCard = memberBankCardService.getMemberBankCardById(Long.valueOf(orderObj.getBindId()));
+        	if (memberBankCard == null) {
                 throw new InvalidBindIdException();
             }
         	//绑卡表中的卡信息和参数卡信息进行比较
-        	if(!card.getAccname().equals(orderObj.getAccNo())||!card.getCardno().equals(orderObj.getCardNo())||
-        			!card.getIdnum().equals(orderObj.getCertifId())||!card.getPhone().equals(orderObj.getPhoneNo())){
+        	if(!memberBankCard.getAccname().equals(orderObj.getAccNo())||!memberBankCard.getCardno().equals(orderObj.getCardNo())||
+        			!memberBankCard.getIdnum().equals(orderObj.getCertifId())||!memberBankCard.getPhone().equals(orderObj.getPhoneNo())){
         		throw new InvalidBindIdException();
         	}
-        	phoneNo = card.getPhone();
+        	phoneNo = memberBankCard.getPhone();
         }else if(StringUtil.isNotEmpty(bindId)){
-        	card = quickpayCustService.getCardByBindId(orderObj.getBindId());
-        	phoneNo = card.getPhone();
+        	memberBankCard = memberBankCardService.getMemberBankCardById(Long.valueOf(orderObj.getBindId()));
+        	phoneNo = memberBankCard.getPhone();
         }else if(StringUtil.isNotEmpty(cardNo)){
-        	List<QuickpayCustModel> cardList =this.quickpayCustService.getCardList(cardNo,orderObj.getCustomerNm(),orderObj.getPhoneNo(),orderObj.getCertifId(),memberId);
+        	//List<QuickpayCustModel> cardList =this.quickpayCustService.getCardList(cardNo,orderObj.getCustomerNm(),orderObj.getPhoneNo(),orderObj.getCertifId(),memberId);
         			//(List<QuickpayCustModel>) quickpayCustService.queryByHQL("from QuickpayCustModel where cardno=? and accname = ? and phone = ? and idnum = ? and relatememberno = ? and status = ?", new Object[]{cardNo,orderObj.getCustomerNm(),orderObj.getPhoneNo(),orderObj.getCertifId(),memberId,"00"});
-        	if(cardList.size()>0){
-        		orderObj.setBindId(cardList.get(0).getId()+"");
+        	QuickpayCustBean quickpayCustBean = memberBankCardService.getCardList(cardNo,orderObj.getCustomerNm(), orderObj.getPhoneNo(), orderObj.getCertifId(), memberId);
+        	if(quickpayCustBean!=null){
+        		orderObj.setBindId(quickpayCustBean.getId()+"");
         	}else{
         		throw new InvalidBindIdException();
         	}
@@ -488,17 +494,23 @@ public class OrderServiceImpl implements OrderService {
 	public ResultBean anonymousRealName(IndividualRealInfo individualRealInfo,String memberId) {
     	ResultBean resultBean = null;
     	try {
-			PojoMember pm = memberDAO.getMemberByMemberId(memberId, null);
+			//PojoMember pm = memberDAO.getMemberByMemberId(memberId, null);
+			PojoMember pm = memberService.getMbmberByMemberId(memberId, null);
+			
 			// 【实名认证】
-			PojoCoopInsti pojoCoopInsti = coopInstiDAO.get(pm.getInstiId());
+			//PojoCoopInsti pojoCoopInsti = coopInstiDAO.get(pm.getInstiId());
+			CoopInsti coopInsti = coopInstiService.getInstiByInstiID(pm.getInstiId());
+			
+			
+			
 			WapCardBean cardBean = new WapCardBean(individualRealInfo.getCardNo(), individualRealInfo.getCardType(), individualRealInfo.getCustomerName(), 
 			        individualRealInfo.getCertifType(), individualRealInfo.getCertifNo(), individualRealInfo.getPhoneNo(), individualRealInfo.getCvn2(), 
 			        individualRealInfo.getExpired());
-			resultBean = gateWayService.bindingBankCard(pojoCoopInsti.getInstiCode(), memberId, cardBean);
+			resultBean = gateWayService.bindingBankCard(coopInsti.getInstiCode(), memberId, cardBean);
 			if(resultBean.isResultBool()){
 			    //保存绑卡信息
 			    QuickpayCustBean quickpayCustBean = new QuickpayCustBean();
-			    quickpayCustBean.setCustomerno(pojoCoopInsti.getInstiCode());
+			    quickpayCustBean.setCustomerno(coopInsti.getInstiCode());
 			    quickpayCustBean.setCardno(individualRealInfo.getCardNo());
 			    quickpayCustBean.setCardtype(individualRealInfo.getCardType());
 			    quickpayCustBean.setAccname(individualRealInfo.getCustomerName());
@@ -510,7 +522,7 @@ public class OrderServiceImpl implements OrderService {
 			    quickpayCustBean.setRelatememberno("999999999999999");
 			    //新增设备ID支持匿名支付
 			    quickpayCustBean.setDevId(individualRealInfo.getDevId());
-			    CardBin cardBin = cardBinDao.getCard(individualRealInfo.getCardNo());
+			    CardBinBean cardBin = cardBinService.getCard(individualRealInfo.getCardNo());
 			    quickpayCustBean.setBankcode(cardBin.getBankCode());
 			    quickpayCustBean.setBankname(cardBin.getBankName());
 			    long bindId = memberBankCardService.saveQuickPayCust(quickpayCustBean);
@@ -518,7 +530,7 @@ public class OrderServiceImpl implements OrderService {
 			    boolean isCost = false;
 			    BusinessCodeEnum busiCode = BusinessCodeEnum.REALNAME_AUTH_COST;
 			    //记录实名认证手续费
-			    ConfigInfoModel startTime = configInfoDAO.getConfigByParaName("REALNAME_AUTH_PRICE");
+			    ConfigInfoModel startTime = configInfoService.getConfigByParaName("REALNAME_AUTH_PRICE");
 			    // 记录分录流水
 			    TradeInfo tradeInfo = new TradeInfo();
 			    tradeInfo.setTxnseqno(OrderNumber.getInstance().generateTxnseqno("8000"));
@@ -531,7 +543,7 @@ public class OrderServiceImpl implements OrderService {
 			    tradeInfo.setCharge(new BigDecimal(startTime.getPara()));// 手续费
 			    
 			    tradeInfo.setChannelId(ChannelEnmu.CMBCWITHHOLDING.getChnlcode());
-			    tradeInfo.setCoopInstCode(pojoCoopInsti.getInstiCode());
+			    tradeInfo.setCoopInstCode(coopInsti.getInstiCode());
 			    accEntryService.accEntryProcess(tradeInfo,EntryEvent.TRADE_SUCCESS);
 			    resultBean = new ResultBean(bindId);
 			}
@@ -619,30 +631,31 @@ public class OrderServiceImpl implements OrderService {
         String bindId = orderObj.getBindId();
         String cardNo = orderObj.getCardNo();
         String phoneNo = "";
-        QuickpayCustModel card = null;
+        QuickpayCustBean  memberBankCard = null;
         if(StringUtil.isNotEmpty(bindId)&&StringUtil.isNotEmpty(cardNo)){//绑卡标示和卡信息同时不为空时
-        	card = quickpayCustService.getCardByBindId(orderObj.getBindId());
-        	if (card == null) {
+        	memberBankCard = memberBankCardService.getMemberBankCardById(Long.valueOf(orderObj.getBindId()));
+        	if (memberBankCard == null) {
                 //throw new InvalidBindIdException();
         		result =new ResultBean("", "无效的卡信息");
         		result.setResultObj(map);
         		return result;
             }
         	//绑卡表中的卡信息和参数卡信息进行比较
-        	if(!card.getAccname().equals(orderObj.getAccNo())||!card.getCardno().equals(orderObj.getCardNo())||
-        			!card.getIdnum().equals(orderObj.getCertifId())||!card.getPhone().equals(orderObj.getPhoneNo())){
+        	if(!memberBankCard.getAccname().equals(orderObj.getAccNo())||!memberBankCard.getCardno().equals(orderObj.getCardNo())||
+        			!memberBankCard.getIdnum().equals(orderObj.getCertifId())||!memberBankCard.getPhone().equals(orderObj.getPhoneNo())){
         		result =new ResultBean("", "请检查输入的卡信息");
         		result.setResultObj(map);
         		return result;
         	}
-        	phoneNo = card.getPhone();
+        	phoneNo = memberBankCard.getPhone();
         }else if(StringUtil.isNotEmpty(bindId)){
-        	card = quickpayCustService.getCardByBindId(orderObj.getBindId());
-        	phoneNo = card.getPhone();
+        	memberBankCard = memberBankCardService.getMemberBankCardById(Long.valueOf(orderObj.getBindId()));
+        	phoneNo = memberBankCard.getPhone();
         }else if(StringUtil.isNotEmpty(cardNo)){
-        	List<QuickpayCustModel> cardList =this.quickpayCustService.getCardList(cardNo,orderObj.getCustomerNm(),orderObj.getPhoneNo(),orderObj.getCertifId(),memberId);
-        	if(cardList.size()>0){
-        		orderObj.setBindId(cardList.get(0).getId()+"");
+        	//List<QuickpayCustModel> cardList =this.quickpayCustService.getCardList(cardNo,orderObj.getCustomerNm(),orderObj.getPhoneNo(),orderObj.getCertifId(),memberId);
+        	QuickpayCustBean quickpayCustBean = memberBankCardService.getCardList(cardNo,orderObj.getCustomerNm(), orderObj.getPhoneNo(), orderObj.getCertifId(), memberId);
+        	if(quickpayCustBean!=null){
+        		orderObj.setBindId(quickpayCustBean.getId()+"");
         	}else{
         		result =new ResultBean("", "请检查输入的卡信息");
         		result.setResultObj(map);
@@ -662,6 +675,8 @@ public class OrderServiceImpl implements OrderService {
         Order orderRet = queryOrder(memberId,orderObj.getTn());
         map.put("orderStatus", orderRet.getStatus());
         if(orderRet.getStatus().equals(OrderStatus.SUCCESS)){
+        	
+        	
         	ResultBean orderResp = gateWayService.generateAsyncRespMessage(txnsLog.getTxnseqno());
         	OrderAsynRespBean respBean = (OrderAsynRespBean) orderResp.getResultObj();
         	TxnsNotifyTaskModel task;

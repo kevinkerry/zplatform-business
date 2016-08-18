@@ -25,6 +25,7 @@ import com.zlebank.zplatform.commons.bean.PagedResult;
 import com.zlebank.zplatform.member.exception.DataCheckFailedException;
 import com.zlebank.zplatform.member.exception.UnbindBankFailedException;
 import com.zlebank.zplatform.sms.pojo.enums.ModuleTypeEnum;
+import com.zlebank.zplatform.trade.bean.CardBinBean;
 
 /**
  * Class Description
@@ -54,7 +55,7 @@ public class MemberCardServiceTest extends ApplicationContextAbled {
 	public void test_queryCardBin() {
 		MemberCardService memberCardService = (MemberCardService) getContext()
 				.getBean("memberCardService");
-		CardBin cardbin = memberCardService.queryCardBin("123456789012");
+		CardBinBean cardbin = memberCardService.queryCardBin("123456789012");
 		System.out.println(JSON.toJSONString(cardbin));
 	}
 

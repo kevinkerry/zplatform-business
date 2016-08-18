@@ -15,8 +15,6 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import javax.management.RuntimeErrorException;
-
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -30,45 +28,37 @@ import com.zlebank.zplatform.business.individual.bean.Bank;
 import com.zlebank.zplatform.business.individual.bean.BankCardInfo;
 import com.zlebank.zplatform.business.individual.bean.IndividualRealInfo;
 import com.zlebank.zplatform.business.individual.bean.Member;
-import com.zlebank.zplatform.business.individual.bean.Order;
 import com.zlebank.zplatform.business.individual.bean.SupportedBankCardType;
 import com.zlebank.zplatform.business.individual.service.MemberCardService;
 import com.zlebank.zplatform.commons.bean.CardBin;
 import com.zlebank.zplatform.commons.bean.DefaultPageResult;
 import com.zlebank.zplatform.commons.bean.PagedResult;
-import com.zlebank.zplatform.commons.dao.CardBinDao;
-import com.zlebank.zplatform.commons.utils.StringUtil;
+import com.zlebank.zplatform.member.bean.CoopInsti;
 import com.zlebank.zplatform.member.bean.MemberBean;
 import com.zlebank.zplatform.member.bean.QuickpayCustBean;
 import com.zlebank.zplatform.member.bean.RealNameBean;
 import com.zlebank.zplatform.member.bean.enums.MemberType;
-import com.zlebank.zplatform.member.dao.CoopInstiDAO;
 import com.zlebank.zplatform.member.exception.DataCheckFailedException;
 import com.zlebank.zplatform.member.exception.UnbindBankFailedException;
-import com.zlebank.zplatform.member.pojo.PojoCoopInsti;
 import com.zlebank.zplatform.member.pojo.PojoMember;
+import com.zlebank.zplatform.member.service.CoopInstiService;
 import com.zlebank.zplatform.member.service.MemberBankCardService;
 import com.zlebank.zplatform.member.service.MemberOperationService;
 import com.zlebank.zplatform.member.service.MemberService;
 import com.zlebank.zplatform.sms.pojo.enums.ModuleTypeEnum;
 import com.zlebank.zplatform.sms.service.ISMSService;
+import com.zlebank.zplatform.trade.bean.CardBinBean;
 import com.zlebank.zplatform.trade.bean.ResultBean;
-import com.zlebank.zplatform.trade.bean.TradeBean;
 import com.zlebank.zplatform.trade.bean.wap.WapCardBean;
 import com.zlebank.zplatform.trade.common.page.PageVo;
-import com.zlebank.zplatform.trade.dao.ITxnsOrderinfoDAO;
 import com.zlebank.zplatform.trade.exception.TradeException;
 import com.zlebank.zplatform.trade.model.CashBankModel;
 import com.zlebank.zplatform.trade.model.TxnsLogModel;
 import com.zlebank.zplatform.trade.model.TxnsOrderinfoModel;
+import com.zlebank.zplatform.trade.service.CardBinService;
 import com.zlebank.zplatform.trade.service.ICashBankService;
 import com.zlebank.zplatform.trade.service.IGateWayService;
-
-import com.zlebank.zplatform.trade.service.IQuickpayCustService;
-
 import com.zlebank.zplatform.trade.service.ITxnsLogService;
-import com.zlebank.zplatform.trade.service.IWebGateWayService;
-import com.zlebank.zplatform.trade.utils.AmountUtil;
 
 /**
  * Class Description
@@ -83,28 +73,25 @@ public class MemberCardServiceImpl implements MemberCardService{
 	private static final Log log = LogFactory.getLog(MemberCardServiceImpl.class);
 	@Autowired
 	private IGateWayService gateWayService;
-	@Autowired
-	private IWebGateWayService  webGateWayService;
+	
 	@Autowired
 	private MemberBankCardService memberBankCardService;
 	@Autowired
-	private CardBinDao cardBinDao;
+	//private CardBinDao cardBinDao;
+	private CardBinService cardBinService;
 	@Autowired
 	private ICashBankService cashBankService;
 	@Autowired
 	private ISMSService smsService;
     @Autowired
-    CoopInstiDAO coopInstiDAO;
+    //CoopInstiDAO coopInstiDAO;
+    private CoopInstiService coopInstiService;
     @Autowired
     private MemberService memberServiceImpl;
     @Autowired
     private MemberOperationService memberOperationServiceImpl;
-
-    @Autowired
-    private IQuickpayCustService quickpayCustService;
-
-	@Autowired
-	private ITxnsOrderinfoDAO orderDao;
+    //@Autowired
+    //private IQuickpayCustService quickpayCustService;
 	@Autowired
 	private ITxnsLogService txnsLogService;
 	
@@ -150,8 +137,8 @@ public class MemberCardServiceImpl implements MemberCardService{
 	 */
 	@Override
 	@Transactional(propagation=Propagation.REQUIRED,rollbackFor=Throwable.class)
-	public CardBin queryCardBin(String bankCardNo) {
-		CardBin cardBin = cardBinDao.getCard(bankCardNo);
+	public CardBinBean queryCardBin(String bankCardNo) {
+		CardBinBean cardBin = cardBinService.getCard(bankCardNo);
 		if (cardBin == null)
 		    return null;
 		cardBin.setBankCode(cardBin.getBankCode()+"0000");
@@ -185,7 +172,7 @@ public class MemberCardServiceImpl implements MemberCardService{
         if (!realName.equals(cardName)) 
             throw new RuntimeException("绑卡姓名和实名信息不一致");
 		QuickpayCustBean quickpayCustBean = new QuickpayCustBean();
-		PojoCoopInsti pojoCoopInsti = coopInstiDAO.getByInstiCode(individualMember.getInstiCode());
+		CoopInsti pojoCoopInsti = coopInstiService.getInstiByInstiCode(individualMember.getInstiCode());
 		quickpayCustBean.setCustomerno(pojoCoopInsti.getInstiCode());
 		quickpayCustBean.setCardno(bankCardInfo.getBankCardInfo().getCardNo());
 		quickpayCustBean.setCardtype(bankCardInfo.getBankCardInfo().getCardType());
@@ -320,7 +307,7 @@ public class MemberCardServiceImpl implements MemberCardService{
             quickpayCustBean.setRelatememberno("999999999999999");
             //新增设备ID支持匿名支付
             quickpayCustBean.setDevId(devId);
-            CardBin cardBin = cardBinDao.getCard(cardNo);
+            CardBinBean cardBin = cardBinService.getCard(cardNo);
             quickpayCustBean.setBankcode(cardBin.getBankCode());
             quickpayCustBean.setBankname(cardBin.getBankName());
             long bindId = memberBankCardService.saveQuickPayCust(quickpayCustBean);
