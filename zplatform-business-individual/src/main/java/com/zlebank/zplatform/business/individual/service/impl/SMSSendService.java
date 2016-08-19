@@ -89,7 +89,6 @@ public class SMSSendService implements SmsService{
 	 * @return
 	 */
 	@Override
-	@Transactional
 	public boolean sendSmsCode(String json, ModuleTypeEnum moduleType) {
 		JSONObject jsonObject =  JSON.parseObject(json);
 		int retcode = 999;
