@@ -169,8 +169,10 @@ public class SMSSendService implements SmsService{
 		        	        	log.error("绑卡签约失败"+JSON.toJSONString(cardBean));
 		        	        	return false;
 		        	        }
-		        	        if(resultBean.isResultBool()){
-		        	        	//保存绑卡信息
+		        	        //绑卡签约成功则已发送短信，因此去掉此逻辑
+		        	       if(resultBean.isResultBool()){
+			        			return true;
+		        	        	/*//保存绑卡信息
 		        	            QuickpayCustBean quickpayCustBean = new QuickpayCustBean();
 		        	            quickpayCustBean.setCustomerno(instiCode);
 		        	            quickpayCustBean.setCardno(cardNo);
@@ -193,13 +195,16 @@ public class SMSSendService implements SmsService{
 		    	        		resultMap.put("bindId", bindId+"");
 		    	        		try {
 		    						gateWayService.sendSMSMessage(JSON.toJSONString(resultMap));
+		    						
 		    						return true;
 		    					} catch (TradeException e) {
 		    						e.printStackTrace();
 		    						log.error("发送短信失败"+e.getMessage());
 		    						return false;
-		    					}
-		        	            
+		    					}*/
+		        	        }else{
+		        	        	log.error("发送短信失败 :resultBean error  msg "+resultBean.getErrCode()+resultBean.getErrMsg());
+			        			return false;
 		        	        }
 		        		}else{
 		        			log.error("发送短信失败 :bindFlag is null");
