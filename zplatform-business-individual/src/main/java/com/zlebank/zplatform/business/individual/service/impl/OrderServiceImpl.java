@@ -67,6 +67,7 @@ import com.zlebank.zplatform.trade.bean.ReaPayResultBean;
 import com.zlebank.zplatform.trade.bean.ResultBean;
 import com.zlebank.zplatform.trade.bean.TradeBean;
 import com.zlebank.zplatform.trade.bean.enums.ChannelEnmu;
+import com.zlebank.zplatform.trade.bean.enums.ChnlTypeEnum;
 import com.zlebank.zplatform.trade.bean.gateway.OrderAsynRespBean;
 import com.zlebank.zplatform.trade.bean.wap.WapCardBean;
 import com.zlebank.zplatform.trade.dao.ConfigInfoDAO;
@@ -77,10 +78,12 @@ import com.zlebank.zplatform.trade.exception.FailToGetAccountInfoException;
 import com.zlebank.zplatform.trade.exception.TradeException;
 import com.zlebank.zplatform.trade.factory.TradeAdapterFactory;
 import com.zlebank.zplatform.trade.model.ConfigInfoModel;
+import com.zlebank.zplatform.trade.model.PojoRspmsg;
 import com.zlebank.zplatform.trade.model.QuickpayCustModel;
 import com.zlebank.zplatform.trade.model.TxnsLogModel;
 import com.zlebank.zplatform.trade.model.TxnsNotifyTaskModel;
 import com.zlebank.zplatform.trade.model.TxnsOrderinfoModel;
+import com.zlebank.zplatform.trade.model.TxnsWithholdingModel;
 import com.zlebank.zplatform.trade.service.IGateWayService;
 import com.zlebank.zplatform.trade.service.IQuickpayCustService;
 import com.zlebank.zplatform.trade.service.ITxnsLogService;
@@ -205,6 +208,8 @@ public class OrderServiceImpl implements OrderService {
 		order.setOrderType( OrderType.fromValue(code));
 		//交易类型
 		order.setBusiType(txnsLog.getBusitype());
+		 ResultBean queryResultBean = null;
+	    ReaPayResultBean payResult = null;
 		if(ChannelEnmu.REAPAY==ChannelEnmu.fromValue(txnsLog.getPayinst())){//支付渠道为融宝时
 			if(OrderStatus.fromValue(orderinfoModel.getStatus())==OrderStatus.PAYING){//订单状态为正在支付
 				//调用融宝查询方法
@@ -228,8 +233,6 @@ public class OrderServiceImpl implements OrderService {
 		        String reapayOrderNo = txnsQuickpayService.getReapayOrderNo(orderinfoModel.getRelatetradetxn());
 		        TradeBean trade = new TradeBean();
 		        trade.setReaPayOrderNo(reapayOrderNo);
-		        ResultBean queryResultBean = null;
-		        ReaPayResultBean payResult = null;
 		        for (int i = 0; i < 5; i++) {
 		        	txnsLog = txnsLogService.getTxnsLogByTxnseqno(orderinfoModel.getRelatetradetxn());
 		        	if("0000".equals(txnsLog.getPayretcode())||"3006".equals(txnsLog.getPayretcode())||"3053".equals(txnsLog.getPayretcode())||"3054".equals(txnsLog.getPayretcode())||
@@ -266,9 +269,52 @@ public class OrderServiceImpl implements OrderService {
 	                
 		        }
 			}
+		}else{
+			if(OrderStatus.fromValue(orderinfoModel.getStatus())==OrderStatus.PAYING){
+				//调用融宝查询方法
+				IQuickPayTrade quickPayTrade = null;
+		        try {
+		            quickPayTrade = TradeAdapterFactory.getInstance()
+		                    .getQuickPayTrade(txnsLog.getPayinst());
+		        } catch (TradeException e) {
+		            // TODO Auto-generated catch block
+		            e.printStackTrace();
+		        } catch (ClassNotFoundException e) {
+		            // TODO Auto-generated catch block
+		            e.printStackTrace();
+		        } catch (InstantiationException e) {
+		            // TODO Auto-generated catch block
+		            e.printStackTrace();
+		        } catch (IllegalAccessException e) {
+		            // TODO Auto-generated catch block
+		            e.printStackTrace();
+		        }
+		         TradeBean trade = new TradeBean();
+		         trade.setTxnseqno(txnsLog.getTxnseqno());
+			    for (int i = 0; i < 5; i++) {
+				    	try {
+							Thread.sleep(1000);
+						} catch (InterruptedException e) {
+							// TODO Auto-generated catch block
+							e.printStackTrace();
+						}
+			    	 	queryResultBean = quickPayTrade.queryTrade(trade);
+		                if(queryResultBean.isResultBool()) {
+		    				TxnsWithholdingModel withholding = (TxnsWithholdingModel)queryResultBean.getResultObj();
+		    				 if("S".equalsIgnoreCase(withholding.getExectype())){
+		    					 order.setStatus(OrderStatus.SUCCESS);
+		                         break;
+		                     }else if("E".equalsIgnoreCase(withholding.getExectype())){
+		                    	 order.setStatus(OrderStatus.FAILURE);
+		                         break;
+		                     }else if("R".equalsIgnoreCase(withholding.getExectype())){
+		                         continue;
+		                     }
+		    			} 
+	                
+		        }
+			}
 		}
-		
-		
 		return order;
 	}
 

@@ -139,6 +139,7 @@ public class SMSSendService implements SmsService{
 					 String instiCode = jsonObject.get("instiCode")+"";
 					 String devId = jsonObject.get("devId")+"";
 					 List<QuickpayCustModel> cardList=null;
+					 String merId = null;
 					 if(StringUtil.isNotEmpty(devId)){
 						 cardList = this.quickpayCustService.getCardList(cardNo, customerNm, phoneNo, certifId, "999999999999999",devId);
 					 }else{
@@ -158,21 +159,20 @@ public class SMSSendService implements SmsService{
 						}
 		        	}else{
 		        		if("1".equals(bindFlag)){//需要进行绑卡签约
-		        			 if(StringUtil.isEmpty(instiCode)){
-		        				 TxnsOrderinfoModel orderinfo = gateWayService.getOrderinfoByTN(tn_);
-		        				 TxnsLogModel txnsLog = txnsLogService.getTxnsLogByTxnseqno(orderinfo.getRelatetradetxn());
-		        				 instiCode = txnsLog.getAcccoopinstino();
-		        			 }
+		        			 TxnsOrderinfoModel orderinfo = gateWayService.getOrderinfoByTN(tn_);
+	        				 TxnsLogModel txnsLog = txnsLogService.getTxnsLogByTxnseqno(orderinfo.getRelatetradetxn());
+	        				 instiCode = txnsLog.getAcccoopinstino();
+		        			 merId = StringUtil.isNotEmpty(orderinfo.getSecmemberno()) ?   orderinfo.getSecmemberno():orderinfo.getFirmemberno();
 		        	        WapCardBean cardBean = new WapCardBean(cardNo,cardType , customerNm,certifTp, certifId, phoneNo, cvn2, expired);
-		        	        ResultBean resultBean = gateWayService.bindingBankCard(instiCode, "999999999999999", cardBean);
+		        	        cardBean.setTn(tn_);
+		        	        ResultBean resultBean = gateWayService.bindingBankCard(merId, "999999999999999", cardBean);
 		        	        if(resultBean==null){
 		        	        	log.error("绑卡签约失败"+JSON.toJSONString(cardBean));
 		        	        	return false;
 		        	        }
 		        	        //绑卡签约成功则已发送短信，因此去掉此逻辑
 		        	       if(resultBean.isResultBool()){
-			        			return true;
-		        	        	/*//保存绑卡信息
+		        	    	 //保存绑卡信息
 		        	            QuickpayCustBean quickpayCustBean = new QuickpayCustBean();
 		        	            quickpayCustBean.setCustomerno(instiCode);
 		        	            quickpayCustBean.setCardno(cardNo);
@@ -189,19 +189,8 @@ public class SMSSendService implements SmsService{
 		        	            CardBin cardBin = cardBinDao.getCard(cardNo);
 		        	            quickpayCustBean.setBankcode(cardBin.getBankCode());
 		        	            quickpayCustBean.setBankname(cardBin.getBankName());
-		        	            long bindId = memberBankCardService.saveQuickPayCustExt(quickpayCustBean);
-		        	            Map<String, Object> resultMap = new HashMap<String, Object>();
-		    	        		resultMap.put("tn", tn_);
-		    	        		resultMap.put("bindId", bindId+"");
-		    	        		try {
-		    						gateWayService.sendSMSMessage(JSON.toJSONString(resultMap));
-		    						
-		    						return true;
-		    					} catch (TradeException e) {
-		    						e.printStackTrace();
-		    						log.error("发送短信失败"+e.getMessage());
-		    						return false;
-		    					}*/
+		        	            memberBankCardService.saveQuickPayCustExt(quickpayCustBean);
+			        			return true;
 		        	        }else{
 		        	        	log.error("发送短信失败 :resultBean error  msg "+resultBean.getErrCode()+resultBean.getErrMsg());
 			        			return false;
