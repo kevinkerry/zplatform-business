@@ -6,14 +6,10 @@ import com.zlebank.zplatform.business.individual.bean.BankCardInfo;
 import com.zlebank.zplatform.business.individual.bean.Member;
 import com.zlebank.zplatform.business.individual.bean.SupportedBankCardType;
 import com.zlebank.zplatform.business.individual.exception.SmsCodeVerifyFailException;
-import com.zlebank.zplatform.commons.bean.CardBin;
 import com.zlebank.zplatform.commons.bean.PagedResult;
-import com.zlebank.zplatform.member.exception.DataCheckFailedException;
-import com.zlebank.zplatform.member.exception.UnbindBankFailedException;
 import com.zlebank.zplatform.trade.bean.CardBinBean;
 import com.zlebank.zplatform.trade.bean.ResultBean;
 import com.zlebank.zplatform.trade.common.page.PageVo;
-import com.zlebank.zplatform.trade.model.CashBankModel;
 /**
  * Member bank card service
  * 
@@ -53,7 +49,7 @@ public interface MemberCardService {
 	 * @throws UnbindBankFailedException 
 	 * @throws DataCheckFailedException 
 	 */
-	public boolean unbindBankCard(String memberId, String bindcardid, String payPwd) throws DataCheckFailedException, UnbindBankFailedException;
+	public boolean unbindBankCard(String memberId, String bindcardid, String payPwd) throws Exception;
 	/**
 	 * 查询支持交易的银行卡列表  Query list of bank
 	 * @return

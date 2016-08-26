@@ -12,8 +12,6 @@ import com.zlebank.zplatform.business.individual.exception.AbstractIndividualBus
 import com.zlebank.zplatform.business.individual.exception.ValidateOrderException;
 import com.zlebank.zplatform.commons.bean.PagedResult;
 import com.zlebank.zplatform.trade.bean.ResultBean;
-import com.zlebank.zplatform.trade.exception.AbstractTradeDescribeException;
-import com.zlebank.zplatform.trade.exception.TradeException;
 
 
 public interface OrderService {
@@ -44,7 +42,7 @@ public interface OrderService {
      * @throws AbstractIndividualBusinessException
      */
     String createOrder(Order order) throws ValidateOrderException,
-            TradeException, AbstractIndividualBusinessException;
+            Exception, AbstractIndividualBusinessException;
     /**
      * Pay a order with account balance
      * 
@@ -54,8 +52,8 @@ public interface OrderService {
      * @return {@link OrderStatus}
      */
     OrderStatus pay(String order, String smsCode, String payPwd, PayWay payWay)
-            throws AbstractTradeDescribeException,
-            AbstractIndividualBusinessException,TradeException;
+            throws Exception,
+            AbstractIndividualBusinessException;
 
     /**
      * 匿名支付
@@ -69,8 +67,8 @@ public interface OrderService {
      */
     public OrderStatus anonymousPay(String order,
             String smsCode
-            ) throws AbstractTradeDescribeException,
-            AbstractIndividualBusinessException, TradeException;
+            ) throws 
+            AbstractIndividualBusinessException, Exception;
     
     /**
      * 匿名支付 实名认证
@@ -89,7 +87,7 @@ public interface OrderService {
      * @throws AbstractIndividualBusinessException
      */
     public String createRefundOrder(Order order) throws ValidateOrderException,
-    TradeException, AbstractIndividualBusinessException;
+    Exception, AbstractIndividualBusinessException;
     
     /**
      * 创建微信订单
@@ -136,7 +134,7 @@ public interface OrderService {
 	 * @param typeId
 	 * @return
 	 */
-	public JSONObject createWechatOrder(String tn , String typeId)throws TradeException;
+	public JSONObject createWechatOrder(String tn , String typeId)throws Exception;
 	
 	
 	 /***
@@ -144,7 +142,7 @@ public interface OrderService {
      * @param tn
      * @return
      */
-    public ResultBean queryWechatOrder(String tn,String typeId)throws TradeException;
+    public ResultBean queryWechatOrder(String tn,String typeId)throws Exception;
 	
 	
 }

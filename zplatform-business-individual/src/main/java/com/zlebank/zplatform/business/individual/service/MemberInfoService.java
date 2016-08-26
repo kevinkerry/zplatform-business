@@ -3,12 +3,6 @@ package com.zlebank.zplatform.business.individual.service;
 import com.zlebank.zplatform.business.individual.bean.IndividualRealInfo;
 import com.zlebank.zplatform.business.individual.bean.Member;
 import com.zlebank.zplatform.business.individual.bean.enums.RealNameTypeEnum;
-import com.zlebank.zplatform.member.exception.CreateBusiAcctFailedException;
-import com.zlebank.zplatform.member.exception.CreateMemberFailedException;
-import com.zlebank.zplatform.member.exception.DataCheckFailedException;
-import com.zlebank.zplatform.member.exception.InvalidMemberDataException;
-import com.zlebank.zplatform.member.exception.LoginFailedException;
-import com.zlebank.zplatform.member.exception.UnbindBankFailedException;
 
 
 public interface MemberInfoService {
@@ -21,7 +15,7 @@ public interface MemberInfoService {
 	 * @throws CreateMemberFailedException 
 	 * @throws InvalidMemberDataException 
 	 */
-	public String register(Member registerMemberInfo,String smsCode) throws InvalidMemberDataException, CreateMemberFailedException, CreateBusiAcctFailedException;
+	public String register(Member registerMemberInfo,String smsCode) throws Exception;
 	/**
 	 * 会员信息查询 Query a member information
 	 * @param loginName 登录名
@@ -38,7 +32,7 @@ public interface MemberInfoService {
 	 * @throws LoginFailedException 
 	 * @throws DataCheckFailedException 
 	 */
-	public String login(String loginName,String pwd,String coopInstiCode) throws DataCheckFailedException, LoginFailedException;
+	public String login(String loginName,String pwd,String coopInstiCode) throws Exception;
 	/**
 	 * 实名认证 Do a real name authenticate
 	 * @param individualRealInfo 实名认证信息
@@ -51,7 +45,7 @@ public interface MemberInfoService {
 	public boolean realName(IndividualRealInfo individualRealInfo,
             String smsCode,
             String payPwd,
-            String memberId,RealNameTypeEnum realNameTypeEnum) throws DataCheckFailedException, UnbindBankFailedException;
+            String memberId,RealNameTypeEnum realNameTypeEnum) throws Exception;
 	/**
 	 * 验证支付密码  Verify the pay password
 	 * @param memberId 会员号
@@ -59,7 +53,7 @@ public interface MemberInfoService {
 	 * @return
 	 * @throws DataCheckFailedException 
 	 */
-	public boolean vaildatePayPwd(String memberId,String payPwd) throws DataCheckFailedException;
+	public boolean vaildatePayPwd(String memberId,String payPwd) throws Exception;
 	
 	/**
 	 * 验证登录密码  Verify the login password
@@ -69,7 +63,7 @@ public interface MemberInfoService {
 	 * @throws DataCheckFailedException
 	 * @throws LoginFailedException 
 	 */
-	public boolean vaildatePwd(String memberId,String pwd) throws DataCheckFailedException, LoginFailedException;
+	public boolean vaildatePwd(String memberId,String pwd) throws Exception;
 	/**
 	 * Modify the login password.<p>Note:The up layer which invoker the method must make
      * sure that member has login</p>
@@ -80,7 +74,7 @@ public interface MemberInfoService {
 	 * @return
 	 * @throws DataCheckFailedException 
 	 */
-	public boolean modifyPwd(String memberId,String orgPwd,String pwd) throws DataCheckFailedException;
+	public boolean modifyPwd(String memberId,String orgPwd,String pwd) throws Exception;
 	/**
      * Modify the pay password.<p>Note:The up layer which invoker the method must make
      * sure that member has login</p>
@@ -91,7 +85,7 @@ public interface MemberInfoService {
 	 * @return
 	 * @throws DataCheckFailedException 
 	 */
-	public boolean modifyPayPwd(String memberId,String orgPayPwd,String payPwd) throws DataCheckFailedException;
+	public boolean modifyPayPwd(String memberId,String orgPayPwd,String payPwd) throws Exception;
 	/**
 	 * 重置登录密码 Reset login password.No need to make sure that member has login
 	 * @param memberId 会员号
@@ -100,7 +94,7 @@ public interface MemberInfoService {
 	 * @return
 	 * @throws DataCheckFailedException 
 	 */
-	public boolean resetPwd(String memberId,String pwd,String smsCode) throws DataCheckFailedException;
+	public boolean resetPwd(String memberId,String pwd,String smsCode) throws Exception;
 	/**
 	 * 重置支付密码 Reset pay password.No need to make sure that member has login
 	 * @param memberId 会员号
@@ -109,5 +103,5 @@ public interface MemberInfoService {
 	 * @return
 	 * @throws DataCheckFailedException 
 	 */
-	public boolean resetPayPwd(String memberId,String payPwd,String smsCode) throws DataCheckFailedException;
+	public boolean resetPayPwd(String memberId,String payPwd,String smsCode) throws Exception;
 }

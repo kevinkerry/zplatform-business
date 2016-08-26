@@ -30,7 +30,6 @@ import com.zlebank.zplatform.business.individual.bean.IndividualRealInfo;
 import com.zlebank.zplatform.business.individual.bean.Member;
 import com.zlebank.zplatform.business.individual.bean.SupportedBankCardType;
 import com.zlebank.zplatform.business.individual.service.MemberCardService;
-import com.zlebank.zplatform.commons.bean.CardBin;
 import com.zlebank.zplatform.commons.bean.DefaultPageResult;
 import com.zlebank.zplatform.commons.bean.PagedResult;
 import com.zlebank.zplatform.member.bean.CoopInsti;
@@ -38,27 +37,24 @@ import com.zlebank.zplatform.member.bean.MemberBean;
 import com.zlebank.zplatform.member.bean.QuickpayCustBean;
 import com.zlebank.zplatform.member.bean.RealNameBean;
 import com.zlebank.zplatform.member.bean.enums.MemberType;
-import com.zlebank.zplatform.member.exception.DataCheckFailedException;
-import com.zlebank.zplatform.member.exception.UnbindBankFailedException;
 import com.zlebank.zplatform.member.pojo.PojoMember;
-import com.zlebank.zplatform.member.service.CoopInstiService;
-import com.zlebank.zplatform.member.service.MemberBankCardService;
-import com.zlebank.zplatform.member.service.MemberOperationService;
-import com.zlebank.zplatform.member.service.MemberService;
+import com.zlebank.zplatform.rmi.member.ICoopInstiService;
+import com.zlebank.zplatform.rmi.member.IMemberBankCardService;
+import com.zlebank.zplatform.rmi.member.IMemberOperationService;
+import com.zlebank.zplatform.rmi.member.IMemberService;
+import com.zlebank.zplatform.rmi.trade.CardBinServiceProxy;
+import com.zlebank.zplatform.rmi.trade.CashBankServiceProxy;
+import com.zlebank.zplatform.rmi.trade.GateWayServiceProxy;
+import com.zlebank.zplatform.rmi.trade.TxnsLogServiceProxy;
 import com.zlebank.zplatform.sms.pojo.enums.ModuleTypeEnum;
 import com.zlebank.zplatform.sms.service.ISMSService;
 import com.zlebank.zplatform.trade.bean.CardBinBean;
 import com.zlebank.zplatform.trade.bean.ResultBean;
 import com.zlebank.zplatform.trade.bean.wap.WapCardBean;
 import com.zlebank.zplatform.trade.common.page.PageVo;
-import com.zlebank.zplatform.trade.exception.TradeException;
 import com.zlebank.zplatform.trade.model.CashBankModel;
 import com.zlebank.zplatform.trade.model.TxnsLogModel;
 import com.zlebank.zplatform.trade.model.TxnsOrderinfoModel;
-import com.zlebank.zplatform.trade.service.CardBinService;
-import com.zlebank.zplatform.trade.service.ICashBankService;
-import com.zlebank.zplatform.trade.service.IGateWayService;
-import com.zlebank.zplatform.trade.service.ITxnsLogService;
 
 /**
  * Class Description
@@ -72,28 +68,28 @@ import com.zlebank.zplatform.trade.service.ITxnsLogService;
 public class MemberCardServiceImpl implements MemberCardService{
 	private static final Log log = LogFactory.getLog(MemberCardServiceImpl.class);
 	@Autowired
-	private IGateWayService gateWayService;
+	private GateWayServiceProxy gateWayService;
 	
 	@Autowired
-	private MemberBankCardService memberBankCardService;
+	private IMemberBankCardService memberBankCardService;
 	@Autowired
 	//private CardBinDao cardBinDao;
-	private CardBinService cardBinService;
+	private CardBinServiceProxy cardBinService;
 	@Autowired
-	private ICashBankService cashBankService;
+	private CashBankServiceProxy cashBankService;
 	@Autowired
 	private ISMSService smsService;
     @Autowired
     //CoopInstiDAO coopInstiDAO;
-    private CoopInstiService coopInstiService;
+    private ICoopInstiService coopInstiService;
     @Autowired
-    private MemberService memberServiceImpl;
+    private IMemberService memberServiceImpl;
     @Autowired
-    private MemberOperationService memberOperationServiceImpl;
+    private IMemberOperationService memberOperationServiceImpl;
     //@Autowired
     //private IQuickpayCustService quickpayCustService;
 	@Autowired
-	private ITxnsLogService txnsLogService;
+	private TxnsLogServiceProxy txnsLogService;
 	
 	/**
 	 *
@@ -202,11 +198,11 @@ public class MemberCardServiceImpl implements MemberCardService{
 	@Override
 	@Transactional(propagation=Propagation.REQUIRED,rollbackFor=Throwable.class)
 	public boolean unbindBankCard(String memberId, String bindcardid,
-			String payPwd) throws DataCheckFailedException, UnbindBankFailedException {
+			String payPwd) throws Exception {
 		//校验支付密码
 	    PojoMember member = memberServiceImpl.getMbmberByMemberId(memberId, MemberType.INDIVIDUAL);
         if (member == null) {// 资金账户不存在
-            throw new UnbindBankFailedException("会员不存在");
+            throw new Exception("会员不存在");
         }
 	    MemberBean memberBean = new MemberBean();
         memberBean.setLoginName(member.getLoginName());
@@ -215,7 +211,7 @@ public class MemberCardServiceImpl implements MemberCardService{
         memberBean.setPaypwd(payPwd);
         // 校验支付密码
         if (!memberOperationServiceImpl.verifyPayPwd(MemberType.INDIVIDUAL,  memberBean)) {
-            throw new UnbindBankFailedException("支付密码不对");
+            throw new Exception("支付密码不对");
         }
 		QuickpayCustBean quickpayCustBean = new QuickpayCustBean();
 		quickpayCustBean.setId(Long.valueOf(bindcardid));
@@ -317,9 +313,9 @@ public class MemberCardServiceImpl implements MemberCardService{
     		try {
 				gateWayService.sendSMSMessage(JSON.toJSONString(resultMap));
 				return new ResultBean(bindId);
-			} catch (TradeException e) {
+			} catch (Exception e) {
 				e.printStackTrace();
-				return new ResultBean(e.getCode(),e.getMessage());
+				return new ResultBean("",e.getMessage());
 			}
             
         }else{

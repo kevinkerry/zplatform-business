@@ -31,32 +31,27 @@ import com.zlebank.zplatform.member.bean.MemberAccountBean;
 import com.zlebank.zplatform.member.bean.MemberBalanceDetailBean;
 import com.zlebank.zplatform.member.bean.MemberBean;
 import com.zlebank.zplatform.member.bean.enums.MemberType;
-import com.zlebank.zplatform.member.exception.DataCheckFailedException;
-import com.zlebank.zplatform.member.exception.GetAccountFailedException;
 import com.zlebank.zplatform.member.pojo.PojoMember;
-import com.zlebank.zplatform.member.service.MemberOperationService;
-import com.zlebank.zplatform.member.service.MemberService;
+import com.zlebank.zplatform.rmi.member.IMemberAccountService;
+import com.zlebank.zplatform.rmi.member.IMemberOperationService;
+import com.zlebank.zplatform.rmi.member.IMemberService;
+import com.zlebank.zplatform.rmi.trade.GateWayServiceProxy;
 import com.zlebank.zplatform.sms.service.ISMSService;
 import com.zlebank.zplatform.trade.bean.wap.WapWithdrawBean;
-import com.zlebank.zplatform.trade.exception.AbstractTradeDescribeException;
-import com.zlebank.zplatform.trade.exception.BalanceNotEnoughException;
-import com.zlebank.zplatform.trade.exception.FailToGetAccountInfoException;
-import com.zlebank.zplatform.trade.exception.TradeException;
-import com.zlebank.zplatform.trade.service.IGateWayService;
 
 @Service("busiMemberAccountServiceImpl")
 public class MemberAccountServiceImpl implements MemberAccountService {
 
     @Autowired
-    private IGateWayService gateWayService;
+    private GateWayServiceProxy gateWayService;
     @Autowired
     private IOrderValidator orderValidator;
     @Autowired
-    private MemberOperationService memberOperationServiceImpl;
+    private IMemberOperationService memberOperationServiceImpl;
     @Autowired
-    private MemberService memberServiceImpl;
+    private IMemberService memberServiceImpl;
     @Autowired
-    private com.zlebank.zplatform.member.service.MemberAccountService memberAccountServiceImpl;
+    private IMemberAccountService memberAccountServiceImpl;
     @Autowired
     private ISMSService smsService;
     @Autowired
@@ -67,15 +62,15 @@ public class MemberAccountServiceImpl implements MemberAccountService {
     @Override
     @Transactional(isolation = Isolation.READ_COMMITTED, propagation = Propagation.REQUIRED)
     public String recharge(Order order) throws ValidateOrderException,
-            TradeException, AbstractIndividualBusinessException {
+            Exception, AbstractIndividualBusinessException {
         return orderServiceImpl.createOrder(order);
     }
 
     @Override
     @Transactional(isolation = Isolation.READ_COMMITTED, propagation = Propagation.REQUIRED)
     public String withdraw(String json, String payPwd)
-            throws ValidateOrderException, TradeException,
-            AbstractTradeDescribeException, AbstractIndividualBusinessException {
+            throws ValidateOrderException, Exception,
+            AbstractIndividualBusinessException {
         json = fullNonWalletData(json);
         WapWithdrawBean withdrawBean = JSON.parseObject(json,
                 WapWithdrawBean.class);
@@ -87,7 +82,7 @@ public class MemberAccountServiceImpl implements MemberAccountService {
                 MemberType.INDIVIDUAL);
 
         if (member == null) {// 资金账户不存在
-            throw new FailToGetAccountInfoException();
+            throw new Exception("资金账户不存在");
         }
 
         List<BusiAcctQuery> busiAcctList = memberServiceImpl
@@ -101,14 +96,14 @@ public class MemberAccountServiceImpl implements MemberAccountService {
         }
 
         if (basicFund == null) {// 资金账户不存在
-            throw new FailToGetAccountInfoException();
+        	throw new Exception("资金账户不存在");
         }
 
         if (basicFund.getBalance().minus(withDrawAmount).compareTo(Money.ZERO) < 0) {// 余额不足
-            throw new BalanceNotEnoughException();
+        	throw new Exception("资金账户余额不足");
         }
 
-        try {
+        
             MemberBean memberBean = new MemberBean();
             memberBean.setLoginName(member.getLoginName());
             memberBean.setInstiId(member.getInstiId());
@@ -119,17 +114,11 @@ public class MemberAccountServiceImpl implements MemberAccountService {
                     memberBean)) {
                 throw new PayPwdVerifyFailException();
             }
-        } catch (DataCheckFailedException e) {
-            PayPwdVerifyFailException pe = new PayPwdVerifyFailException();
-            pe.initCause(e);
-            throw pe;
-        }
+        
 
         String tn = null;
         try {
             tn = gateWayService.withdraw(json);//.withdraw(json);
-        } catch (TradeException e) {
-            e.printStackTrace();
         } catch (Exception e) {
             e.printStackTrace();
             throw new UnCheckedSystemException();
@@ -141,35 +130,28 @@ public class MemberAccountServiceImpl implements MemberAccountService {
     }
     @Override
     public MemberAccountBean queryMemberFuns(String memberId)
-            throws AbstractTradeDescribeException {
+            throws Exception {
         MemberBean member = new MemberBean();
         member.setMemberId(memberId);
         MemberAccountBean memberAccount = null;
-        try {
-            memberAccount = memberAccountServiceImpl.queryBalance(
-                    MemberType.INDIVIDUAL, member, Usage.BASICPAY);
-        } catch (DataCheckFailedException e) {
-            throw new FailToGetAccountInfoException();
-        } catch (GetAccountFailedException e) {
-            throw new FailToGetAccountInfoException();
-        }
+       
+            memberAccount = memberAccountServiceImpl.queryBalance(MemberType.INDIVIDUAL, member, Usage.BASICPAY);
+        
         return memberAccount;
     }
 
     @Override
     public PagedResult<MemInAndExDetail> queryAccInAndExDetail(String memberId,
             int page,
-            int pageSize) throws AbstractTradeDescribeException,
+            int pageSize) throws Exception,
             IllegalAccessException {
         MemberBean member = new MemberBean();
         member.setMemberId(memberId);
-        PagedResult<MemberBalanceDetailBean> entrys;
-        try {
+        PagedResult<MemberBalanceDetailBean> entrys = null;
+        
             entrys = memberAccountServiceImpl.queryBalanceDetail(
                     MemberType.INDIVIDUAL, member, page, pageSize);
-        } catch (GetAccountFailedException e) {
-            throw new FailToGetAccountInfoException();
-        }
+        
         if (entrys == null) {
             return null;
         }

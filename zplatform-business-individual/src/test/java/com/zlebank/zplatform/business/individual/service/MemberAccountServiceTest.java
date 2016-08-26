@@ -18,8 +18,6 @@ import com.zlebank.zplatform.business.individual.exception.ValidateOrderExceptio
 import com.zlebank.zplatform.business.individual.util.ApplicationContextAbled;
 import com.zlebank.zplatform.commons.bean.PagedResult;
 import com.zlebank.zplatform.member.bean.MemberAccountBean;
-import com.zlebank.zplatform.trade.exception.AbstractTradeDescribeException;
-import com.zlebank.zplatform.trade.exception.TradeException;
 
 public class MemberAccountServiceTest extends ApplicationContextAbled {
 
@@ -38,11 +36,7 @@ public class MemberAccountServiceTest extends ApplicationContextAbled {
             tn = memberAccountService.recharge(orderGenerator.generate(false));
             System.out.println(tn);
             Assert.assertNotNull(tn);
-        } catch (TradeException e) {
-            Assert.fail(e.getMessage());
-        } catch (AbstractIndividualBusinessException e) {
-            Assert.fail(e.getMessage());
-        } catch (ValidateOrderException e) {
+        } catch (Exception e) {
             Assert.fail(e.getMessage());
         }
         try {
@@ -69,19 +63,10 @@ public class MemberAccountServiceTest extends ApplicationContextAbled {
         System.out.println(json);
         try {
             memberAccountService.withdraw(json, payPwd);
-        } catch (TradeException e) {
+        } catch (Exception e) {
             // TODO Auto-generated catch block
             e.printStackTrace();
-        } catch (AbstractTradeDescribeException e) {
-            // TODO Auto-generated catch block
-            e.printStackTrace();
-        } catch (AbstractIndividualBusinessException e) {
-            // TODO Auto-generated catch block
-            e.printStackTrace();
-        } catch (ValidateOrderException e) {
-            // TODO Auto-generated catch block
-            e.printStackTrace();
-        }
+        } 
     }
     @Test
     @Ignore
@@ -94,7 +79,7 @@ public class MemberAccountServiceTest extends ApplicationContextAbled {
             Assert.assertEquals("00", memberAccountBean.getStatus());
             Assert.assertEquals(Usage.BASICPAY, memberAccountBean.getUsage());
             Assert.assertEquals(BigDecimal.ZERO, memberAccountBean.getBalance());
-        } catch (AbstractTradeDescribeException e) {
+        } catch (Exception e) {
             // TODO Auto-generated catch block
             e.printStackTrace();
         }
@@ -102,13 +87,13 @@ public class MemberAccountServiceTest extends ApplicationContextAbled {
 
     @Test
     @Ignore
-    public void testqueryAccInAndExDetail() {
+    public void testqueryAccInAndExDetail() throws Exception {
         try {
-            PagedResult<MemInAndExDetail> result = memberAccountService
+            PagedResult<MemInAndExDetail> result = (PagedResult<MemInAndExDetail>) memberAccountService
                     .queryAccInAndExDetail(individualMemberId, 1, 10);
             Assert.assertEquals(0, result.getTotal());
 
-            result = memberAccountService.queryAccInAndExDetail(
+            result = (PagedResult<MemInAndExDetail>) memberAccountService.queryAccInAndExDetail(
                     "100000000000435", 2, 14);
             Assert.assertEquals(1054, result.getTotal());
             List<MemInAndExDetail> memInAndExDetails = result.getPagedResult();
@@ -117,10 +102,7 @@ public class MemberAccountServiceTest extends ApplicationContextAbled {
                         + memInAndExDetail.getTxnTime() + "|"
                         + memInAndExDetail.getTxnAmt());
             }
-        } catch (AbstractTradeDescribeException e) {
-            // TODO Auto-generated catch block
-            e.printStackTrace();
-        } catch (IllegalAccessException e) {
+        }catch (IllegalAccessException e) {
             // TODO Auto-generated catch block
             e.printStackTrace();
         }

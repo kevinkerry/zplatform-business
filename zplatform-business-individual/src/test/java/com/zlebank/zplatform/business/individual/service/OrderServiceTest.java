@@ -22,8 +22,6 @@ import com.zlebank.zplatform.commons.bean.PagedResult;
 import com.zlebank.zplatform.commons.utils.DateUtil;
 import com.zlebank.zplatform.sms.pojo.enums.ModuleTypeEnum;
 import com.zlebank.zplatform.trade.bean.ResultBean;
-import com.zlebank.zplatform.trade.exception.AbstractTradeDescribeException;
-import com.zlebank.zplatform.trade.exception.TradeException;
 
 public class OrderServiceTest extends ApplicationContextAbled {
     
@@ -52,14 +50,15 @@ public class OrderServiceTest extends ApplicationContextAbled {
             tn = orderService.createOrder(orderGenerator.generate(true));
             System.out.println(tn);
             Assert.assertNotNull(tn);
-        } catch (TradeException e) {
-            Assert.fail(e.getMessage());
-        } catch (AbstractIndividualBusinessException e) {
+        }catch (AbstractIndividualBusinessException e) {
             Assert.fail(e.getMessage());
         } catch (ValidateOrderException e) {
             e.printStackTrace();
             Assert.fail(e.getMessage());
-        }
+        } catch (Exception e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
     }
     
    
@@ -130,13 +129,10 @@ public class OrderServiceTest extends ApplicationContextAbled {
         Order order = orderService.queryOrder("100000000000576", "160708001400053579");
         try {
             orderService.pay(JSON.toJSONString(order), "", "e10adc3949ba59abbe56e057f20f883e", PayWay.ACCOUNT);
-        } catch (AbstractTradeDescribeException e) {
-            // TODO Auto-generated catch block
-            e.printStackTrace();
         } catch (AbstractIndividualBusinessException e) {
             // TODO Auto-generated catch block
             e.printStackTrace();
-        } catch (TradeException e) {
+        } catch (Exception e) {
             // TODO Auto-generated catch block
             e.printStackTrace();
         }

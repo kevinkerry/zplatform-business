@@ -13,7 +13,6 @@ package com.zlebank.zplatform.business.individual.service;
 import com.zlebank.zplatform.business.individual.exception.DataBaseErrorException;
 import com.zlebank.zplatform.business.individual.exception.MerchMKNotExistException;
 import com.zlebank.zplatform.business.individual.exception.MerchWhiteListNotExistException;
-import com.zlebank.zplatform.member.exception.DataCheckFailedException;
 import com.zlebank.zplatform.trade.model.PojoMerchWhiteList;
 
 /**
@@ -63,5 +62,5 @@ public interface MerchBusinessService {
 	 * @return
 	 * @throws DataCheckFailedException
 	 */
-	public boolean resetPayPwd(String memberId, String pwd) throws DataCheckFailedException;
+	public boolean resetPayPwd(String memberId, String pwd) throws Exception;
 }

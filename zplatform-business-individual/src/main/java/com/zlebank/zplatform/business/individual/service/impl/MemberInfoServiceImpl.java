@@ -21,9 +21,7 @@ import com.zlebank.zplatform.business.individual.bean.IndividualRealInfo;
 import com.zlebank.zplatform.business.individual.bean.Member;
 import com.zlebank.zplatform.business.individual.bean.enums.RealNameTypeEnum;
 import com.zlebank.zplatform.business.individual.service.MemberInfoService;
-import com.zlebank.zplatform.commons.bean.CardBin;
 import com.zlebank.zplatform.commons.bean.PagedResult;
-import com.zlebank.zplatform.commons.dao.CardBinDao;
 import com.zlebank.zplatform.commons.utils.StringUtil;
 import com.zlebank.zplatform.member.bean.CoopInsti;
 import com.zlebank.zplatform.member.bean.MemberBean;
@@ -31,27 +29,18 @@ import com.zlebank.zplatform.member.bean.QuickpayCustBean;
 import com.zlebank.zplatform.member.bean.RealNameBean;
 import com.zlebank.zplatform.member.bean.enums.MemberType;
 import com.zlebank.zplatform.member.bean.enums.RealNameLvType;
-import com.zlebank.zplatform.member.dao.CoopInstiDAO;
-import com.zlebank.zplatform.member.dao.MemberDAO;
-import com.zlebank.zplatform.member.exception.CreateBusiAcctFailedException;
-import com.zlebank.zplatform.member.exception.CreateMemberFailedException;
-import com.zlebank.zplatform.member.exception.DataCheckFailedException;
-import com.zlebank.zplatform.member.exception.InvalidMemberDataException;
-import com.zlebank.zplatform.member.exception.LoginFailedException;
-import com.zlebank.zplatform.member.exception.UnbindBankFailedException;
-import com.zlebank.zplatform.member.pojo.PojoCoopInsti;
 import com.zlebank.zplatform.member.pojo.PojoMember;
-import com.zlebank.zplatform.member.service.CoopInstiService;
-import com.zlebank.zplatform.member.service.MemberBankCardService;
-import com.zlebank.zplatform.member.service.MemberOperationService;
-import com.zlebank.zplatform.member.service.MemberService;
+import com.zlebank.zplatform.rmi.member.ICoopInstiService;
+import com.zlebank.zplatform.rmi.member.IMemberBankCardService;
+import com.zlebank.zplatform.rmi.member.IMemberOperationService;
+import com.zlebank.zplatform.rmi.member.IMemberService;
+import com.zlebank.zplatform.rmi.trade.CardBinServiceProxy;
+import com.zlebank.zplatform.rmi.trade.GateWayServiceProxy;
 import com.zlebank.zplatform.sms.pojo.enums.ModuleTypeEnum;
 import com.zlebank.zplatform.sms.service.ISMSService;
 import com.zlebank.zplatform.trade.bean.CardBinBean;
 import com.zlebank.zplatform.trade.bean.ResultBean;
 import com.zlebank.zplatform.trade.bean.wap.WapCardBean;
-import com.zlebank.zplatform.trade.service.CardBinService;
-import com.zlebank.zplatform.trade.service.IGateWayService;
 
 /**
  * Class Description
@@ -65,22 +54,22 @@ import com.zlebank.zplatform.trade.service.IGateWayService;
 public class MemberInfoServiceImpl implements MemberInfoService {
 
 	@Autowired
-	private MemberOperationService memberOperationService;
+	private IMemberOperationService memberOperationService;
 	@Autowired
 	private ISMSService smsService;
 	@Autowired
 	//private MemberDAO memberDAO;
-	private MemberService memberService;
+	private IMemberService memberService;
 	@Autowired
-	private MemberBankCardService memberBankCardService;
+	private IMemberBankCardService memberBankCardService;
 	@Autowired
-	private IGateWayService gateWayService;
+	private GateWayServiceProxy gateWayService;
 	@Autowired
 	//private CardBinDao cardBinDao;
-	private CardBinService cardBinService;
+	private CardBinServiceProxy cardBinService;
     @Autowired
     //CoopInstiDAO coopInstiDAO;
-    private CoopInstiService coopInstiService;
+    private ICoopInstiService coopInstiService;
 	/**
 	 *
 	 * @param registerMemberInfo
@@ -92,8 +81,7 @@ public class MemberInfoServiceImpl implements MemberInfoService {
 	 */
 	@Override
 	public String register(Member registerMemberInfo, String smsCode)
-			throws InvalidMemberDataException, CreateMemberFailedException,
-			CreateBusiAcctFailedException {
+			throws Exception {
 		int retCode = smsService.verifyCode(ModuleTypeEnum.REGISTER,
 				registerMemberInfo.getPhone(), smsCode);
 		if (retCode != 1) {
@@ -160,7 +148,7 @@ public class MemberInfoServiceImpl implements MemberInfoService {
 	 */
 	@Override
 	public String login(String loginName, String pwd, String coopInstiCode)
-			throws DataCheckFailedException, LoginFailedException {
+			throws Exception {
 		MemberBean member = new MemberBean();
 		member.setLoginName(loginName);
 		member.setPwd(pwd);
@@ -187,7 +175,7 @@ public class MemberInfoServiceImpl implements MemberInfoService {
 	public boolean realName(IndividualRealInfo individualRealInfo,
             String smsCode,
             String payPwd,
-            String memberId,RealNameTypeEnum realNameTypeEnum) throws DataCheckFailedException, UnbindBankFailedException {
+            String memberId,RealNameTypeEnum realNameTypeEnum) throws Exception {
 		//校验短信验证码
 		PojoMember pm = memberService.getMbmberByMemberId(memberId, MemberType.INDIVIDUAL);
 		if(realNameTypeEnum!=RealNameTypeEnum.CARDREALNAME){
@@ -222,8 +210,8 @@ public class MemberInfoServiceImpl implements MemberInfoService {
                         quickpayCustBean.setRelatememberno(memberId);
                         try {
                             memberBankCardService.unbindQuickPayCust(quickpayCustBean);
-                        } catch (UnbindBankFailedException e) {
-                            throw new UnbindBankFailedException();
+                        } catch (Exception e) {
+                            throw new Exception("解绑银行卡失败");
                         }
                     }
                 } catch (IllegalAccessException e) {
@@ -290,7 +278,7 @@ public class MemberInfoServiceImpl implements MemberInfoService {
 	 */
 	@Override
 	@Transactional(propagation=Propagation.REQUIRED,rollbackFor=Throwable.class)
-	public boolean vaildatePayPwd(String memberId, String payPwd) throws DataCheckFailedException {
+	public boolean vaildatePayPwd(String memberId, String payPwd) throws Exception {
 		PojoMember pm = memberService.getMbmberByMemberId(memberId, MemberType.INDIVIDUAL);
 		if(pm==null){
 			return false;
@@ -313,7 +301,7 @@ public class MemberInfoServiceImpl implements MemberInfoService {
 	 */
 	@Override
 	@Transactional(propagation=Propagation.REQUIRED,rollbackFor=Throwable.class)
-	public boolean modifyPwd(String memberId, String orgPwd, String pwd) throws DataCheckFailedException {
+	public boolean modifyPwd(String memberId, String orgPwd, String pwd) throws Exception {
 		PojoMember pm = memberService.getMbmberByMemberId(memberId, MemberType.INDIVIDUAL);
 		if(pm==null){
 			return false;
@@ -336,7 +324,7 @@ public class MemberInfoServiceImpl implements MemberInfoService {
 	 */
 	@Override
 	@Transactional(propagation=Propagation.REQUIRED,rollbackFor=Throwable.class)
-	public boolean modifyPayPwd(String memberId, String orgPayPwd, String payPwd) throws DataCheckFailedException {
+	public boolean modifyPayPwd(String memberId, String orgPayPwd, String payPwd) throws Exception {
 		PojoMember pm = memberService.getMbmberByMemberId(memberId, null);
 		if(pm==null){
 			return false;
@@ -365,7 +353,7 @@ public class MemberInfoServiceImpl implements MemberInfoService {
 	 */
 	@Override
 	@Transactional(propagation=Propagation.REQUIRED,rollbackFor=Throwable.class)
-	public boolean resetPwd(String memberId, String pwd, String smsCode) throws DataCheckFailedException {
+	public boolean resetPwd(String memberId, String pwd, String smsCode) throws Exception {
 		PojoMember pm = memberService.getMbmberByMemberId(memberId, MemberType.INDIVIDUAL);
 		if(pm==null){
 			return false;
@@ -392,7 +380,7 @@ public class MemberInfoServiceImpl implements MemberInfoService {
 	 */
 	@Override
 	@Transactional(propagation=Propagation.REQUIRED,rollbackFor=Throwable.class)
-	public boolean resetPayPwd(String memberId, String payPwd, String smsCode) throws DataCheckFailedException {
+	public boolean resetPayPwd(String memberId, String payPwd, String smsCode) throws Exception {
 		PojoMember pm = memberService.getMbmberByMemberId(memberId, MemberType.INDIVIDUAL);
 		if(pm==null){
 			return false;
@@ -420,7 +408,7 @@ public class MemberInfoServiceImpl implements MemberInfoService {
 	@Override
 	@Transactional(propagation=Propagation.REQUIRED,rollbackFor=Throwable.class)
 	public boolean vaildatePwd(String memberId, String pwd)
-			throws DataCheckFailedException, LoginFailedException {
+			throws Exception {
 		PojoMember pm = memberService.getMbmberByMemberId(memberId, MemberType.INDIVIDUAL);
 		if(pm==null){
 			return false;

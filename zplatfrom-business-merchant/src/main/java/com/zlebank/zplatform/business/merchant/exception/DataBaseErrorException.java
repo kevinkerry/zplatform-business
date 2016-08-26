@@ -1,0 +1,13 @@
+package com.zlebank.zplatform.business.merchant.exception;
+
+public class DataBaseErrorException extends AbstractIndividualBusinessException {
+    /**
+     * serialVersionUID
+     */
+    private static final long serialVersionUID = 1293998023938542976L;
+
+    @Override
+    public String getCode() {
+        return "EBUBI0009";
+    }
+}

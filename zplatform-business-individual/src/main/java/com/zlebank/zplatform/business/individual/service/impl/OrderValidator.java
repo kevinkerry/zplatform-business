@@ -9,22 +9,17 @@ import org.springframework.util.StringUtils;
 
 import com.zlebank.zplatform.business.individual.bean.Order;
 import com.zlebank.zplatform.business.individual.bean.enums.OrderType;
-import com.zlebank.zplatform.business.individual.utils.Constants;
+import com.zlebank.zplatform.rmi.trade.GateWayServiceProxy;
+import com.zlebank.zplatform.rmi.trade.ProdCaseServiceProxy;
 import com.zlebank.zplatform.trade.analyzer.GateWayTradeAnalyzer;
 import com.zlebank.zplatform.trade.bean.ResultBean;
-import com.zlebank.zplatform.trade.exception.TradeException;
-import com.zlebank.zplatform.trade.service.IGateWayService;
-import com.zlebank.zplatform.trade.service.IMemberService;
-import com.zlebank.zplatform.trade.service.IProdCaseService;
 
 @Service
 public class OrderValidator implements IOrderValidator {
     @Autowired
-    private IGateWayService gateWayService;
+    private GateWayServiceProxy gateWayService;
     @Autowired
-    private IProdCaseService prodCaseService;
-    @Autowired
-    private IMemberService memberService;
+    private ProdCaseServiceProxy prodCaseService;
 
     public Map<String, String> validateOrder(Order order) {
         // 验证订单数据有效性，用hibernate validator处理
@@ -50,11 +45,10 @@ public class OrderValidator implements IOrderValidator {
             gateWayService.verifyRepeatWebOrder(order.getOrderId(),
                     order.getTxnTime(), order.getTxnAmt(), order.getMerId(),
                     order.getMemberId());
-        } catch (TradeException e) {
+        } catch (Exception e) {
             // TODO Auto-generated catch block
             e.printStackTrace();
             resultMap.put(RET_MESSAGE, e.getMessage());
-            resultMap.put(RET_CODE, e.getCode());
             return resultMap;
         }
 

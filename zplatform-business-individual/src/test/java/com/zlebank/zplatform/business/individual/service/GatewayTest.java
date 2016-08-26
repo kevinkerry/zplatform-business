@@ -15,15 +15,10 @@ import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 import com.alibaba.fastjson.JSON;
 import com.zlebank.zplatform.business.individual.bean.Order;
 import com.zlebank.zplatform.business.individual.bean.SupportedBankCardType;
-import com.zlebank.zplatform.business.individual.bean.enums.OrderStatus;
-import com.zlebank.zplatform.business.individual.exception.AbstractIndividualBusinessException;
-import com.zlebank.zplatform.commons.bean.CardBin;
 import com.zlebank.zplatform.sms.pojo.enums.ModuleTypeEnum;
 import com.zlebank.zplatform.trade.bean.CardBinBean;
 import com.zlebank.zplatform.trade.bean.ResultBean;
 import com.zlebank.zplatform.trade.common.page.PageVo;
-import com.zlebank.zplatform.trade.exception.AbstractTradeDescribeException;
-import com.zlebank.zplatform.trade.exception.TradeException;
 
 @RunWith(SpringJUnit4ClassRunner.class)
 @ContextConfiguration("/*.xml")

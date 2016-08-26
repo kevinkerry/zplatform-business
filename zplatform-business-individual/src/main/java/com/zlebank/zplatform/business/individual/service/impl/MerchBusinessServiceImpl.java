@@ -22,15 +22,12 @@ import com.zlebank.zplatform.business.individual.service.MerchBusinessService;
 import com.zlebank.zplatform.member.bean.MemberBean;
 import com.zlebank.zplatform.member.bean.MerchMK;
 import com.zlebank.zplatform.member.bean.enums.MemberType;
-import com.zlebank.zplatform.member.dao.MemberDAO;
-import com.zlebank.zplatform.member.exception.DataCheckFailedException;
 import com.zlebank.zplatform.member.pojo.PojoMember;
-import com.zlebank.zplatform.member.service.MemberOperationService;
-import com.zlebank.zplatform.member.service.MemberService;
-import com.zlebank.zplatform.member.service.MerchMKService;
-import com.zlebank.zplatform.trade.dao.MerchWhiteListDAO;
+import com.zlebank.zplatform.rmi.member.IMemberOperationService;
+import com.zlebank.zplatform.rmi.member.IMemberService;
+import com.zlebank.zplatform.rmi.member.IMerchMKService;
+import com.zlebank.zplatform.rmi.trade.MerchWhiteListServiceProxy;
 import com.zlebank.zplatform.trade.model.PojoMerchWhiteList;
-import com.zlebank.zplatform.trade.service.MerchWhiteListService;
 
 /**
  * Class Description
@@ -45,15 +42,15 @@ public class MerchBusinessServiceImpl implements MerchBusinessService{
 	
 	@Autowired
 	//private MerchMKDAO merchMKDAO;
-	private MerchMKService merchMKService;
+	private IMerchMKService merchMKService;
 	@Autowired
 	//private MerchWhiteListDAO merchWhiteListDAO;
-	private MerchWhiteListService merchWhiteListService;
+	private MerchWhiteListServiceProxy merchWhiteListService;
 	@Autowired
-	private MemberOperationService memberOperationService;
+	private IMemberOperationService memberOperationService;
 	@Autowired
 	//private MemberDAO memberDAO;
-	private MemberService memberService;
+	private IMemberService memberService;
 
 	/**
 	 *
@@ -156,7 +153,7 @@ public class MerchBusinessServiceImpl implements MerchBusinessService{
 	}
 
 	@Transactional(propagation=Propagation.REQUIRED,rollbackFor=Throwable.class)
-	public boolean resetPayPwd(String memberId, String payPwd) throws DataCheckFailedException {
+	public boolean resetPayPwd(String memberId, String payPwd) throws Exception {
 		PojoMember pm = memberService.getMbmberByMemberId(memberId, MemberType.ENTERPRISE);
 		if(pm==null){
 			return false;

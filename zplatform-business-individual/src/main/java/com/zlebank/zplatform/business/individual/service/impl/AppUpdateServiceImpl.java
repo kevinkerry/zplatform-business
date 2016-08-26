@@ -15,7 +15,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import com.zlebank.zplatform.business.individual.service.AppUpdateService;
-import com.zlebank.zplatform.trade.dao.AppUpdateDAO;
+import com.zlebank.zplatform.rmi.trade.AppUpdateServiceProxy;
 import com.zlebank.zplatform.trade.model.PojoAppUpdate;
 
 /**
@@ -30,7 +30,7 @@ import com.zlebank.zplatform.trade.model.PojoAppUpdate;
 public class AppUpdateServiceImpl implements AppUpdateService{
 
 	@Autowired
-	private AppUpdateDAO appUpdateDAO;
+	private AppUpdateServiceProxy appUpdateServiceProxy;
 	/**
 	 *
 	 * @param appVersion
@@ -41,7 +41,7 @@ public class AppUpdateServiceImpl implements AppUpdateService{
 	@Transactional(readOnly=true)
 	public PojoAppUpdate getAppUpdate(String appVersion, String appChannelId) {
 		// TODO Auto-generated method stub
-		return appUpdateDAO.getAppUpdate(appVersion, appChannelId);
+		return appUpdateServiceProxy.getAppUpdate(appVersion, appChannelId);
 	}
 
 }

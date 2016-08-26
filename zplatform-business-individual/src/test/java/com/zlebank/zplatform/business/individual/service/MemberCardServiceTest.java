@@ -20,10 +20,7 @@ import com.zlebank.zplatform.business.individual.bean.Member;
 import com.zlebank.zplatform.business.individual.bean.SupportedBankCardType;
 import com.zlebank.zplatform.business.individual.exception.SmsCodeVerifyFailException;
 import com.zlebank.zplatform.business.individual.util.ApplicationContextAbled;
-import com.zlebank.zplatform.commons.bean.CardBin;
 import com.zlebank.zplatform.commons.bean.PagedResult;
-import com.zlebank.zplatform.member.exception.DataCheckFailedException;
-import com.zlebank.zplatform.member.exception.UnbindBankFailedException;
 import com.zlebank.zplatform.sms.pojo.enums.ModuleTypeEnum;
 import com.zlebank.zplatform.trade.bean.CardBinBean;
 
@@ -99,10 +96,7 @@ public class MemberCardServiceTest extends ApplicationContextAbled {
 		try {
 			boolean flag = memberCardService.unbindBankCard("100000000000572", "105", "654321");
 			System.out.println(flag);
-		} catch (DataCheckFailedException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		} catch (UnbindBankFailedException e) {
+		} catch (Exception e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}

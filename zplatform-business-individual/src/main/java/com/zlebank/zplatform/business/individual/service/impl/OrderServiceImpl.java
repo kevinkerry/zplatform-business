@@ -1,6 +1,8 @@
 package com.zlebank.zplatform.business.individual.service.impl;
 
 import java.math.BigDecimal;
+import java.text.DecimalFormat;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.HashMap;
@@ -21,11 +23,7 @@ import com.alibaba.fastjson.JSON;
 import com.zlebank.zplatform.acc.bean.BusiAcctQuery;
 import com.zlebank.zplatform.acc.bean.TradeInfo;
 import com.zlebank.zplatform.acc.bean.enums.Usage;
-import com.zlebank.zplatform.acc.exception.AbstractBusiAcctException;
-import com.zlebank.zplatform.acc.exception.AccBussinessException;
-import com.zlebank.zplatform.acc.exception.IllegalEntryRequestException;
 import com.zlebank.zplatform.acc.pojo.Money;
-import com.zlebank.zplatform.acc.service.AccEntryService;
 import com.zlebank.zplatform.acc.service.entry.EntryEvent;
 import com.zlebank.zplatform.business.individual.bean.IndividualRealInfo;
 import com.zlebank.zplatform.business.individual.bean.Order;
@@ -42,7 +40,6 @@ import com.zlebank.zplatform.business.individual.exception.UnknowPayWayException
 import com.zlebank.zplatform.business.individual.exception.ValidateOrderException;
 import com.zlebank.zplatform.business.individual.service.OrderService;
 import com.zlebank.zplatform.business.individual.utils.Constants;
-import com.zlebank.zplatform.commons.bean.CardBin;
 import com.zlebank.zplatform.commons.bean.DefaultPageResult;
 import com.zlebank.zplatform.commons.bean.PagedResult;
 import com.zlebank.zplatform.commons.dao.pojo.BusiTypeEnum;
@@ -53,55 +50,51 @@ import com.zlebank.zplatform.member.bean.CoopInsti;
 import com.zlebank.zplatform.member.bean.MemberBean;
 import com.zlebank.zplatform.member.bean.QuickpayCustBean;
 import com.zlebank.zplatform.member.bean.enums.MemberType;
-import com.zlebank.zplatform.member.exception.DataCheckFailedException;
 import com.zlebank.zplatform.member.pojo.PojoMember;
-import com.zlebank.zplatform.member.service.CoopInstiService;
-import com.zlebank.zplatform.member.service.MemberBankCardService;
-import com.zlebank.zplatform.member.service.MemberOperationService;
-import com.zlebank.zplatform.member.service.MemberService;
+import com.zlebank.zplatform.rmi.acc.IAccEntryService;
+import com.zlebank.zplatform.rmi.member.ICoopInstiService;
+import com.zlebank.zplatform.rmi.member.IMemberAccountService;
+import com.zlebank.zplatform.rmi.member.IMemberBankCardService;
+import com.zlebank.zplatform.rmi.member.IMemberOperationService;
+import com.zlebank.zplatform.rmi.member.IMemberService;
+import com.zlebank.zplatform.rmi.trade.CardBinServiceProxy;
+import com.zlebank.zplatform.rmi.trade.ConfigInfoServiceProxy;
+import com.zlebank.zplatform.rmi.trade.GateWayServiceProxy;
+import com.zlebank.zplatform.rmi.trade.TradeQueryServiceProxy;
+import com.zlebank.zplatform.rmi.trade.TxnsLogServiceProxy;
+import com.zlebank.zplatform.rmi.trade.TxnsNotifyTaskServiceProxy;
+import com.zlebank.zplatform.rmi.trade.TxnsQuickpayServiceProxy;
+import com.zlebank.zplatform.rmi.trade.WeChatQRServiceProxy;
+import com.zlebank.zplatform.rmi.trade.WeChatServiceProxy;
 import com.zlebank.zplatform.sms.service.ISMSService;
-import com.zlebank.zplatform.trade.adapter.quickpay.IQuickPayTrade;
 import com.zlebank.zplatform.trade.bean.CardBinBean;
 import com.zlebank.zplatform.trade.bean.ReaPayResultBean;
 import com.zlebank.zplatform.trade.bean.ResultBean;
 import com.zlebank.zplatform.trade.bean.TradeBean;
 import com.zlebank.zplatform.trade.bean.enums.ChannelEnmu;
+import com.zlebank.zplatform.trade.bean.enums.OrderStatusEnum;
 import com.zlebank.zplatform.trade.bean.gateway.OrderAsynRespBean;
 import com.zlebank.zplatform.trade.bean.wap.WapCardBean;
-import com.zlebank.zplatform.trade.exception.AbstractTradeDescribeException;
-import com.zlebank.zplatform.trade.exception.BalanceNotEnoughException;
-import com.zlebank.zplatform.trade.exception.FailToGetAccountInfoException;
-import com.zlebank.zplatform.trade.exception.TradeException;
-import com.zlebank.zplatform.trade.factory.TradeAdapterFactory;
 import com.zlebank.zplatform.trade.model.ConfigInfoModel;
 import com.zlebank.zplatform.trade.model.TxnsLogModel;
 import com.zlebank.zplatform.trade.model.TxnsNotifyTaskModel;
 import com.zlebank.zplatform.trade.model.TxnsOrderinfoModel;
-import com.zlebank.zplatform.trade.service.CardBinService;
-import com.zlebank.zplatform.trade.service.ConfigInfoService;
-import com.zlebank.zplatform.trade.service.IGateWayService;
-import com.zlebank.zplatform.trade.service.ITxnsLogService;
-import com.zlebank.zplatform.trade.service.ITxnsNotifyTaskService;
-import com.zlebank.zplatform.trade.service.ITxnsQuickpayService;
 import com.zlebank.zplatform.trade.utils.ObjectDynamic;
-import com.zlebank.zplatform.trade.utils.OrderNumber;
-import com.zlebank.zplatform.wechat.qr.service.WeChatQRService;
-import com.zlebank.zplatform.wechat.service.WeChatService;
 
 @Service
 public class OrderServiceImpl implements OrderService {
 
 	private static final Log log = LogFactory.getLog(OrderServiceImpl.class);
     @Autowired
-    private IGateWayService gateWayService;
+    private GateWayServiceProxy gateWayService;
     @Autowired
     private IOrderValidator orderValidator;
     @Autowired
-    private MemberOperationService memberOperationServiceImpl;
+    private IMemberOperationService memberOperationServiceImpl;
     @Autowired
-    private MemberService memberServiceImpl;
+    private IMemberService memberServiceImpl;
     @Autowired
-    private com.zlebank.zplatform.member.service.MemberAccountService memberAccountServiceImpl;
+    private IMemberAccountService memberAccountServiceImpl;
     @Autowired
     private ISMSService smsService;
    // @Autowired
@@ -111,33 +104,35 @@ public class OrderServiceImpl implements OrderService {
 	private MemberDAO memberDAO;*/
     
     @Autowired
-    private MemberService memberService;
+    private IMemberService memberService;
     
     @Autowired
-	private MemberBankCardService memberBankCardService;
+	private IMemberBankCardService memberBankCardService;
     @Autowired
     //private CardBinDao cardBinDao;
-    private CardBinService cardBinService;
+    private CardBinServiceProxy cardBinService;
     @Autowired
     //private ConfigInfoDAO configInfoDAO;
-    private ConfigInfoService configInfoService;
+    private ConfigInfoServiceProxy configInfoService;
     @Autowired
-    private AccEntryService accEntryService;
+    private IAccEntryService accEntryService;
     @Autowired
-    private ITxnsLogService txnsLogService;
+    private TxnsLogServiceProxy txnsLogService;
     @Autowired
-    private WeChatService weChatService;
+    private WeChatServiceProxy weChatService;
     @Autowired
-    private ITxnsQuickpayService txnsQuickpayService;
+    private TxnsQuickpayServiceProxy txnsQuickpayService;
     
     @Autowired
-    private ITxnsNotifyTaskService txnsNotifyTaskService;
+    private TxnsNotifyTaskServiceProxy txnsNotifyTaskService;
     @Autowired
-    private WeChatQRService weChatQRService;
+    private WeChatQRServiceProxy weChatQRService;
     @Autowired
-    private CoopInstiService coopInstiService;
-   
-    
+    private ICoopInstiService coopInstiService;
+    @Autowired
+    private TradeQueryServiceProxy tradeQueryServiceProxy;
+    @Autowired
+    private ConfigInfoServiceProxy configInfoServiceProxy;
 	/**
 	 *
 	 * @param memberId
@@ -208,64 +203,8 @@ public class OrderServiceImpl implements OrderService {
 		order.setBusiType(txnsLog.getBusitype());
 		if(ChannelEnmu.REAPAY==ChannelEnmu.fromValue(txnsLog.getPayinst())){//支付渠道为融宝时
 			if(OrderStatus.fromValue(orderinfoModel.getStatus())==OrderStatus.PAYING){//订单状态为正在支付
-				//调用融宝查询方法
-				IQuickPayTrade quickPayTrade = null;
-		        try {
-		            quickPayTrade = TradeAdapterFactory.getInstance()
-		                    .getQuickPayTrade(ChannelEnmu.REAPAY.getChnlcode());
-		        } catch (TradeException e) {
-		            // TODO Auto-generated catch block
-		            e.printStackTrace();
-		        } catch (ClassNotFoundException e) {
-		            // TODO Auto-generated catch block
-		            e.printStackTrace();
-		        } catch (InstantiationException e) {
-		            // TODO Auto-generated catch block
-		            e.printStackTrace();
-		        } catch (IllegalAccessException e) {
-		            // TODO Auto-generated catch block
-		            e.printStackTrace();
-		        }
-		        String reapayOrderNo = txnsQuickpayService.getReapayOrderNo(orderinfoModel.getRelatetradetxn());
-		        TradeBean trade = new TradeBean();
-		        trade.setReaPayOrderNo(reapayOrderNo);
-		        ResultBean queryResultBean = null;
-		        ReaPayResultBean payResult = null;
-		        for (int i = 0; i < 5; i++) {
-		        	txnsLog = txnsLogService.getTxnsLogByTxnseqno(orderinfoModel.getRelatetradetxn());
-		        	if("0000".equals(txnsLog.getPayretcode())||"3006".equals(txnsLog.getPayretcode())||"3053".equals(txnsLog.getPayretcode())||"3054".equals(txnsLog.getPayretcode())||
-	                        "3056".equals(txnsLog.getPayretcode())||"3083".equals(txnsLog.getPayretcode())||"3081".equals(txnsLog.getPayretcode())){
-	                    //返回这些信息时，表示融宝已经接受到交易请求，但是没有同步处理，等待异步通知
-		        		
-		        		try {
-							Thread.sleep(1000);
-						} catch (InterruptedException e) {
-							// TODO Auto-generated catch block
-							e.printStackTrace();
-						}
-		                queryResultBean = quickPayTrade.queryTrade(trade);
-		                payResult = (ReaPayResultBean) queryResultBean.getResultObj();
-		                if ("completed".equalsIgnoreCase(payResult.getStatus())) {//交易完成
-		                	order.setStatus(OrderStatus.SUCCESS);
-		                    break;
-		                }
-		                if ("failed".equalsIgnoreCase(payResult.getStatus())) {//交易失败
-		                	order.setStatus(OrderStatus.PAYFAILED);
-		                    break;
-		                }
-		                if ("wait".equalsIgnoreCase(payResult.getStatus())) {//等待支付，也就是未支付，比如验证码错误，或者交易金额超限等错误，此时状态为支付失败
-		                	order.setStatus(OrderStatus.PAYFAILED);
-		                    break;
-		                }
-		                if ("processing".equalsIgnoreCase(payResult.getStatus())) {
-		                    
-		                }
-	                }else{
-	                    //订单状态更新为失败
-	                	break;
-	                }
-	                
-		        }
+				OrderStatusEnum queryTradeResult = tradeQueryServiceProxy.queryTradeResult(orderinfoModel.getRelatetradetxn());
+				order.setStatus(OrderStatus.fromValue(queryTradeResult.getStatus()));
 			}
 		}
 		
@@ -276,7 +215,7 @@ public class OrderServiceImpl implements OrderService {
     @Override
     @Transactional(isolation = Isolation.READ_COMMITTED, propagation = Propagation.REQUIRED)
     public String createOrder(Order order) throws ValidateOrderException,
-            TradeException, AbstractIndividualBusinessException {
+            Exception, AbstractIndividualBusinessException {
         String tn = null;
         fullNonWalletData(order);
 
@@ -291,8 +230,6 @@ public class OrderServiceImpl implements OrderService {
         }
         try {
             tn = gateWayService.dealWithWapOrder(order);
-        } catch (TradeException e) {
-            e.printStackTrace();
         } catch (Exception e) {
             e.printStackTrace();
             throw new UnCheckedSystemException();
@@ -333,13 +270,13 @@ public class OrderServiceImpl implements OrderService {
     public OrderStatus pay(String order,
             String smsCode,
             String payPwd,
-            PayWay payWay) throws AbstractTradeDescribeException,
-            AbstractIndividualBusinessException, TradeException {
+            PayWay payWay) throws 
+            AbstractIndividualBusinessException, Exception {
         Order orderObj = JSON.parseObject(order, Order.class);
         String memberId = orderObj.getMemberId();
         PojoMember member = memberServiceImpl.getMbmberByMemberId(memberId, MemberType.INDIVIDUAL);
         if (member == null) {// 资金账户不存在
-            throw new FailToGetAccountInfoException();
+            throw new Exception("资金账户不存在");
         }
 
         List<BusiAcctQuery> busiAcctList = memberServiceImpl
@@ -353,7 +290,7 @@ public class OrderServiceImpl implements OrderService {
         }
 
         if (basicFund == null) {// 资金账户不存在
-            throw new FailToGetAccountInfoException();
+            throw new Exception("资金账户不存在");
         }
         try {
             MemberBean memberBean = new MemberBean();
@@ -366,7 +303,7 @@ public class OrderServiceImpl implements OrderService {
                     memberBean)) {
                 throw new PayPwdVerifyFailException();
             }
-        } catch (DataCheckFailedException e) {
+        } catch (Exception e) {
             PayPwdVerifyFailException pe = new PayPwdVerifyFailException();
             pe.initCause(e);
             throw pe;
@@ -390,7 +327,7 @@ public class OrderServiceImpl implements OrderService {
                 Money amount = Money.valueOf(new BigDecimal(orderObj
                         .getTxnAmt()));
                 if (basicFund.getBalance().minus(amount).compareTo(Money.ZERO) < 0) {// 余额不足
-                    throw new BalanceNotEnoughException();
+                    throw new Exception("余额不足");
                 }
                 gateWayService.accountPay(order);
                 updateAnonOrderToMemberOrder(orderObj);
@@ -441,8 +378,8 @@ public class OrderServiceImpl implements OrderService {
     }
     
     @Transactional(propagation=Propagation.REQUIRED,rollbackFor=Throwable.class)
-    public OrderStatus anonymousPay(String order,String smsCode) throws AbstractTradeDescribeException,
-            AbstractIndividualBusinessException, TradeException {
+    public OrderStatus anonymousPay(String order,String smsCode) throws 
+            AbstractIndividualBusinessException, Exception {
         Order orderObj = JSON.parseObject(order, Order.class);
         String memberId = "999999999999999";
         String bindId = orderObj.getBindId();
@@ -533,7 +470,7 @@ public class OrderServiceImpl implements OrderService {
 			    ConfigInfoModel startTime = configInfoService.getConfigByParaName("REALNAME_AUTH_PRICE");
 			    // 记录分录流水
 			    TradeInfo tradeInfo = new TradeInfo();
-			    tradeInfo.setTxnseqno(OrderNumber.getInstance().generateTxnseqno("8000"));
+			    tradeInfo.setTxnseqno(getTradeNum());
 			    tradeInfo.setAmount(BigDecimal.ZERO);
 			    tradeInfo.setCommission(BigDecimal.ZERO);
 			    tradeInfo.setAmountD(BigDecimal.ZERO);
@@ -550,24 +487,25 @@ public class OrderServiceImpl implements OrderService {
 		} catch (NumberFormatException e) {
 			// TODO Auto-generated catch block
 			resultBean = new ResultBean("", "数字格式化异常");
-		} catch (AccBussinessException e) {
+		} catch (Exception e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
-			resultBean = new ResultBean(e.getCode(), e.getMessage());
-		} catch (AbstractBusiAcctException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-			resultBean = new ResultBean(e.getCode(), e.getMessage());
-		} catch (IllegalEntryRequestException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
+			resultBean = new ResultBean("", e.getMessage());
 		}
 		return resultBean;
 	}
     
+    private String getTradeNum(){
+    	long sequence = configInfoServiceProxy.getSequence("SEQ_TXNSEQNO");
+    	 DecimalFormat df = new DecimalFormat("00000000");
+         SimpleDateFormat sdf = new SimpleDateFormat("yyMMdd");
+         String tradeNum = sdf.format(new Date())+ df.format(sequence);
+         return tradeNum.substring(0,6)+"99"+tradeNum.substring(6);
+    }
+    
     @Transactional(isolation = Isolation.READ_COMMITTED, propagation = Propagation.REQUIRED)
     public String createRefundOrder(Order order) throws ValidateOrderException,
-    TradeException, AbstractIndividualBusinessException{
+    Exception, AbstractIndividualBusinessException{
     	
     	String tn = null;
         fullNonWalletData(order);
@@ -583,8 +521,6 @@ public class OrderServiceImpl implements OrderService {
         }
         try {
             tn = gateWayService.refund(JSON.toJSONString(order));
-        } catch (TradeException e) {
-            e.printStackTrace();
         } catch (Exception e) {
             e.printStackTrace();
             throw new UnCheckedSystemException();
@@ -665,10 +601,10 @@ public class OrderServiceImpl implements OrderService {
         orderObj.setSmsCode(smsCode);
         try {
 			gateWayService.submitPay(JSON.toJSONString(orderObj));
-		} catch (TradeException e) {
+		} catch (Exception e) {
 			log.error(e.getMessage());
 			e.printStackTrace();
-			result =new ResultBean(e.getCode(), e.getMessage());
+			result =new ResultBean("", e.getMessage());
     		result.setResultObj(map);
     		return result;
 		}
@@ -679,7 +615,8 @@ public class OrderServiceImpl implements OrderService {
         	
         	ResultBean orderResp = gateWayService.generateAsyncRespMessage(txnsLog.getTxnseqno());
         	OrderAsynRespBean respBean = (OrderAsynRespBean) orderResp.getResultObj();
-        	TxnsNotifyTaskModel task;
+        	//同步通知有问题
+        	/*TxnsNotifyTaskModel task;
 			try {
 				task = new TxnsNotifyTaskModel(
 						orderinfoModel.getFirmemberno(),
@@ -693,7 +630,7 @@ public class OrderServiceImpl implements OrderService {
 				result =new ResultBean("","保存前台通知失败");
 	    		result.setResultObj(map);
 	    		return result;
-			}
+			}*/
              
         }
         //返回url及状态
@@ -712,7 +649,7 @@ public class OrderServiceImpl implements OrderService {
 		JSONObject creatOrder = null;
 		try {
 			creatOrder = weChatQRService.creatOrder(tn);
-		} catch (TradeException e) {
+		} catch (Exception e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
@@ -720,10 +657,10 @@ public class OrderServiceImpl implements OrderService {
 	}
 	@Override
 	@Transactional(propagation=Propagation.REQUIRED,rollbackFor=Throwable.class)
-	public JSONObject createWechatOrder(String tn, String typeId) throws TradeException {
+	public JSONObject createWechatOrder(String tn, String typeId) throws Exception {
 		JSONObject result = null;
 		if(StringUtil.isEmpty(typeId)||StringUtil.isEmpty(tn)){
-			throw new TradeException("", "tn或typeId不能为空！");
+			throw new Exception("tn或typeId不能为空！");
 		}
 		//微信APP支付
 		if(typeId.equals(WechatType.APP.getTypeId())){
@@ -737,10 +674,10 @@ public class OrderServiceImpl implements OrderService {
 	}
 
 	@Override
-	public ResultBean queryWechatOrder(String tn, String typeId)throws TradeException {
+	public ResultBean queryWechatOrder(String tn, String typeId)throws Exception {
 		ResultBean result = null;
 		if(StringUtil.isEmpty(typeId)||StringUtil.isEmpty(tn)){
-			throw new TradeException("", "tn或typeId不能为空！");
+			throw new Exception( "tn或typeId不能为空！");
 		}
 		TradeBean trade = new TradeBean();
 		trade.setTn(tn);

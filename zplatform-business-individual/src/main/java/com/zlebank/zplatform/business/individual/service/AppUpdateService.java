@@ -10,6 +10,8 @@
  */
 package com.zlebank.zplatform.business.individual.service;
 
+import com.zlebank.zplatform.hessian.core.Context;
+import com.zlebank.zplatform.hessian.core.Hessian;
 import com.zlebank.zplatform.trade.model.PojoAppUpdate;
 
 /**
@@ -20,6 +22,7 @@ import com.zlebank.zplatform.trade.model.PojoAppUpdate;
  * @date 2016年6月24日 下午4:25:58
  * @since 
  */
+
 public interface AppUpdateService {
 
 	public PojoAppUpdate getAppUpdate(String appVersion,String appChannelId);

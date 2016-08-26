@@ -11,7 +11,6 @@
 package com.zlebank.zplatform.business.individual.service.impl;
 
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 
 import org.apache.commons.logging.Log;
@@ -22,28 +21,20 @@ import org.springframework.transaction.annotation.Transactional;
 
 import com.alibaba.fastjson.JSON;
 import com.alibaba.fastjson.JSONObject;
-import com.zlebank.zplatform.business.individual.bean.enums.RealNameTypeEnum;
-import com.zlebank.zplatform.business.individual.exception.InvalidBindIdException;
 import com.zlebank.zplatform.business.individual.service.SmsService;
-import com.zlebank.zplatform.commons.bean.CardBin;
-import com.zlebank.zplatform.commons.dao.CardBinDao;
 import com.zlebank.zplatform.commons.utils.StringUtil;
 import com.zlebank.zplatform.member.bean.QuickpayCustBean;
-import com.zlebank.zplatform.member.pojo.PojoCoopInsti;
-import com.zlebank.zplatform.member.service.MemberBankCardService;
+import com.zlebank.zplatform.rmi.member.IMemberBankCardService;
+import com.zlebank.zplatform.rmi.trade.CardBinServiceProxy;
+import com.zlebank.zplatform.rmi.trade.GateWayServiceProxy;
+import com.zlebank.zplatform.rmi.trade.TxnsLogServiceProxy;
 import com.zlebank.zplatform.sms.pojo.enums.ModuleTypeEnum;
 import com.zlebank.zplatform.sms.service.ISMSService;
 import com.zlebank.zplatform.trade.bean.CardBinBean;
 import com.zlebank.zplatform.trade.bean.ResultBean;
 import com.zlebank.zplatform.trade.bean.wap.WapCardBean;
-import com.zlebank.zplatform.trade.exception.TradeException;
-import com.zlebank.zplatform.trade.model.QuickpayCustModel;
 import com.zlebank.zplatform.trade.model.TxnsLogModel;
 import com.zlebank.zplatform.trade.model.TxnsOrderinfoModel;
-import com.zlebank.zplatform.trade.service.CardBinService;
-import com.zlebank.zplatform.trade.service.IGateWayService;
-import com.zlebank.zplatform.trade.service.IQuickpayCustService;
-import com.zlebank.zplatform.trade.service.ITxnsLogService;
 
 /**
  * Class Description
@@ -59,16 +50,17 @@ public class SMSSendService implements SmsService{
 	@Autowired
 	private ISMSService smsSendService;
 	@Autowired 
-	private IGateWayService gateWayService;
-	@Autowired
-    private IQuickpayCustService quickpayCustService;
+	private GateWayServiceProxy gateWayService;
+	//@Autowired
+    
+	
 	@Autowired
 	//private CardBinDao cardBinDao;
-	private CardBinService cardBinService;
+	private CardBinServiceProxy cardBinService;
 	@Autowired
-	private MemberBankCardService memberBankCardService;
+	private IMemberBankCardService memberBankCardService;
 	@Autowired
-	private ITxnsLogService txnsLogService;
+	private TxnsLogServiceProxy txnsLogService;
 	/**
 	 *
 	 * @param memberId
@@ -114,7 +106,7 @@ public class SMSSendService implements SmsService{
 				//需要bindId tn
 				try {
 					gateWayService.sendSMSMessage(json);
-				} catch (TradeException e) {
+				} catch (Exception e) {
 					e.printStackTrace();
 					return false;
 				}
@@ -142,20 +134,20 @@ public class SMSSendService implements SmsService{
 					 String bindFlag = jsonObject.get("bindFlag")+"";
 					 String instiCode = jsonObject.get("instiCode")+"";
 					 String devId = jsonObject.get("devId")+"";
-					 List<QuickpayCustModel> cardList=null;
+					 QuickpayCustBean custBean = null;
 					 if(StringUtil.isNotEmpty(devId)){
-						 cardList = this.quickpayCustService.getCardList(cardNo, customerNm, phoneNo, certifId, "999999999999999",devId);
+						 custBean = memberBankCardService.getCardList(cardNo, customerNm, phoneNo, certifId, "999999999999999",devId);
 					 }else{
-						 cardList = this.quickpayCustService.getCardList(cardNo, customerNm, phoneNo, certifId, "999999999999999");
+						 custBean = memberBankCardService.getCardList(cardNo, customerNm, phoneNo, certifId, "999999999999999");
 					 }
-		        	if(cardList.size()>0){//已绑卡
+		        	if(custBean!=null){//已绑卡
 		        		Map<String, Object> resultMap = new HashMap<String, Object>();
 		        		resultMap.put("tn", tn_);
-		        		resultMap.put("bindId", cardList.get(0).getId());
+		        		resultMap.put("bindId", custBean.getId());
 		        		try {
 							gateWayService.sendSMSMessage(JSON.toJSONString(resultMap));
 							return true;
-						} catch (TradeException e) {
+						} catch (Exception e) {
 							e.printStackTrace();
 							log.error("发送短信失败"+e.getMessage());
 							return false;
@@ -198,7 +190,7 @@ public class SMSSendService implements SmsService{
 		    	        		try {
 		    						gateWayService.sendSMSMessage(JSON.toJSONString(resultMap));
 		    						return true;
-		    					} catch (TradeException e) {
+		    					} catch (Exception e) {
 		    						e.printStackTrace();
 		    						log.error("发送短信失败"+e.getMessage());
 		    						return false;
@@ -221,6 +213,134 @@ public class SMSSendService implements SmsService{
 		return false;
 	}
 
+	
+	public String generateSmsCode(String json, ModuleTypeEnum moduleType) {
+		JSONObject jsonObject =  JSON.parseObject(json);
+		String retcode = "";
+		String phoneNo = null;
+		switch (moduleType) {
+			case BINDCARD:
+				phoneNo = jsonObject.get("phoneNo").toString();
+				retcode = smsSendService.generateCode(moduleType, phoneNo, "");
+				break;
+			case CHANGELOGINPWD:
+				phoneNo = jsonObject.get("phoneNo").toString();
+				retcode = smsSendService.generateCode(moduleType, phoneNo, "");
+				break;
+			case CHANGEPAYPWD:
+				phoneNo = jsonObject.get("phoneNo").toString();
+				retcode = smsSendService.generateCode(moduleType, phoneNo, "");
+				break;
+			case PAY:
+				//需要bindId tn
+				try {
+					gateWayService.sendSMSMessage(json);
+				} catch (Exception e) {
+					e.printStackTrace();
+					return "false";
+				}
+				return "true";
+			case REGISTER:
+				phoneNo = jsonObject.get("phoneNo").toString();
+				retcode = smsSendService.generateCode(moduleType, phoneNo, "");
+				break;
+			case ACCOUNTPAY:
+				phoneNo = jsonObject.get("phoneNo").toString();
+				String tn = jsonObject.get("tn").toString();
+				retcode = smsSendService.generateCode(moduleType, phoneNo, tn);
+				break;
+			case ANONYMOUSPAY:
+				try {
+					String tn_=jsonObject.get("tn").toString();
+					 String cardNo=jsonObject.get("cardNo").toString();
+					 String cardType=jsonObject.get("cardType").toString();
+					 String customerNm=jsonObject.get("customerNm").toString();
+					 String certifTp=jsonObject.get("certifTp").toString();
+					 String certifId=jsonObject.get("certifId").toString();
+					 phoneNo=jsonObject.get("phoneNo").toString();
+					 String cvn2=jsonObject.get("cvn2")+"";
+					 String expired=jsonObject.get("expired")+"";
+					 String bindFlag = jsonObject.get("bindFlag")+"";
+					 String instiCode = jsonObject.get("instiCode")+"";
+					 String devId = jsonObject.get("devId")+"";
+					 QuickpayCustBean custBean = null;
+					 if(StringUtil.isNotEmpty(devId)){
+						 custBean = memberBankCardService.getCardList(cardNo, customerNm, phoneNo, certifId, "999999999999999",devId);
+					 }else{
+						 custBean = memberBankCardService.getCardList(cardNo, customerNm, phoneNo, certifId, "999999999999999");
+					 }
+		        	if(custBean!=null){//已绑卡
+		        		Map<String, Object> resultMap = new HashMap<String, Object>();
+		        		resultMap.put("tn", tn_);
+		        		resultMap.put("bindId", custBean.getId());
+		        		try {
+							gateWayService.sendSMSMessage(JSON.toJSONString(resultMap));
+							return "true";
+						} catch (Exception e) {
+							e.printStackTrace();
+							log.error("发送短信失败"+e.getMessage());
+							return null;
+						}
+		        	}else{
+		        		if("1".equals(bindFlag)){//需要进行绑卡签约
+		        			 if(StringUtil.isEmpty(instiCode)){
+		        				 TxnsOrderinfoModel orderinfo = gateWayService.getOrderinfoByTN(tn_);
+		        				 TxnsLogModel txnsLog = txnsLogService.getTxnsLogByTxnseqno(orderinfo.getRelatetradetxn());
+		        				 instiCode = txnsLog.getAcccoopinstino();
+		        			 }
+		        	        WapCardBean cardBean = new WapCardBean(cardNo,cardType , customerNm,certifTp, certifId, phoneNo, cvn2, expired);
+		        	        ResultBean resultBean = gateWayService.bindingBankCard(instiCode, "999999999999999", cardBean);
+		        	        if(resultBean==null){
+		        	        	log.error("绑卡签约失败"+JSON.toJSONString(cardBean));
+		        	        	return null;
+		        	        }
+		        	        if(resultBean.isResultBool()){
+		        	        	//保存绑卡信息
+		        	            QuickpayCustBean quickpayCustBean = new QuickpayCustBean();
+		        	            quickpayCustBean.setCustomerno(instiCode);
+		        	            quickpayCustBean.setCardno(cardNo);
+		        	            quickpayCustBean.setCardtype(cardType);
+		        	            quickpayCustBean.setAccname(customerNm);
+		        	            quickpayCustBean.setPhone(phoneNo);
+		        	            quickpayCustBean.setIdtype(certifTp);
+		        	            quickpayCustBean.setIdnum(certifId);
+		        	            quickpayCustBean.setCvv2(cvn2);
+		        	            quickpayCustBean.setValidtime(expired);
+		        	            quickpayCustBean.setRelatememberno("999999999999999");
+		        	            //新增设备ID支持匿名支付
+		        	            quickpayCustBean.setDevId(devId);
+		        	            CardBinBean cardBin = cardBinService.getCard(cardNo);
+		        	            quickpayCustBean.setBankcode(cardBin.getBankCode());
+		        	            quickpayCustBean.setBankname(cardBin.getBankName());
+		        	            long bindId = memberBankCardService.saveQuickPayCustExt(quickpayCustBean);
+		        	            Map<String, Object> resultMap = new HashMap<String, Object>();
+		    	        		resultMap.put("tn", tn_);
+		    	        		resultMap.put("bindId", bindId+"");
+		    	        		try {
+		    						gateWayService.sendSMSMessage(JSON.toJSONString(resultMap));
+		    						return "true";
+		    					} catch (Exception e) {
+		    						e.printStackTrace();
+		    						log.error("发送短信失败"+e.getMessage());
+		    						return null;
+		    					}
+		        	            
+		        	        }
+		        		}else{
+		        			log.error("发送短信失败 :bindFlag is null");
+		        			return null;
+		        		}
+		        	}
+				} catch (Exception e) {
+					e.printStackTrace();
+					log.error("发送短信失败"+e.getMessage());
+					return null;
+				}
+				 
+		}
+		log.error("发送短信失败：modelType is null ");
+		return null;
+	}
 	public static void main(String[] args) {
 		Map<String, Object> resultMap = new HashMap<String, Object>();
 		resultMap.put("tn", "123");

@@ -6,8 +6,6 @@ import com.zlebank.zplatform.business.individual.exception.AbstractIndividualBus
 import com.zlebank.zplatform.business.individual.exception.ValidateOrderException;
 import com.zlebank.zplatform.commons.bean.PagedResult;
 import com.zlebank.zplatform.member.bean.MemberAccountBean;
-import com.zlebank.zplatform.trade.exception.AbstractTradeDescribeException;
-import com.zlebank.zplatform.trade.exception.TradeException;
 /**
  * 
  * Individual member account service
@@ -34,7 +32,7 @@ public interface MemberAccountService {
      * @throws AbstractIndividualBusinessException
      * @see OrderService
      */
-    String recharge(Order order) throws ValidateOrderException, TradeException,
+    String recharge(Order order) throws ValidateOrderException, Exception,
             AbstractIndividualBusinessException;
     /**
      * Member account withdraw.Just create a withdraw order,it will be processed
@@ -53,8 +51,8 @@ public interface MemberAccountService {
      * @throws AbstractIndividualBusinessException
      */
     String withdraw(String json, String payPwd)
-            throws ValidateOrderException, TradeException,
-            AbstractTradeDescribeException, AbstractIndividualBusinessException;
+            throws ValidateOrderException, Exception,
+             AbstractIndividualBusinessException;
     /**
      * query member basic funds account
      * 
@@ -64,7 +62,7 @@ public interface MemberAccountService {
      *             if member funs account not exist
      */
     MemberAccountBean queryMemberFuns(String memberId)
-            throws AbstractTradeDescribeException;
+            throws Exception;
     /**
      * query member income and express detail
      * 
@@ -75,8 +73,8 @@ public interface MemberAccountService {
      * @throws AbstractTradeDescribeException
      * @throws IllegalAccessException
      */
-    PagedResult<MemInAndExDetail> queryAccInAndExDetail(String memberId,
+    PagedResult<?> queryAccInAndExDetail(String memberId,
             int page,
-            int pageSize) throws AbstractTradeDescribeException,
+            int pageSize) throws Exception,
             IllegalAccessException;
 }
