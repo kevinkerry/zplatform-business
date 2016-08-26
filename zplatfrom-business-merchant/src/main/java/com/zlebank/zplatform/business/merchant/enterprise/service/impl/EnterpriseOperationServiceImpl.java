@@ -14,7 +14,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Repository;
 
 import com.zlebank.zplatform.business.merchant.enterprise.service.EnterpriseOperationService;
-import com.zlebank.zplatform.business.merchant.exception.SmsCodeVerifyFailException;
 import com.zlebank.zplatform.member.bean.EnterpriseBankAccountBean;
 import com.zlebank.zplatform.member.bean.EnterpriseBean;
 import com.zlebank.zplatform.member.bean.EnterpriseRealNameBean;
@@ -72,14 +71,14 @@ public class EnterpriseOperationServiceImpl implements EnterpriseOperationServic
 	 * @throws SmsCodeVerifyFailException 
 	 */
 	@Override
-	public void realnameConfirm(EnterpriseRealNameConfirmBean enterpriseRealNameConfirmBean) throws SmsCodeVerifyFailException,Exception {
+	public void realnameConfirm(EnterpriseRealNameConfirmBean enterpriseRealNameConfirmBean) throws Exception {
 		//校验短信验证码
 		PojoMember enterpriseMember = memberService.getMbmberByMemberId(enterpriseRealNameConfirmBean.getMemberId(), MemberType.ENTERPRISE);
 		int verifyCode = smsService.verifyCode(enterpriseMember.getPhone(), enterpriseRealNameConfirmBean.getTn(), enterpriseRealNameConfirmBean.getSmsCode());
 		if(verifyCode==1){//验证成功
 			enterpriseTradeServiceProxy.realNameConfirm(enterpriseRealNameConfirmBean);
 		}else{
-			throw new SmsCodeVerifyFailException();
+			throw new Exception("短信验证码错误");
 		}
 		
 	}

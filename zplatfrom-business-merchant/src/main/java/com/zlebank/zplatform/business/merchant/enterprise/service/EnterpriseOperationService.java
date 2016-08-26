@@ -10,7 +10,6 @@
  */
 package com.zlebank.zplatform.business.merchant.enterprise.service;
 
-import com.zlebank.zplatform.business.merchant.exception.SmsCodeVerifyFailException;
 import com.zlebank.zplatform.member.bean.EnterpriseBankAccountBean;
 import com.zlebank.zplatform.member.bean.EnterpriseBean;
 import com.zlebank.zplatform.member.bean.EnterpriseRealNameBean;
@@ -43,7 +42,7 @@ public interface EnterpriseOperationService {
 	 * 企业实名认证确认
 	 * @param enterpriseRealNameConfirmBean
 	 */
-	public void realnameConfirm(EnterpriseRealNameConfirmBean enterpriseRealNameConfirmBean) throws SmsCodeVerifyFailException,Exception;
+	public void realnameConfirm(EnterpriseRealNameConfirmBean enterpriseRealNameConfirmBean) throws Exception;
 	
 	/**
 	 * 企业会员绑定银行账户
