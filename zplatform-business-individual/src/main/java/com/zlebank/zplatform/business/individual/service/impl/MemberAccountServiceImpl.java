@@ -7,9 +7,6 @@ import java.util.List;
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Isolation;
-import org.springframework.transaction.annotation.Propagation;
-import org.springframework.transaction.annotation.Transactional;
 
 import com.alibaba.fastjson.JSON;
 import com.alibaba.fastjson.JSONObject;
@@ -18,9 +15,6 @@ import com.zlebank.zplatform.acc.bean.enums.Usage;
 import com.zlebank.zplatform.acc.pojo.Money;
 import com.zlebank.zplatform.business.individual.bean.MemInAndExDetail;
 import com.zlebank.zplatform.business.individual.bean.Order;
-import com.zlebank.zplatform.business.individual.exception.AbstractIndividualBusinessException;
-import com.zlebank.zplatform.business.individual.exception.PayPwdVerifyFailException;
-import com.zlebank.zplatform.business.individual.exception.UnCheckedSystemException;
 import com.zlebank.zplatform.business.individual.exception.ValidateOrderException;
 import com.zlebank.zplatform.business.individual.service.MemberAccountService;
 import com.zlebank.zplatform.business.individual.service.OrderService;
@@ -32,11 +26,11 @@ import com.zlebank.zplatform.member.bean.MemberBalanceDetailBean;
 import com.zlebank.zplatform.member.bean.MemberBean;
 import com.zlebank.zplatform.member.bean.enums.MemberType;
 import com.zlebank.zplatform.member.pojo.PojoMember;
+import com.zlebank.zplatform.rmi.commons.SMSServiceProxy;
 import com.zlebank.zplatform.rmi.member.IMemberAccountService;
 import com.zlebank.zplatform.rmi.member.IMemberOperationService;
 import com.zlebank.zplatform.rmi.member.IMemberService;
 import com.zlebank.zplatform.rmi.trade.GateWayServiceProxy;
-import com.zlebank.zplatform.sms.service.ISMSService;
 import com.zlebank.zplatform.trade.bean.wap.WapWithdrawBean;
 
 @Service("busiMemberAccountServiceImpl")
@@ -53,24 +47,22 @@ public class MemberAccountServiceImpl implements MemberAccountService {
     @Autowired
     private IMemberAccountService memberAccountServiceImpl;
     @Autowired
-    private ISMSService smsService;
+    private SMSServiceProxy smsService;
     @Autowired
     private OrderService orderServiceImpl;
     //@Autowired
     //CoopInstiDAO coopInstiDAO;
 
     @Override
-    @Transactional(isolation = Isolation.READ_COMMITTED, propagation = Propagation.REQUIRED)
     public String recharge(Order order) throws ValidateOrderException,
-            Exception, AbstractIndividualBusinessException {
+            Exception {
         return orderServiceImpl.createOrder(order);
     }
 
     @Override
-    @Transactional(isolation = Isolation.READ_COMMITTED, propagation = Propagation.REQUIRED)
+    
     public String withdraw(String json, String payPwd)
-            throws ValidateOrderException, Exception,
-            AbstractIndividualBusinessException {
+            throws ValidateOrderException, Exception{
         json = fullNonWalletData(json);
         WapWithdrawBean withdrawBean = JSON.parseObject(json,
                 WapWithdrawBean.class);
@@ -112,7 +104,8 @@ public class MemberAccountServiceImpl implements MemberAccountService {
             // 校验支付密码
             if (!memberOperationServiceImpl.verifyPayPwd(MemberType.INDIVIDUAL,
                     memberBean)) {
-                throw new PayPwdVerifyFailException();
+                //throw new PayPwdVerifyFailException();
+            	throw new Exception();
             }
         
 
@@ -121,10 +114,12 @@ public class MemberAccountServiceImpl implements MemberAccountService {
             tn = gateWayService.withdraw(json);//.withdraw(json);
         } catch (Exception e) {
             e.printStackTrace();
-            throw new UnCheckedSystemException();
+           // throw new UnCheckedSystemException();
+            throw new Exception();
         }
         if (tn == null || tn.equals("")) {
-            throw new UnCheckedSystemException();
+           // throw new UnCheckedSystemException();
+        	throw new Exception();
         }
         return tn;
     }

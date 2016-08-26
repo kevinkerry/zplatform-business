@@ -18,7 +18,6 @@ import com.zlebank.zplatform.business.individual.bean.BankCardInfo;
 import com.zlebank.zplatform.business.individual.bean.IndividualRealInfo;
 import com.zlebank.zplatform.business.individual.bean.Member;
 import com.zlebank.zplatform.business.individual.bean.SupportedBankCardType;
-import com.zlebank.zplatform.business.individual.exception.SmsCodeVerifyFailException;
 import com.zlebank.zplatform.business.individual.util.ApplicationContextAbled;
 import com.zlebank.zplatform.commons.bean.PagedResult;
 import com.zlebank.zplatform.sms.pojo.enums.ModuleTypeEnum;
@@ -63,7 +62,7 @@ public class MemberCardServiceTest extends ApplicationContextAbled {
 	}
 
 	// @Test
-	public void test_bindBankCard() throws SmsCodeVerifyFailException {
+	public void test_bindBankCard() {
 		MemberCardService memberCardService = (MemberCardService) getContext()
 				.getBean("memberCardService");
 		Member individualMember = new Member();
@@ -86,8 +85,13 @@ public class MemberCardServiceTest extends ApplicationContextAbled {
 		individualRealInfo.setCvn2("");
 		individualRealInfo.setExpired("");
 		bankCardInfo.setBankCardInfo(individualRealInfo);
-		memberCardService
-				.bindBankCard(individualMember, bankCardInfo, "235469");
+		try {
+			memberCardService
+					.bindBankCard(individualMember, bankCardInfo, "235469");
+		} catch (Exception e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
 	}
 
 	

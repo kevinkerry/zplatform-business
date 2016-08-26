@@ -17,9 +17,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 
-import com.zlebank.zplatform.business.individual.exception.DataBaseErrorException;
-import com.zlebank.zplatform.business.individual.exception.MerchMKNotExistException;
-import com.zlebank.zplatform.business.individual.exception.MerchWhiteListNotExistException;
 import com.zlebank.zplatform.trade.model.PojoMerchWhiteList;
 
 /**
@@ -40,36 +37,32 @@ public class MerchBusinessServiceTest {
 	@Test
 	@Ignore
 	public void test_updateMerchPubKey(){
-		try {
-			merchBusinessService.updateMerchPubKey("200000000000001", "1234566777");
-		} catch (MerchMKNotExistException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		} catch (DataBaseErrorException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		}
+		
+			try {
+				merchBusinessService.updateMerchPubKey("200000000000001", "1234566777");
+			} catch (Exception e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
+		
 	}
 	@Test
 	@Ignore
-	public void test_saveWhiteList(){
-		try {
+	public void test_saveWhiteList() throws Exception{
+		
 			PojoMerchWhiteList merchWhiteList = new PojoMerchWhiteList();
 			merchWhiteList.setAccName("郭佳");
 			merchWhiteList.setMerchId("200000000000613");
 			merchWhiteList.setCardNo("6228480018543668976");
 			merchWhiteList.setStatus("0");
 			merchBusinessService.saveWhiteList(merchWhiteList);
-		} catch (DataBaseErrorException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		}
+		
 	}
 	
 	@Test
 	@Ignore
-	public void test_updateWhiteList(){
-		try {
+	public void test_updateWhiteList() throws Exception{
+		
 			PojoMerchWhiteList merchWhiteList = new PojoMerchWhiteList();
 			merchWhiteList.setId(19L);
 			merchWhiteList.setAccName("郭佳__");
@@ -77,23 +70,14 @@ public class MerchBusinessServiceTest {
 			merchWhiteList.setCardNo("6228480018543661200");
 			merchWhiteList.setStatus("0");
 			merchBusinessService.updateWhiteList(merchWhiteList);
-		} catch (DataBaseErrorException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		} catch (MerchWhiteListNotExistException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		}
+		
 	}
 	
 	@Test
-	public void test_deleteWhiteList(){
-		try {
+	public void test_deleteWhiteList() throws Exception{
+		
 			merchBusinessService.deleteWhiteList(19L);
-		} catch (DataBaseErrorException | MerchWhiteListNotExistException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		}
+		
 	}
 	
 }

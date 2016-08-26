@@ -17,19 +17,17 @@ import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
 
 import com.alibaba.fastjson.JSON;
 import com.alibaba.fastjson.JSONObject;
 import com.zlebank.zplatform.business.individual.service.SmsService;
-import com.zlebank.zplatform.commons.utils.StringUtil;
 import com.zlebank.zplatform.member.bean.QuickpayCustBean;
+import com.zlebank.zplatform.rmi.commons.SMSServiceProxy;
 import com.zlebank.zplatform.rmi.member.IMemberBankCardService;
 import com.zlebank.zplatform.rmi.trade.CardBinServiceProxy;
 import com.zlebank.zplatform.rmi.trade.GateWayServiceProxy;
 import com.zlebank.zplatform.rmi.trade.TxnsLogServiceProxy;
 import com.zlebank.zplatform.sms.pojo.enums.ModuleTypeEnum;
-import com.zlebank.zplatform.sms.service.ISMSService;
 import com.zlebank.zplatform.trade.bean.CardBinBean;
 import com.zlebank.zplatform.trade.bean.ResultBean;
 import com.zlebank.zplatform.trade.bean.wap.WapCardBean;
@@ -48,7 +46,7 @@ import com.zlebank.zplatform.trade.model.TxnsOrderinfoModel;
 public class SMSSendService implements SmsService{
 	private static final Log log = LogFactory.getLog(SMSSendService.class);
 	@Autowired
-	private ISMSService smsSendService;
+	private SMSServiceProxy smsSendService;
 	@Autowired 
 	private GateWayServiceProxy gateWayService;
 	//@Autowired
@@ -84,7 +82,6 @@ public class SMSSendService implements SmsService{
 	 * @return
 	 */
 	@Override
-	@Transactional
 	public boolean sendSmsCode(String json, ModuleTypeEnum moduleType) {
 		JSONObject jsonObject =  JSON.parseObject(json);
 		int retcode = 999;
@@ -135,7 +132,7 @@ public class SMSSendService implements SmsService{
 					 String instiCode = jsonObject.get("instiCode")+"";
 					 String devId = jsonObject.get("devId")+"";
 					 QuickpayCustBean custBean = null;
-					 if(StringUtil.isNotEmpty(devId)){
+					 if(devId!=null&&!"".equals(devId)){
 						 custBean = memberBankCardService.getCardList(cardNo, customerNm, phoneNo, certifId, "999999999999999",devId);
 					 }else{
 						 custBean = memberBankCardService.getCardList(cardNo, customerNm, phoneNo, certifId, "999999999999999");
@@ -154,7 +151,7 @@ public class SMSSendService implements SmsService{
 						}
 		        	}else{
 		        		if("1".equals(bindFlag)){//需要进行绑卡签约
-		        			 if(StringUtil.isEmpty(instiCode)){
+		        			 if(instiCode!=null&&!"".equals(instiCode)){
 		        				 TxnsOrderinfoModel orderinfo = gateWayService.getOrderinfoByTN(tn_);
 		        				 TxnsLogModel txnsLog = txnsLogService.getTxnsLogByTxnseqno(orderinfo.getRelatetradetxn());
 		        				 instiCode = txnsLog.getAcccoopinstino();
@@ -264,7 +261,7 @@ public class SMSSendService implements SmsService{
 					 String instiCode = jsonObject.get("instiCode")+"";
 					 String devId = jsonObject.get("devId")+"";
 					 QuickpayCustBean custBean = null;
-					 if(StringUtil.isNotEmpty(devId)){
+					 if(devId!=null&&!"".equals(devId)){
 						 custBean = memberBankCardService.getCardList(cardNo, customerNm, phoneNo, certifId, "999999999999999",devId);
 					 }else{
 						 custBean = memberBankCardService.getCardList(cardNo, customerNm, phoneNo, certifId, "999999999999999");
@@ -283,7 +280,7 @@ public class SMSSendService implements SmsService{
 						}
 		        	}else{
 		        		if("1".equals(bindFlag)){//需要进行绑卡签约
-		        			 if(StringUtil.isEmpty(instiCode)){
+		        			 if(instiCode!=null&&!"".equals(instiCode)){
 		        				 TxnsOrderinfoModel orderinfo = gateWayService.getOrderinfoByTN(tn_);
 		        				 TxnsLogModel txnsLog = txnsLogService.getTxnsLogByTxnseqno(orderinfo.getRelatetradetxn());
 		        				 instiCode = txnsLog.getAcccoopinstino();

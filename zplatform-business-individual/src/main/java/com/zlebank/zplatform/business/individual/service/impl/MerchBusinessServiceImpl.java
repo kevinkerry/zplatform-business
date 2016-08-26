@@ -12,12 +12,7 @@ package com.zlebank.zplatform.business.individual.service.impl;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Propagation;
-import org.springframework.transaction.annotation.Transactional;
 
-import com.zlebank.zplatform.business.individual.exception.DataBaseErrorException;
-import com.zlebank.zplatform.business.individual.exception.MerchMKNotExistException;
-import com.zlebank.zplatform.business.individual.exception.MerchWhiteListNotExistException;
 import com.zlebank.zplatform.business.individual.service.MerchBusinessService;
 import com.zlebank.zplatform.member.bean.MemberBean;
 import com.zlebank.zplatform.member.bean.MerchMK;
@@ -59,14 +54,14 @@ public class MerchBusinessServiceImpl implements MerchBusinessService{
 	 * @return
 	 * @throws MerchMKNotExistException,DataBaseErrorException 
 	 */
-	@Transactional(propagation=Propagation.REQUIRED,rollbackFor=Throwable.class)
-	public boolean updateMerchPubKey(String memberId, String pub_key) throws MerchMKNotExistException,DataBaseErrorException {
+	public boolean updateMerchPubKey(String memberId, String pub_key) throws Exception {
 		// TODO Auto-generated method stub
 		
 		MerchMK merchMK = merchMKService.get(memberId);
 		if(merchMK==null){
 			//商户秘钥不存在异常
-			throw new MerchMKNotExistException();
+			//throw new MerchMKNotExistException();
+			throw new Exception();
 		}
 		merchMK.setMemberPubKey(pub_key);
 		try {
@@ -75,7 +70,8 @@ public class MerchBusinessServiceImpl implements MerchBusinessService{
 		} catch (Exception e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
-			throw new DataBaseErrorException();
+			//throw new DataBaseErrorException();
+			throw new Exception();
 		}
 		return true;
 	}
@@ -86,15 +82,15 @@ public class MerchBusinessServiceImpl implements MerchBusinessService{
 	 * @return
 	 * @throws DataBaseErrorException 
 	 */
-	@Transactional(propagation=Propagation.REQUIRED,rollbackFor=Throwable.class)
-	public boolean saveWhiteList(PojoMerchWhiteList merchWhiteList) throws DataBaseErrorException {
+	public boolean saveWhiteList(PojoMerchWhiteList merchWhiteList) throws Exception {
 		// TODO Auto-generated method stub
 		try {
 			merchWhiteListService.merge(merchWhiteList);
 		} catch (Exception e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
-			throw new DataBaseErrorException();
+			//throw new DataBaseErrorException();
+			throw new Exception();
 		}
 		return true;
 	}
@@ -104,11 +100,11 @@ public class MerchBusinessServiceImpl implements MerchBusinessService{
 	 * @param merchWhiteList
 	 * @return
 	 */
-	@Transactional(propagation=Propagation.REQUIRED,rollbackFor=Throwable.class)
-	public boolean updateWhiteList(PojoMerchWhiteList merchWhiteList)  throws DataBaseErrorException,MerchWhiteListNotExistException{
+	public boolean updateWhiteList(PojoMerchWhiteList merchWhiteList)  throws Exception{
 		PojoMerchWhiteList merchWhite = merchWhiteListService.getMerchWhiteListById(merchWhiteList.getId());
 		if(merchWhite==null){
-			throw new MerchWhiteListNotExistException();
+		//	throw new MerchWhiteListNotExistException();
+			throw new Exception();
 		}
 		try {
 			merchWhite.setAccName(merchWhiteList.getAccName());
@@ -123,7 +119,8 @@ public class MerchBusinessServiceImpl implements MerchBusinessService{
 		} catch (Exception e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
-			throw new DataBaseErrorException();
+			//throw new DataBaseErrorException();
+			throw new Exception();
 		}
 		return true;
 	}
@@ -134,12 +131,12 @@ public class MerchBusinessServiceImpl implements MerchBusinessService{
 	 * @return
 	 * @throws MerchWhiteListNotExistException 
 	 */
-	@Transactional(propagation=Propagation.REQUIRED,rollbackFor=Throwable.class)
-	public boolean deleteWhiteList(Long id)  throws DataBaseErrorException, MerchWhiteListNotExistException{
+	public boolean deleteWhiteList(Long id)  throws Exception{
 		// TODO Auto-generated method stub
 		PojoMerchWhiteList merchWhiteList = merchWhiteListService.getMerchWhiteListById(id);
 		if(merchWhiteList==null){
-			throw new MerchWhiteListNotExistException();
+			//throw new MerchWhiteListNotExistException();
+			throw new Exception();
 		}
 		merchWhiteList.setStatus("9");
 		try {
@@ -147,12 +144,12 @@ public class MerchBusinessServiceImpl implements MerchBusinessService{
 		} catch (Exception e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
-			throw new DataBaseErrorException();
+			//throw new DataBaseErrorException();
+			throw new Exception();
 		}
 		return true;
 	}
 
-	@Transactional(propagation=Propagation.REQUIRED,rollbackFor=Throwable.class)
 	public boolean resetPayPwd(String memberId, String payPwd) throws Exception {
 		PojoMember pm = memberService.getMbmberByMemberId(memberId, MemberType.ENTERPRISE);
 		if(pm==null){

@@ -1,4 +1,4 @@
-package com.zlebank.zplatform.business.individual.service;
+	package com.zlebank.zplatform.business.individual.service;
 
 import java.math.BigDecimal;
 import java.util.List;
@@ -13,7 +13,6 @@ import com.alibaba.fastjson.JSONObject;
 import com.zlebank.zplatform.acc.bean.enums.Usage;
 import com.zlebank.zplatform.business.individual.bean.MemInAndExDetail;
 import com.zlebank.zplatform.business.individual.bean.Order;
-import com.zlebank.zplatform.business.individual.exception.AbstractIndividualBusinessException;
 import com.zlebank.zplatform.business.individual.exception.ValidateOrderException;
 import com.zlebank.zplatform.business.individual.util.ApplicationContextAbled;
 import com.zlebank.zplatform.commons.bean.PagedResult;

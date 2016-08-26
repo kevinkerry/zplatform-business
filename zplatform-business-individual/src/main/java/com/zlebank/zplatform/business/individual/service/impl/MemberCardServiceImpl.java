@@ -19,8 +19,6 @@ import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Propagation;
-import org.springframework.transaction.annotation.Transactional;
 
 import com.alibaba.fastjson.JSON;
 import com.alibaba.fastjson.JSONObject;
@@ -38,6 +36,7 @@ import com.zlebank.zplatform.member.bean.QuickpayCustBean;
 import com.zlebank.zplatform.member.bean.RealNameBean;
 import com.zlebank.zplatform.member.bean.enums.MemberType;
 import com.zlebank.zplatform.member.pojo.PojoMember;
+import com.zlebank.zplatform.rmi.commons.SMSServiceProxy;
 import com.zlebank.zplatform.rmi.member.ICoopInstiService;
 import com.zlebank.zplatform.rmi.member.IMemberBankCardService;
 import com.zlebank.zplatform.rmi.member.IMemberOperationService;
@@ -47,7 +46,6 @@ import com.zlebank.zplatform.rmi.trade.CashBankServiceProxy;
 import com.zlebank.zplatform.rmi.trade.GateWayServiceProxy;
 import com.zlebank.zplatform.rmi.trade.TxnsLogServiceProxy;
 import com.zlebank.zplatform.sms.pojo.enums.ModuleTypeEnum;
-import com.zlebank.zplatform.sms.service.ISMSService;
 import com.zlebank.zplatform.trade.bean.CardBinBean;
 import com.zlebank.zplatform.trade.bean.ResultBean;
 import com.zlebank.zplatform.trade.bean.wap.WapCardBean;
@@ -78,7 +76,7 @@ public class MemberCardServiceImpl implements MemberCardService{
 	@Autowired
 	private CashBankServiceProxy cashBankService;
 	@Autowired
-	private ISMSService smsService;
+	private SMSServiceProxy smsService;
     @Autowired
     //CoopInstiDAO coopInstiDAO;
     private ICoopInstiService coopInstiService;
@@ -98,7 +96,6 @@ public class MemberCardServiceImpl implements MemberCardService{
 	 * @throws IllegalAccessException 
 	 */
 	@Override
-	@Transactional(propagation=Propagation.REQUIRED,rollbackFor=Throwable.class)
 	public PagedResult<BankCardInfo> queryBankCard(String memberId,String cardType,String devId,int page,int pageSize) throws IllegalAccessException {
 		PagedResult<QuickpayCustBean> pagedResult = memberBankCardService.queryMemberBankCard(memberId, cardType,devId, page, pageSize);
 		System.out.println(JSON.toJSON(pagedResult.getPagedResult()));
@@ -132,7 +129,6 @@ public class MemberCardServiceImpl implements MemberCardService{
 	 * @return
 	 */
 	@Override
-	@Transactional(propagation=Propagation.REQUIRED,rollbackFor=Throwable.class)
 	public CardBinBean queryCardBin(String bankCardNo) {
 		CardBinBean cardBin = cardBinService.getCard(bankCardNo);
 		if (cardBin == null)
@@ -149,7 +145,6 @@ public class MemberCardServiceImpl implements MemberCardService{
 	 * @return
 	 */
 	@Override
-	@Transactional(propagation=Propagation.REQUIRED,rollbackFor=Throwable.class)
 	public String bindBankCard(Member individualMember,
 			BankCardInfo bankCardInfo, String smsCode) {
 		int retCode = smsService.verifyCode(ModuleTypeEnum.BINDCARD,
@@ -196,7 +191,6 @@ public class MemberCardServiceImpl implements MemberCardService{
 	 * @throws DataCheckFailedException 
 	 */
 	@Override
-	@Transactional(propagation=Propagation.REQUIRED,rollbackFor=Throwable.class)
 	public boolean unbindBankCard(String memberId, String bindcardid,
 			String payPwd) throws Exception {
 		//校验支付密码
@@ -228,7 +222,6 @@ public class MemberCardServiceImpl implements MemberCardService{
 	 * @return
 	 */
 	@Override
-	@Transactional(propagation=Propagation.REQUIRED,rollbackFor=Throwable.class)
 	public PagedResult<SupportedBankCardType> queryBank(int page, int pageSize) {
 		List<SupportedBankCardType> supportBankList = new ArrayList<SupportedBankCardType>();
 		List<CashBankModel> bankList = cashBankService.findBankPage(page, pageSize);
@@ -246,7 +239,6 @@ public class MemberCardServiceImpl implements MemberCardService{
 	}
 
 	@Override
-	@Transactional(propagation=Propagation.REQUIRED,rollbackFor=Throwable.class)
 	public PageVo<SupportedBankCardType> queryCardList(Map<String, Object> map,
 			Integer pageNo, Integer pageSize) {
 		PageVo<CashBankModel>  pagevo = this.cashBankService.getCardList(map, pageNo, pageSize);
@@ -269,7 +261,6 @@ public class MemberCardServiceImpl implements MemberCardService{
 	}
 
 	@Override
-	@Transactional(propagation=Propagation.REQUIRED,rollbackFor=Throwable.class)
 	public ResultBean anonymousBindCard(String json) {
 		JSONObject jsonObject =  JSON.parseObject(json);
 		//需要进行绑卡签约

@@ -12,7 +12,6 @@ package com.zlebank.zplatform.business.individual.service.impl;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
 
 import com.zlebank.zplatform.business.individual.service.AppUpdateService;
 import com.zlebank.zplatform.rmi.trade.AppUpdateServiceProxy;
@@ -38,7 +37,6 @@ public class AppUpdateServiceImpl implements AppUpdateService{
 	 * @return
 	 */
 	@Override
-	@Transactional(readOnly=true)
 	public PojoAppUpdate getAppUpdate(String appVersion, String appChannelId) {
 		// TODO Auto-generated method stub
 		return appUpdateServiceProxy.getAppUpdate(appVersion, appChannelId);

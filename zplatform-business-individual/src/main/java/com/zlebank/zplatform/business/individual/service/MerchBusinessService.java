@@ -10,9 +10,6 @@
  */
 package com.zlebank.zplatform.business.individual.service;
 
-import com.zlebank.zplatform.business.individual.exception.DataBaseErrorException;
-import com.zlebank.zplatform.business.individual.exception.MerchMKNotExistException;
-import com.zlebank.zplatform.business.individual.exception.MerchWhiteListNotExistException;
 import com.zlebank.zplatform.trade.model.PojoMerchWhiteList;
 
 /**
@@ -32,28 +29,28 @@ public interface MerchBusinessService {
 	 * @param pub_key
 	 * @return
 	 */
-	public boolean updateMerchPubKey(String memberId, String pub_key) throws MerchMKNotExistException,DataBaseErrorException;
+	public boolean updateMerchPubKey(String memberId, String pub_key) throws Exception;
 	
 	/**
 	 * 保存白名单信息
 	 * @param merchWhiteList
 	 * @return
 	 */
-	public boolean saveWhiteList(PojoMerchWhiteList merchWhiteList)  throws DataBaseErrorException;
+	public boolean saveWhiteList(PojoMerchWhiteList merchWhiteList)  throws Exception;
 	
 	/**
 	 * 更新白名单
 	 * @param merchWhiteList
 	 * @return
 	 */
-	public boolean updateWhiteList(PojoMerchWhiteList merchWhiteList)  throws DataBaseErrorException,MerchWhiteListNotExistException;
+	public boolean updateWhiteList(PojoMerchWhiteList merchWhiteList)  throws Exception;
 	
 	/**
 	 * 删除白名单
 	 * @param id
 	 * @return
 	 */
-	public boolean deleteWhiteList(Long id)  throws DataBaseErrorException,MerchWhiteListNotExistException;
+	public boolean deleteWhiteList(Long id)  throws Exception;
 	
 	/**
 	 * 重置商户支付密码

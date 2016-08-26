@@ -20,10 +20,10 @@ import com.zlebank.zplatform.member.bean.EnterpriseRealNameBean;
 import com.zlebank.zplatform.member.bean.EnterpriseRealNameConfirmBean;
 import com.zlebank.zplatform.member.bean.enums.MemberType;
 import com.zlebank.zplatform.member.pojo.PojoMember;
+import com.zlebank.zplatform.rmi.commons.SMSServiceProxy;
 import com.zlebank.zplatform.rmi.member.IEnterpriseService;
 import com.zlebank.zplatform.rmi.member.IMemberService;
 import com.zlebank.zplatform.rmi.trade.EnterpriseTradeServiceProxy;
-import com.zlebank.zplatform.sms.service.ISMSService;
 
 /**
  * Class Description
@@ -41,7 +41,7 @@ public class EnterpriseOperationServiceImpl implements EnterpriseOperationServic
 	@Autowired
 	private EnterpriseTradeServiceProxy enterpriseTradeServiceProxy;
 	@Autowired
-	private ISMSService smsService;
+	private SMSServiceProxy smsService;
 	@Autowired
 	private IMemberService memberService;
 	

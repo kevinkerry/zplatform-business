@@ -8,7 +8,6 @@ import com.zlebank.zplatform.business.individual.bean.IndividualRealInfo;
 import com.zlebank.zplatform.business.individual.bean.Order;
 import com.zlebank.zplatform.business.individual.bean.enums.OrderStatus;
 import com.zlebank.zplatform.business.individual.bean.enums.PayWay;
-import com.zlebank.zplatform.business.individual.exception.AbstractIndividualBusinessException;
 import com.zlebank.zplatform.business.individual.exception.ValidateOrderException;
 import com.zlebank.zplatform.commons.bean.PagedResult;
 import com.zlebank.zplatform.trade.bean.ResultBean;
@@ -42,7 +41,7 @@ public interface OrderService {
      * @throws AbstractIndividualBusinessException
      */
     String createOrder(Order order) throws ValidateOrderException,
-            Exception, AbstractIndividualBusinessException;
+            Exception;
     /**
      * Pay a order with account balance
      * 
@@ -52,8 +51,7 @@ public interface OrderService {
      * @return {@link OrderStatus}
      */
     OrderStatus pay(String order, String smsCode, String payPwd, PayWay payWay)
-            throws Exception,
-            AbstractIndividualBusinessException;
+            throws Exception;
 
     /**
      * 匿名支付
@@ -67,8 +65,7 @@ public interface OrderService {
      */
     public OrderStatus anonymousPay(String order,
             String smsCode
-            ) throws 
-            AbstractIndividualBusinessException, Exception;
+            ) throws  Exception;
     
     /**
      * 匿名支付 实名认证
@@ -87,7 +84,7 @@ public interface OrderService {
      * @throws AbstractIndividualBusinessException
      */
     public String createRefundOrder(Order order) throws ValidateOrderException,
-    Exception, AbstractIndividualBusinessException;
+    Exception;
     
     /**
      * 创建微信订单
