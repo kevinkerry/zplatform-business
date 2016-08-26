@@ -57,6 +57,7 @@ import com.zlebank.zplatform.rmi.trade.TxnsQuickpayServiceProxy;
 import com.zlebank.zplatform.rmi.trade.WeChatQRServiceProxy;
 import com.zlebank.zplatform.rmi.trade.WeChatServiceProxy;
 import com.zlebank.zplatform.trade.bean.CardBinBean;
+import com.zlebank.zplatform.trade.bean.ReaPayResultBean;
 import com.zlebank.zplatform.trade.bean.ResultBean;
 import com.zlebank.zplatform.trade.bean.TradeBean;
 import com.zlebank.zplatform.trade.bean.enums.ChannelEnmu;
@@ -90,6 +91,7 @@ public class OrderServiceImpl implements OrderService {
    
     /*@Autowired
 	private MemberDAO memberDAO;*/
+   
     
     @Autowired
     private IMemberService memberService;
@@ -187,14 +189,14 @@ public class OrderServiceImpl implements OrderService {
 		order.setOrderType( OrderType.fromValue(code));
 		//交易类型
 		order.setBusiType(txnsLog.getBusitype());
+		 ResultBean queryResultBean = null;
+	    ReaPayResultBean payResult = null;
 		if(ChannelEnmu.REAPAY==ChannelEnmu.fromValue(txnsLog.getPayinst())){//支付渠道为融宝时
 			if(OrderStatus.fromValue(orderinfoModel.getStatus())==OrderStatus.PAYING){//订单状态为正在支付
 				OrderStatusEnum queryTradeResult = tradeQueryServiceProxy.queryTradeResult(orderinfoModel.getRelatetradetxn());
 				order.setStatus(OrderStatus.fromValue(queryTradeResult.getStatus()));
-			}
 		}
-		
-		
+		}
 		return order;
 	}
 
@@ -594,7 +596,6 @@ public class OrderServiceImpl implements OrderService {
         try {
 			gateWayService.submitPay(JSON.toJSONString(orderObj));
 		} catch (Exception e) {
-			log.error(e.getMessage());
 			e.printStackTrace();
 			result =new ResultBean("", e.getMessage());
     		result.setResultObj(map);

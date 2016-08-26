@@ -134,6 +134,7 @@ public class SMSSendService implements SmsService{
 					 QuickpayCustBean custBean = null;
 					 if(devId!=null&&!"".equals(devId)){
 						 custBean = memberBankCardService.getCardList(cardNo, customerNm, phoneNo, certifId, "999999999999999",devId);
+					
 					 }else{
 						 custBean = memberBankCardService.getCardList(cardNo, customerNm, phoneNo, certifId, "999999999999999");
 					 }
@@ -156,14 +157,21 @@ public class SMSSendService implements SmsService{
 		        				 TxnsLogModel txnsLog = txnsLogService.getTxnsLogByTxnseqno(orderinfo.getRelatetradetxn());
 		        				 instiCode = txnsLog.getAcccoopinstino();
 		        			 }
+		        			 TxnsOrderinfoModel orderinfo = gateWayService.getOrderinfoByTN(tn_);
+	        				 TxnsLogModel txnsLog = txnsLogService.getTxnsLogByTxnseqno(orderinfo.getRelatetradetxn());
+	        				 instiCode = txnsLog.getAcccoopinstino();
+		        			 String merId = orderinfo.getSecmemberno()!=null ?   orderinfo.getSecmemberno():orderinfo.getFirmemberno();
 		        	        WapCardBean cardBean = new WapCardBean(cardNo,cardType , customerNm,certifTp, certifId, phoneNo, cvn2, expired);
-		        	        ResultBean resultBean = gateWayService.bindingBankCard(instiCode, "999999999999999", cardBean);
+		        	        cardBean.setTn(tn_);
+		        	        
+		        	        ResultBean resultBean = gateWayService.bindingBankCard(merId, "999999999999999", cardBean);
 		        	        if(resultBean==null){
 		        	        	log.error("绑卡签约失败"+JSON.toJSONString(cardBean));
 		        	        	return false;
 		        	        }
-		        	        if(resultBean.isResultBool()){
-		        	        	//保存绑卡信息
+		        	        //绑卡签约成功则已发送短信，因此去掉此逻辑
+		        	       if(resultBean.isResultBool()){
+		        	    	 //保存绑卡信息
 		        	            QuickpayCustBean quickpayCustBean = new QuickpayCustBean();
 		        	            quickpayCustBean.setCustomerno(instiCode);
 		        	            quickpayCustBean.setCardno(cardNo);
@@ -192,7 +200,11 @@ public class SMSSendService implements SmsService{
 		    						log.error("发送短信失败"+e.getMessage());
 		    						return false;
 		    					}
-		        	            
+		        	            //memberBankCardService.saveQuickPayCustExt(quickpayCustBean);
+			        			//return true;
+		        	        }else{
+		        	        	log.error("发送短信失败 :resultBean error  msg "+resultBean.getErrCode()+resultBean.getErrMsg());
+			        			return false;
 		        	        }
 		        		}else{
 		        			log.error("发送短信失败 :bindFlag is null");
