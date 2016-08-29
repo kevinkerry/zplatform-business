@@ -69,7 +69,7 @@ public class SMSSendService implements SmsService{
 	@Override
 	public boolean sendSmsCode(String memberId, String phone,
 			ModuleTypeEnum moduleType) {
-		int retcode = smsSendService.sendSMS(moduleType, phone, "", "");
+		int retcode = smsSendService.sendSMS(moduleType.getCode(), phone, "", "");
 		if(retcode==100||retcode==105){
 			return true;
 		}
@@ -89,15 +89,15 @@ public class SMSSendService implements SmsService{
 		switch (moduleType) {
 			case BINDCARD:
 				phoneNo = jsonObject.get("phoneNo").toString();
-				retcode = smsSendService.sendSMS(moduleType, phoneNo, "", "");
+				retcode = smsSendService.sendSMS(moduleType.getCode(), phoneNo, "", "");
 				break;
 			case CHANGELOGINPWD:
 				phoneNo = jsonObject.get("phoneNo").toString();
-				retcode = smsSendService.sendSMS(moduleType, phoneNo, "", "");
+				retcode = smsSendService.sendSMS(moduleType.getCode(), phoneNo, "", "");
 				break;
 			case CHANGEPAYPWD:
 				phoneNo = jsonObject.get("phoneNo").toString();
-				retcode = smsSendService.sendSMS(moduleType, phoneNo, "", "");
+				retcode = smsSendService.sendSMS(moduleType.getCode(), phoneNo, "", "");
 				break;
 			case PAY:
 				//需要bindId tn
@@ -110,12 +110,12 @@ public class SMSSendService implements SmsService{
 				return true;
 			case REGISTER:
 				phoneNo = jsonObject.get("phoneNo").toString();
-				retcode = smsSendService.sendSMS(moduleType, phoneNo, "", "");
+				retcode = smsSendService.sendSMS(moduleType.getCode(), phoneNo, "", "");
 				break;
 			case ACCOUNTPAY:
 				phoneNo = jsonObject.get("phoneNo").toString();
 				String tn = jsonObject.get("tn").toString();
-				retcode = smsSendService.sendSMS(moduleType, phoneNo, tn, "");
+				retcode = smsSendService.sendSMS(moduleType.getCode(), phoneNo, tn, "");
 				break;
 			case ANONYMOUSPAY:
 				try {
@@ -230,15 +230,15 @@ public class SMSSendService implements SmsService{
 		switch (moduleType) {
 			case BINDCARD:
 				phoneNo = jsonObject.get("phoneNo").toString();
-				retcode = smsSendService.generateCode(moduleType, phoneNo, "");
+				retcode = smsSendService.generateCode(moduleType.getCode(), phoneNo, "");
 				break;
 			case CHANGELOGINPWD:
 				phoneNo = jsonObject.get("phoneNo").toString();
-				retcode = smsSendService.generateCode(moduleType, phoneNo, "");
+				retcode = smsSendService.generateCode(moduleType.getCode(), phoneNo, "");
 				break;
 			case CHANGEPAYPWD:
 				phoneNo = jsonObject.get("phoneNo").toString();
-				retcode = smsSendService.generateCode(moduleType, phoneNo, "");
+				retcode = smsSendService.generateCode(moduleType.getCode(), phoneNo, "");
 				break;
 			case PAY:
 				//需要bindId tn
@@ -251,12 +251,12 @@ public class SMSSendService implements SmsService{
 				return "true";
 			case REGISTER:
 				phoneNo = jsonObject.get("phoneNo").toString();
-				retcode = smsSendService.generateCode(moduleType, phoneNo, "");
+				retcode = smsSendService.generateCode(moduleType.getCode(), phoneNo, "");
 				break;
 			case ACCOUNTPAY:
 				phoneNo = jsonObject.get("phoneNo").toString();
 				String tn = jsonObject.get("tn").toString();
-				retcode = smsSendService.generateCode(moduleType, phoneNo, tn);
+				retcode = smsSendService.generateCode(moduleType.getCode(), phoneNo, tn);
 				break;
 			case ANONYMOUSPAY:
 				try {

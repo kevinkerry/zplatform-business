@@ -80,7 +80,7 @@ public class MemberInfoServiceImpl implements MemberInfoService {
 	@Override
 	public String register(Member registerMemberInfo, String smsCode)
 			throws Exception {
-		int retCode = smsService.verifyCode(ModuleTypeEnum.REGISTER,
+		int retCode = smsService.verifyCodeByModuleType(ModuleTypeEnum.REGISTER.getCode(),
 				registerMemberInfo.getPhone(), smsCode);
 		if (retCode != 1) {
 			throw new RuntimeException("验证码错误");
@@ -178,7 +178,7 @@ public class MemberInfoServiceImpl implements MemberInfoService {
 			if(pm==null){
 				return false;
 			}
-			int retCode = smsService.verifyCode(ModuleTypeEnum.BINDCARD,individualRealInfo.getPhoneNo(), smsCode);
+			int retCode = smsService.verifyCodeByModuleType(ModuleTypeEnum.BINDCARD.getCode(),individualRealInfo.getPhoneNo(), smsCode);
 			if(retCode != 1) {
 				throw new RuntimeException("验证码错误");
 			}
@@ -350,7 +350,7 @@ public class MemberInfoServiceImpl implements MemberInfoService {
 		if(pm==null){
 			return false;
 		}
-		int retCode = smsService.verifyCode(ModuleTypeEnum.CHANGELOGINPWD,
+		int retCode = smsService.verifyCodeByModuleType(ModuleTypeEnum.CHANGELOGINPWD.getCode(),
 				pm.getPhone(), smsCode);
 		if (retCode != 1) {
 			throw new RuntimeException("验证码错误");
@@ -376,7 +376,7 @@ public class MemberInfoServiceImpl implements MemberInfoService {
 		if(pm==null){
 			return false;
 		}
-		int retCode = smsService.verifyCode(ModuleTypeEnum.RESETPAYPWD,
+		int retCode = smsService.verifyCodeByModuleType(ModuleTypeEnum.RESETPAYPWD.getCode(),
 				pm.getPhone(), smsCode);
 		if (retCode != 1) {
 			throw new RuntimeException("验证码错误");

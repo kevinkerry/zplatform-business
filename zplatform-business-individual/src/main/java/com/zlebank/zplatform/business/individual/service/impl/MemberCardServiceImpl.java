@@ -147,7 +147,7 @@ public class MemberCardServiceImpl implements MemberCardService{
 	@Override
 	public String bindBankCard(Member individualMember,
 			BankCardInfo bankCardInfo, String smsCode) {
-		int retCode = smsService.verifyCode(ModuleTypeEnum.BINDCARD,
+		int retCode = smsService.verifyCode(ModuleTypeEnum.BINDCARD.getCode(),
 				individualMember.getPhone(), smsCode);
 		if (retCode != 1) {
 			throw new RuntimeException("验证码错误");

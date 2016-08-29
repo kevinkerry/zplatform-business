@@ -29,7 +29,7 @@ public interface EnterpriseOperationService {
 	 * 企业注册申请
 	 * @param enterpriseBean
 	 */
-	public void registerApply(EnterpriseBean enterpriseBean) throws Exception;
+	public boolean registerApply(EnterpriseBean enterpriseBean) throws Exception;
 	
 	/**
 	 * 企业实名认证申请
@@ -49,4 +49,11 @@ public interface EnterpriseOperationService {
 	 * @param enterpriseBankAccountBean
 	 */
 	public void bindingBankAccount(EnterpriseBankAccountBean enterpriseBankAccountBean) throws Exception;
+	
+	/**
+	 * 更加企业会员号查询企业状态
+	 * @param memberId
+	 * @return
+	 */
+	public String queryEnterpriseStatus(String memberId);
 }
