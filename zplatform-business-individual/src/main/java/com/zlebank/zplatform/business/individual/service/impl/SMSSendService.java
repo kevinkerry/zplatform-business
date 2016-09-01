@@ -117,6 +117,22 @@ public class SMSSendService implements SmsService{
 				String tn = jsonObject.get("tn").toString();
 				retcode = smsSendService.sendSMS(moduleType.getCode(), phoneNo, tn, "");
 				break;
+			case ENTERPRISEREALNAME://1.5.0 新增企业实名认证
+				phoneNo = jsonObject.get("phoneNo").toString();
+				retcode = smsSendService.sendSMS(moduleType.getCode(), phoneNo, "", "");
+				break;
+			case UNBINDPHONE://1.5.0 新增解绑手机
+				phoneNo = jsonObject.get("phoneNo").toString();
+				retcode = smsSendService.sendSMS(moduleType.getCode(), phoneNo, "", phoneNo.substring(7));
+				break;
+			case RESETPAYPWD://1.5.0 新增重置支付密码
+				phoneNo = jsonObject.get("phoneNo").toString();
+				retcode = smsSendService.sendSMS(moduleType.getCode(), phoneNo, "", "");
+				break;
+			case BINDPHONE://1.5.0 新增绑定手机
+				phoneNo = jsonObject.get("phoneNo").toString();
+				retcode = smsSendService.sendSMS(moduleType.getCode(), phoneNo, "",  phoneNo.substring(7));
+				break;
 			case ANONYMOUSPAY:
 				try {
 					String tn_=jsonObject.get("tn").toString();
@@ -134,7 +150,6 @@ public class SMSSendService implements SmsService{
 					 QuickpayCustBean custBean = null;
 					 if(devId!=null&&!"".equals(devId)){
 						 custBean = memberBankCardService.getCardList(cardNo, customerNm, phoneNo, certifId, "999999999999999",devId);
-					
 					 }else{
 						 custBean = memberBankCardService.getCardList(cardNo, customerNm, phoneNo, certifId, "999999999999999");
 					 }
@@ -218,7 +233,6 @@ public class SMSSendService implements SmsService{
 				}
 				 
 		}
-		log.error("发送短信失败：modelType is null ");
 		return false;
 	}
 
@@ -257,6 +271,22 @@ public class SMSSendService implements SmsService{
 				phoneNo = jsonObject.get("phoneNo").toString();
 				String tn = jsonObject.get("tn").toString();
 				retcode = smsSendService.generateCode(moduleType.getCode(), phoneNo, tn);
+				break;
+			case ENTERPRISEREALNAME://1.5.0 新增企业实名认证
+				phoneNo = jsonObject.get("phoneNo").toString();
+				retcode = smsSendService.generateCode(moduleType.getCode(), phoneNo, "");
+				break;
+			case UNBINDPHONE://1.5.0 新增解绑手机
+				phoneNo = jsonObject.get("phoneNo").toString();
+				retcode = smsSendService.generateCode(moduleType.getCode(), phoneNo, "");
+				break;
+			case RESETPAYPWD://1.5.0 新增重置支付密码
+				phoneNo = jsonObject.get("phoneNo").toString();
+				retcode = smsSendService.generateCode(moduleType.getCode(), phoneNo, "");
+				break;
+			case BINDPHONE://1.5.0 新增绑定手机
+				phoneNo = jsonObject.get("phoneNo").toString();
+				retcode = smsSendService.generateCode(moduleType.getCode(), phoneNo, "");
 				break;
 			case ANONYMOUSPAY:
 				try {

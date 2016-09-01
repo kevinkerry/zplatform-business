@@ -53,10 +53,10 @@ public class EnterpriseOperationServiceImpl implements EnterpriseOperationServic
 	 * @param enterpriseBean
 	 */
 	@Override
-	public boolean registerApply(EnterpriseBean enterpriseBean) throws Exception{
+	public String registerApply(EnterpriseBean enterpriseBean) throws Exception{
 		try {
-			enterpriseService.registerApply(enterpriseBean);
-			return true;
+			String memberId = enterpriseService.registerApply(enterpriseBean);
+			return memberId;
 		} catch (Exception e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
@@ -85,7 +85,7 @@ public class EnterpriseOperationServiceImpl implements EnterpriseOperationServic
 		//校验短信验证码
 		PojoMember enterpriseMember = memberService.getMbmberByMemberId(enterpriseRealNameConfirmBean.getMemberId(), MemberType.ENTERPRISE);
 		int verifyCode = smsService.verifyCode(enterpriseMember.getPhone(), enterpriseRealNameConfirmBean.getTn(), enterpriseRealNameConfirmBean.getSmsCode());
-		if(verifyCode!=1){//验证成功
+		if(verifyCode==1){//验证成功
 			enterpriseTradeServiceProxy.realNameConfirm(enterpriseRealNameConfirmBean);
 		}else{
 			throw new Exception("短信验证码错误");

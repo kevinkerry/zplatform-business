@@ -12,6 +12,7 @@ package com.zlebank.zplatform.business.merchant.fund.service;
 
 import com.zlebank.zplatform.trade.bean.FinancierReimbursementBean;
 import com.zlebank.zplatform.trade.bean.MerchantReimbursementBean;
+import com.zlebank.zplatform.trade.bean.OffLineChargeBean;
 import com.zlebank.zplatform.trade.bean.RaiseMoneyTransferBean;
 
 /**
@@ -44,4 +45,11 @@ public interface FundManagerService {
 	 * @return
 	 */
 	public String merchanReimbursement(MerchantReimbursementBean merchanReimbursementBean) throws Exception;
+	
+	/**
+	 * 线下充值订单
+	 * @param offLineChargeBean
+	 * @return
+	 */
+	public String offLineCharge(OffLineChargeBean offLineChargeBean);
 }

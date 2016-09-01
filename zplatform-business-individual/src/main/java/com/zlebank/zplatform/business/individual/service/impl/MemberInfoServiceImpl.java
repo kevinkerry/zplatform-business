@@ -18,6 +18,7 @@ import org.springframework.stereotype.Service;
 import com.zlebank.zplatform.business.individual.bean.IndividualRealInfo;
 import com.zlebank.zplatform.business.individual.bean.Member;
 import com.zlebank.zplatform.business.individual.bean.enums.RealNameTypeEnum;
+import com.zlebank.zplatform.business.individual.exception.CommonException;
 import com.zlebank.zplatform.business.individual.service.MemberInfoService;
 import com.zlebank.zplatform.commons.bean.PagedResult;
 import com.zlebank.zplatform.member.bean.CoopInsti;
@@ -68,6 +69,7 @@ public class MemberInfoServiceImpl implements MemberInfoService {
     @Autowired
     //CoopInstiDAO coopInstiDAO;
     private ICoopInstiService coopInstiService;
+    
 	/**
 	 *
 	 * @param registerMemberInfo
@@ -414,6 +416,95 @@ public class MemberInfoServiceImpl implements MemberInfoService {
 		return false;
 	}
 	
+	@Override
+	public boolean vaildateUnbindPhone(String memberId,String phone,String payPwd,String smsCode) throws CommonException,Exception{
+		//验证短信验证码
+		if (smsService.verifyCode(phone,"",smsCode)!=1) {
+            // throw new SmsCodeVerifyFailException();
+         	throw new CommonException("5M","短信验证码错误");
+        }
+		//验证支付密码
+		if(!vaildatePayPwd(memberId, payPwd)){
+			throw new CommonException("5M","支付密码错误");
+		}
+		return true;
+	}
+	@Override
+	public void vaildateBankCardForModifyPhone(String memberId,long bindId,String cardNo,String certNo,String payPwd)throws CommonException,Exception{
+		QuickpayCustBean memberBankCard = memberBankCardService.getMemberBankCardById(bindId);
+		if(memberBankCard==null){
+			throw new CommonException("58","未找到银行卡信息");
+		}
+		if(StringUtil.isNotEmpty(cardNo)){
+			if(!cardNo.equals(memberBankCard.getCardno())){
+				throw new CommonException("58","银行卡号错误");
+			}
+		}else{
+			throw new CommonException("58","银行卡号为空");
+		}
+		
+		if(StringUtil.isNotEmpty(certNo)){
+			if(!certNo.equals(memberBankCard.getIdnum())){
+				throw new CommonException("58","身份证号错误");
+			}
+		}else{
+			throw new CommonException("58","身份证号为空");
+		}
+		
+		if(!vaildatePayPwd(memberId, payPwd)){
+			throw new CommonException("5M","支付密码错误");
+		}
+	}
+	
+	@Override
+	public void modifyPhone(String memberId,String phone,String smsCode) throws CommonException{
+		//验证短信验证码
+		if (smsService.verifyCode(phone,"",smsCode)!=1) {
+            // throw new SmsCodeVerifyFailException();
+         	throw new CommonException("5M","短信验证码错误");
+        }
+		//获取会员所属合作机构ID
+		PojoMember member = memberService.getMbmberByMemberId(memberId, null);
+		
+		PojoMember memberByPhone = memberService.getMemberByPhoneAndCoopInsti(phone, member.getInstiId());
+		if(memberByPhone!=null){
+			throw new CommonException("58","手机号已经被注册 ");
+		}
+		//更新会员手机号 t_member 
+		if(!memberOperationService.modifyPhone(memberId, phone)){
+			throw new CommonException("58","手机号已经被注册 ");
+		}
+		
+	}
+	
+	@Override
+	public void vaildateBankCardForResetPwd(String memberId,String phone,String smsCode,long bindId,String cardNo) throws CommonException{
+		//获取绑卡信息
+		QuickpayCustBean memberBankCard = memberBankCardService.getMemberBankCardById(bindId);
+		if(memberBankCard==null){
+			throw new CommonException("58","未找到银行卡信息");
+		}
+		//校验银行卡号
+		if(StringUtil.isNotEmpty(cardNo)){
+			if(!cardNo.equals(memberBankCard.getCardno())){
+				throw new CommonException("58","银行卡号错误");
+			}
+		}else{
+			throw new CommonException("58","银行卡号为空");
+		}
+		//校验银行卡预留手机号
+		if(StringUtil.isNotEmpty(phone)){
+			if(!memberBankCard.getPhone().equals(phone)){
+				throw new CommonException("58","银行卡预留手机号错误");
+			}
+		}else{
+			throw new CommonException("58","银行卡预留手机号为空");
+		}
+		//验证短信验证码
+		if(smsService.verifyCode(phone,"",smsCode)!=1) {
+         	throw new CommonException("5M","短信验证码错误");
+        }
+	}
 	
 
 }

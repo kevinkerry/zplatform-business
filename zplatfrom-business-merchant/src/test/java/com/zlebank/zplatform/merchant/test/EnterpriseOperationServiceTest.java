@@ -29,7 +29,10 @@ import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 
 
 
+
+
 import com.zlebank.zplatform.business.merchant.enterprise.service.EnterpriseOperationService;
+import com.zlebank.zplatform.member.bean.EnterpriseBankAccountBean;
 import com.zlebank.zplatform.member.bean.EnterpriseBean;
 import com.zlebank.zplatform.member.bean.EnterpriseRealNameBean;
 import com.zlebank.zplatform.member.bean.EnterpriseRealNameConfirmBean;
@@ -51,37 +54,40 @@ public class EnterpriseOperationServiceTest {
 	private EnterpriseOperationService enterpriseOperationService; 
 	
 	@Test
-	@Ignore
+	//@Ignore
 	public void test_regist(){
-		EnterpriseBean enterpriseBean = new EnterpriseBean();
-		enterpriseBean.setCoopInstiCode("300000000000027");
-		enterpriseBean.setEnterpriseName("测试企业"+System.currentTimeMillis());
-		enterpriseBean.setEmail("test@"+System.currentTimeMillis()+".com");
-		enterpriseBean.setCellPhoneNo("11111111111");
-		enterpriseBean.setProvince(110000L);
-		enterpriseBean.setCity(110100L);
-		enterpriseBean.setStreet(110101L);
-		enterpriseBean.setTaxNo("123");
-		enterpriseBean.setLicenceNo("456");
-		enterpriseBean.setOrgCode("789");
-		enterpriseBean.setAddress("测试地址给");
-		enterpriseBean.setPostCode("100024");
-		enterpriseBean.setPrimaryBusiness(IndustryType.FINANCE);
-		enterpriseBean.setCorpCertType("01");
-		enterpriseBean.setCorporation("联系人");
-		enterpriseBean.setCorpNo("110105198610094789");
-		enterpriseBean.setContact("联系人");
-		enterpriseBean.setContPhone("22222222222");
-		enterpriseBean.setContAddress("联系人地址");
-		enterpriseBean.setContPost("100089");
-		enterpriseBean.setContEmail(System.currentTimeMillis()+"@test.com");
-		try {
-			boolean registerApply = enterpriseOperationService.registerApply(enterpriseBean);
-			System.out.println("【企业申请结果】"+registerApply);
-		} catch (Exception e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
+		for(int i=0 ;i<10;i++){
+			EnterpriseBean enterpriseBean = new EnterpriseBean();
+			enterpriseBean.setCoopInstiCode("300000000000027");
+			enterpriseBean.setEnterpriseName("测试企业"+System.currentTimeMillis());
+			enterpriseBean.setEmail("test@"+System.currentTimeMillis()+".com");
+			enterpriseBean.setCellPhoneNo("11111111111");
+			enterpriseBean.setProvince(110000L);
+			enterpriseBean.setCity(110100L);
+			enterpriseBean.setStreet(110101L);
+			enterpriseBean.setTaxNo("123");
+			enterpriseBean.setLicenceNo("456");
+			enterpriseBean.setOrgCode("789");
+			enterpriseBean.setAddress("测试地址给");
+			enterpriseBean.setPostCode("100024");
+			enterpriseBean.setPrimaryBusiness(IndustryType.FINANCE);
+			enterpriseBean.setCorpCertType("01");
+			enterpriseBean.setCorporation("联系人");
+			enterpriseBean.setCorpNo("110105198610094789");
+			enterpriseBean.setContact("联系人");
+			enterpriseBean.setContPhone("22222222222");
+			enterpriseBean.setContAddress("联系人地址");
+			enterpriseBean.setContPost("100089");
+			enterpriseBean.setContEmail(System.currentTimeMillis()+"@test.com");
+			try {
+				String registerApply = enterpriseOperationService.registerApply(enterpriseBean);
+				System.out.println("【企业申请结果】"+registerApply);
+			} catch (Exception e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
 		}
+		
 	}
 	
 	@Test
@@ -124,7 +130,7 @@ public class EnterpriseOperationServiceTest {
 	}
 	
 	@Test
-	//@Ignore
+	@Ignore
 	public void test_realname_confirm(){
 		EnterpriseRealNameConfirmBean bean = new EnterpriseRealNameConfirmBean();
 		bean.setMemberId("200000000000856");
@@ -142,5 +148,27 @@ public class EnterpriseOperationServiceTest {
 		}
 	}
 	
+	@Test
+	@Ignore
+	public void test_bindingcard(){
+		EnterpriseBankAccountBean enterpriseBankAccountBean = new EnterpriseBankAccountBean();
+		enterpriseBankAccountBean.setMemberId("200000000000856");;// 企业会员ID
+		enterpriseBankAccountBean.setCoopinsti("300000000000004");;//合作机构
+		enterpriseBankAccountBean.setAccNum("134111111111112");;// 银行账号
+		enterpriseBankAccountBean.setAccName("测试对公账号1");;// 银行账户名
+		enterpriseBankAccountBean.setBankNode("102221000382");;// 银行账户开户网点(开户行号)
+		try {
+			enterpriseOperationService.bindingBankAccount(enterpriseBankAccountBean);
+		} catch (Exception e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+	}
+	
+	@Test
+	@Ignore
+	public void test_offline_charge(){
+		
+	}
 	
 }

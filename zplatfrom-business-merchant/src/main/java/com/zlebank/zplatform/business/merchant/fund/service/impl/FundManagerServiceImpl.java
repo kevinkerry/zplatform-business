@@ -17,6 +17,7 @@ import com.zlebank.zplatform.business.merchant.fund.service.FundManagerService;
 import com.zlebank.zplatform.rmi.trade.EnterpriseTradeServiceProxy;
 import com.zlebank.zplatform.trade.bean.FinancierReimbursementBean;
 import com.zlebank.zplatform.trade.bean.MerchantReimbursementBean;
+import com.zlebank.zplatform.trade.bean.OffLineChargeBean;
 import com.zlebank.zplatform.trade.bean.RaiseMoneyTransferBean;
 
 /**
@@ -67,6 +68,17 @@ public class FundManagerServiceImpl implements FundManagerService{
 			MerchantReimbursementBean merchanReimbursementBean) throws Exception {
 		// TODO Auto-generated method stub
 		return enterpriseTradeServiceProxy.createMerchantReimbusementOrder(merchanReimbursementBean);
+	}
+
+	/**
+	 *
+	 * @param offLineChargeBean
+	 * @return
+	 */
+	@Override
+	public String offLineCharge(OffLineChargeBean offLineChargeBean) {
+		// TODO Auto-generated method stub
+		return enterpriseTradeServiceProxy.offLineCharge(offLineChargeBean);
 	}
 
 }

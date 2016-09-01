@@ -29,7 +29,7 @@ public interface EnterpriseOperationService {
 	 * 企业注册申请
 	 * @param enterpriseBean
 	 */
-	public boolean registerApply(EnterpriseBean enterpriseBean) throws Exception;
+	public String registerApply(EnterpriseBean enterpriseBean) throws Exception;
 	
 	/**
 	 * 企业实名认证申请
