@@ -31,6 +31,7 @@ import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 
 
 
+
 import com.zlebank.zplatform.business.merchant.enterprise.service.EnterpriseOperationService;
 import com.zlebank.zplatform.member.bean.EnterpriseBankAccountBean;
 import com.zlebank.zplatform.member.bean.EnterpriseBean;
@@ -61,7 +62,7 @@ public class EnterpriseOperationServiceTest {
 			enterpriseBean.setCoopInstiCode("300000000000027");
 			enterpriseBean.setEnterpriseName("测试企业"+System.currentTimeMillis());
 			enterpriseBean.setEmail("test@"+System.currentTimeMillis()+".com");
-			enterpriseBean.setCellPhoneNo("11111111111");
+			enterpriseBean.setCellPhoneNo("13"+getVerifyCode());
 			enterpriseBean.setProvince(110000L);
 			enterpriseBean.setCity(110100L);
 			enterpriseBean.setStreet(110101L);
@@ -89,6 +90,15 @@ public class EnterpriseOperationServiceTest {
 		}
 		
 	}
+	
+	private String getVerifyCode(){
+	       String verifyCode = "";
+	       for(int i=0;i<9;i++){
+	           int x=1+(int)(Math.random()*9);
+	           verifyCode+=x;
+	       }
+	       return verifyCode;
+	   }
 	
 	@Test
 	@Ignore

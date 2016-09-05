@@ -63,7 +63,7 @@ public class FundManagerServiceTest {
 	}
 	
 	@Test
-	//@Ignore
+	@Ignore
 	public void test_financierReimbursement(){
 		/**
 		 *  22
@@ -98,49 +98,66 @@ public class FundManagerServiceTest {
 	@Test
 	@Ignore
 	public void test_raiseMoneyTransfer(){
-		RaiseMoneyTransferBean raiseMoneyTransferBean = new RaiseMoneyTransferBean();
+		for(int i=0 ; i<10 ;i++){
+			RaiseMoneyTransferBean raiseMoneyTransferBean = new RaiseMoneyTransferBean();
+			
+			/**
+			 *  txnType;// 交易类型
+				txnSubType;// 交易子类
+				bizTypeprivate;// 产品类型
+				channelType;// 渠道类型
+				OrderId;// 订单号
+				memberId;// 商户ID
+				financingId;// 融资人ID
+				productCode;// 产品代码
+			 */
+			
+			raiseMoneyTransferBean.setTxnType("23");
+			raiseMoneyTransferBean.setTxnSubType("00");
+			raiseMoneyTransferBean.setBizType("000207"); 
+			raiseMoneyTransferBean.setChannelType("00");
+			raiseMoneyTransferBean.setOrderId("MP"+System.currentTimeMillis());
+			raiseMoneyTransferBean.setMemberId("200000000000597");
+			raiseMoneyTransferBean.setFinancingId("200000000000611");
+			raiseMoneyTransferBean.setProductCode("100000001");
+			raiseMoneyTransferBean.setCoopInsti("300000000000027");
+			
+			String tn = fundManagerService.raiseMoneyTransfer(raiseMoneyTransferBean);
+			System.out.println("【募集款划转】"+tn);
+			try {
+				Thread.sleep(10);
+			} catch (InterruptedException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
+		}
 		
-		/**
-		 *  txnType;// 交易类型
-			txnSubType;// 交易子类
-			bizTypeprivate;// 产品类型
-			channelType;// 渠道类型
-			OrderId;// 订单号
-			memberId;// 商户ID
-			financingId;// 融资人ID
-			productCode;// 产品代码
-		 */
-		
-		raiseMoneyTransferBean.setTxnType("23");
-		raiseMoneyTransferBean.setTxnSubType("00");
-		raiseMoneyTransferBean.setBizType("000207"); 
-		raiseMoneyTransferBean.setChannelType("00");
-		raiseMoneyTransferBean.setOrderId("MP"+DateUtil.getCurrentDateTime());
-		raiseMoneyTransferBean.setMemberId("200000000000597");
-		raiseMoneyTransferBean.setFinancingId("200000000000683");
-		raiseMoneyTransferBean.setProductCode("100000001");
-		raiseMoneyTransferBean.setCoopInsti("300000000000027");
-		
-		String tn = fundManagerService.raiseMoneyTransfer(raiseMoneyTransferBean);
-		System.out.println("【募集款划转】"+tn);
 	}
 	
 	@Test
-	@Ignore
+	//@Ignore
 	public void test_merchanReimbursement(){
 		MerchantReimbursementBean merchanReimbursementBean = new MerchantReimbursementBean();
 		merchanReimbursementBean.setBatchNo("BP"+DateUtil.getCurrentDateTime());
 		merchanReimbursementBean.setMemberId("200000000000597");
 		merchanReimbursementBean.setProductCode("100000001");
 		merchanReimbursementBean.setTotalAmt("10");
+		merchanReimbursementBean.setCoopInsti("300000000000027");
 		List<ReimbursementDetailBean> detaiList = new ArrayList<ReimbursementDetailBean>();
-		ReimbursementDetailBean detailBean = new ReimbursementDetailBean();
-		detailBean.setOrderId("MO"+DateUtil.getCurrentDateTime());
-		detailBean.setTxnAmt("10");
-		detailBean.setInterest("200000000000597");
-		detailBean.setInvestors("200000000000597");
-		detaiList.add(detailBean);
-		
+		for(int i =0;i<10;i++){
+			ReimbursementDetailBean detailBean = new ReimbursementDetailBean();
+			detailBean.setOrderId("MO"+System.currentTimeMillis());
+			detailBean.setTxnAmt("10");
+			detailBean.setInterest("1");
+			detailBean.setInvestors("100000000000576");
+			detaiList.add(detailBean);
+			try {
+				Thread.sleep(10);
+			} catch (InterruptedException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
+		}
 		merchanReimbursementBean.setDetaiList(detaiList);
 		try {
 			String tn = fundManagerService.merchanReimbursement(merchanReimbursementBean);

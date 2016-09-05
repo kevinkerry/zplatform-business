@@ -1,6 +1,7 @@
 package com.zlebank.zplatform.business.individual.service;
 
 import com.zlebank.zplatform.business.individual.bean.Order;
+import com.zlebank.zplatform.business.individual.exception.CommonException;
 import com.zlebank.zplatform.business.individual.exception.ValidateOrderException;
 import com.zlebank.zplatform.commons.bean.PagedResult;
 import com.zlebank.zplatform.member.bean.MemberAccountBean;
@@ -30,8 +31,7 @@ public interface MemberAccountService {
      * @throws AbstractIndividualBusinessException
      * @see OrderService
      */
-    String recharge(Order order) throws ValidateOrderException, Exception
-            ;
+    String recharge(Order order) throws CommonException;
     /**
      * Member account withdraw.Just create a withdraw order,it will be processed
      * by background program. Member can check bank account later if background
@@ -49,7 +49,7 @@ public interface MemberAccountService {
      * @throws AbstractIndividualBusinessException
      */
     String withdraw(String json, String payPwd)
-            throws ValidateOrderException, Exception;
+            throws CommonException;
     /**
      * query member basic funds account
      * 
@@ -59,7 +59,7 @@ public interface MemberAccountService {
      *             if member funs account not exist
      */
     MemberAccountBean queryMemberFuns(String memberId)
-            throws Exception;
+            throws CommonException;
     /**
      * query member income and express detail
      * 
@@ -72,6 +72,5 @@ public interface MemberAccountService {
      */
     PagedResult<?> queryAccInAndExDetail(String memberId,
             int page,
-            int pageSize) throws Exception,
-            IllegalAccessException;
+            int pageSize) throws CommonException;
 }

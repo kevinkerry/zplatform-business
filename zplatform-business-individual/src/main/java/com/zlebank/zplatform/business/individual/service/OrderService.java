@@ -8,6 +8,7 @@ import com.zlebank.zplatform.business.individual.bean.IndividualRealInfo;
 import com.zlebank.zplatform.business.individual.bean.Order;
 import com.zlebank.zplatform.business.individual.bean.enums.OrderStatus;
 import com.zlebank.zplatform.business.individual.bean.enums.PayWay;
+import com.zlebank.zplatform.business.individual.exception.CommonException;
 import com.zlebank.zplatform.business.individual.exception.ValidateOrderException;
 import com.zlebank.zplatform.commons.bean.PagedResult;
 import com.zlebank.zplatform.trade.bean.ResultBean;
@@ -40,8 +41,7 @@ public interface OrderService {
      * @throws TradeException
      * @throws AbstractIndividualBusinessException
      */
-    String createOrder(Order order) throws ValidateOrderException,
-            Exception;
+    String createOrder(Order order) throws CommonException;
     /**
      * Pay a order with account balance
      * 
@@ -51,7 +51,7 @@ public interface OrderService {
      * @return {@link OrderStatus}
      */
     OrderStatus pay(String order, String smsCode, String payPwd, PayWay payWay)
-            throws Exception;
+            throws CommonException;
 
     /**
      * 匿名支付
@@ -65,7 +65,7 @@ public interface OrderService {
      */
     public OrderStatus anonymousPay(String order,
             String smsCode
-            ) throws  Exception;
+            ) throws  CommonException;
     
     /**
      * 匿名支付 实名认证
@@ -83,8 +83,7 @@ public interface OrderService {
      * @throws TradeException
      * @throws AbstractIndividualBusinessException
      */
-    public String createRefundOrder(Order order) throws ValidateOrderException,
-    Exception;
+    public String createRefundOrder(Order order) throws CommonException;
     
     /**
      * 创建微信订单
@@ -131,7 +130,7 @@ public interface OrderService {
 	 * @param typeId
 	 * @return
 	 */
-	public JSONObject createWechatOrder(String tn , String typeId)throws Exception;
+	public JSONObject createWechatOrder(String tn , String typeId)throws CommonException;
 	
 	
 	 /***
@@ -139,7 +138,7 @@ public interface OrderService {
      * @param tn
      * @return
      */
-    public ResultBean queryWechatOrder(String tn,String typeId)throws Exception;
+    public ResultBean queryWechatOrder(String tn,String typeId)throws CommonException;
 	
 	
 }

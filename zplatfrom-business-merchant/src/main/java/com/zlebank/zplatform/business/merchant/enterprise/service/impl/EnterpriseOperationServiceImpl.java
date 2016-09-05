@@ -14,7 +14,9 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Repository;
 import org.springframework.stereotype.Service;
 
+import com.zlebank.zplatform.business.merchant.enterprise.bean.enums.ExcepitonTypeEnum;
 import com.zlebank.zplatform.business.merchant.enterprise.service.EnterpriseOperationService;
+import com.zlebank.zplatform.business.merchant.exception.CommonException;
 import com.zlebank.zplatform.member.bean.EnterpriseBankAccountBean;
 import com.zlebank.zplatform.member.bean.EnterpriseBean;
 import com.zlebank.zplatform.member.bean.EnterpriseRealNameBean;
@@ -53,14 +55,14 @@ public class EnterpriseOperationServiceImpl implements EnterpriseOperationServic
 	 * @param enterpriseBean
 	 */
 	@Override
-	public String registerApply(EnterpriseBean enterpriseBean) throws Exception{
+	public String registerApply(EnterpriseBean enterpriseBean) throws CommonException{
 		try {
 			String memberId = enterpriseService.registerApply(enterpriseBean);
 			return memberId;
 		} catch (Exception e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
-			throw new Exception(e.getMessage());
+			throw new CommonException(ExcepitonTypeEnum.ENTERPRISE_INFO.getCode(),e.getMessage());
 		}
 	}
 
@@ -71,8 +73,14 @@ public class EnterpriseOperationServiceImpl implements EnterpriseOperationServic
 	 * @throws Exception 
 	 */
 	@Override
-	public String realNameApply(EnterpriseRealNameBean enterpriseRealNameBean) throws Exception {
-		return enterpriseTradeServiceProxy.createEnterpriseRealNameOrder(enterpriseRealNameBean);
+	public String realNameApply(EnterpriseRealNameBean enterpriseRealNameBean) throws CommonException {
+		try {
+			return enterpriseTradeServiceProxy.createEnterpriseRealNameOrder(enterpriseRealNameBean);
+		} catch (Exception e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+			throw new CommonException(ExcepitonTypeEnum.ENTERPRISE_INFO.getCode(),e.getMessage());
+		}
 	}
 
 	/**
@@ -81,21 +89,33 @@ public class EnterpriseOperationServiceImpl implements EnterpriseOperationServic
 	 * @throws SmsCodeVerifyFailException 
 	 */
 	@Override
-	public void realnameConfirm(EnterpriseRealNameConfirmBean enterpriseRealNameConfirmBean) throws Exception {
+	public void realnameConfirm(EnterpriseRealNameConfirmBean enterpriseRealNameConfirmBean) throws CommonException {
 		//校验短信验证码
 		PojoMember enterpriseMember = memberService.getMbmberByMemberId(enterpriseRealNameConfirmBean.getMemberId(), MemberType.ENTERPRISE);
 		int verifyCode = smsService.verifyCode(enterpriseMember.getPhone(), enterpriseRealNameConfirmBean.getTn(), enterpriseRealNameConfirmBean.getSmsCode());
 		if(verifyCode==1){//验证成功
-			enterpriseTradeServiceProxy.realNameConfirm(enterpriseRealNameConfirmBean);
+			try {
+				enterpriseTradeServiceProxy.realNameConfirm(enterpriseRealNameConfirmBean);
+			} catch (Exception e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+				throw new CommonException(ExcepitonTypeEnum.ENTERPRISE_INFO.getCode(),e.getMessage());
+			}
 		}else{
-			throw new Exception("短信验证码错误");
+			throw new CommonException(ExcepitonTypeEnum.PASSWORD.getCode(),"短信验证码错误");
 		}
 		
 	}
 	
 	@Override
-	public void bindingBankAccount(EnterpriseBankAccountBean enterpriseBankAccountBean) throws Exception{
-		enterpriseService.bindingBankAccount(enterpriseBankAccountBean);
+	public void bindingBankAccount(EnterpriseBankAccountBean enterpriseBankAccountBean) throws CommonException{
+		try {
+			enterpriseService.bindingBankAccount(enterpriseBankAccountBean);
+		} catch (Exception e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+			throw new CommonException(ExcepitonTypeEnum.ENTERPRISE_CARD.getCode(),e.getMessage());
+		}
 	}
 
 	/**

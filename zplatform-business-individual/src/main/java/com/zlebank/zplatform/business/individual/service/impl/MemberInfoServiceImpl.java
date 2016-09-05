@@ -17,6 +17,7 @@ import org.springframework.stereotype.Service;
 
 import com.zlebank.zplatform.business.individual.bean.IndividualRealInfo;
 import com.zlebank.zplatform.business.individual.bean.Member;
+import com.zlebank.zplatform.business.individual.bean.enums.ExcepitonTypeEnum;
 import com.zlebank.zplatform.business.individual.bean.enums.RealNameTypeEnum;
 import com.zlebank.zplatform.business.individual.exception.CommonException;
 import com.zlebank.zplatform.business.individual.service.MemberInfoService;
@@ -81,18 +82,26 @@ public class MemberInfoServiceImpl implements MemberInfoService {
 	 */
 	@Override
 	public String register(Member registerMemberInfo, String smsCode)
-			throws Exception {
+			throws CommonException{
 		int retCode = smsService.verifyCodeByModuleType(ModuleTypeEnum.REGISTER.getCode(),
 				registerMemberInfo.getPhone(), smsCode);
 		if (retCode != 1) {
-			throw new RuntimeException("验证码错误");
+//			throw new RuntimeException("验证码错误");
+			throw new CommonException(ExcepitonTypeEnum.PASSWORD.getCode(),"验证码错误");
 		}
 		// 机构号转换为机构ID
 		CoopInsti coopInsti = coopInstiService.getInstiByInstiCode(registerMemberInfo.getInstiCode());//getByInstiCode(registerMemberInfo.getInstiCode());
 		registerMemberInfo.setInstiCode(coopInsti.getInstiCode());
 		registerMemberInfo.setInstiId(coopInsti.getId());
-		String memberId = memberOperationService.registMember(
-				MemberType.INDIVIDUAL, registerMemberInfo);
+		String memberId = null;
+		try {
+			memberId = memberOperationService.registMember(
+					MemberType.INDIVIDUAL, registerMemberInfo);
+		} catch (Exception e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+			throw new CommonException(ExcepitonTypeEnum.PASSWORD.getCode(),e.getMessage());
+		}
 		return memberId;
 	}
 
@@ -147,13 +156,20 @@ public class MemberInfoServiceImpl implements MemberInfoService {
 	 */
 	@Override
 	public String login(String loginName, String pwd, String coopInstiCode)
-			throws Exception {
+			throws CommonException{
 		MemberBean member = new MemberBean();
 		member.setLoginName(loginName);
 		member.setPwd(pwd);
 		CoopInsti coopInsti = coopInstiService.getInstiByInstiCode(coopInstiCode);
 		member.setInstiId(coopInsti.getId());
-		String memberId = memberOperationService.login(MemberType.INDIVIDUAL,member);
+		String memberId = null;
+		try {
+			memberId = memberOperationService.login(MemberType.INDIVIDUAL,member);
+		} catch (Exception e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+			throw new CommonException(ExcepitonTypeEnum.PASSWORD.getCode(),e.getMessage());
+		}
 		if (memberId!=null&&!"".equals(memberId)) {
 			return memberId;
 		}
@@ -173,7 +189,7 @@ public class MemberInfoServiceImpl implements MemberInfoService {
 	public boolean realName(IndividualRealInfo individualRealInfo,
             String smsCode,
             String payPwd,
-            String memberId,RealNameTypeEnum realNameTypeEnum) throws Exception {
+            String memberId,RealNameTypeEnum realNameTypeEnum) throws CommonException {
 		//校验短信验证码
 		PojoMember pm = memberService.getMbmberByMemberId(memberId, MemberType.INDIVIDUAL);
 		if(realNameTypeEnum!=RealNameTypeEnum.CARDREALNAME){
@@ -182,7 +198,8 @@ public class MemberInfoServiceImpl implements MemberInfoService {
 			}
 			int retCode = smsService.verifyCodeByModuleType(ModuleTypeEnum.BINDCARD.getCode(),individualRealInfo.getPhoneNo(), smsCode);
 			if(retCode != 1) {
-				throw new RuntimeException("验证码错误");
+				//throw new RuntimeException("验证码错误");
+				throw new CommonException(ExcepitonTypeEnum.PASSWORD.getCode(),"验证码错误");
 			}
 		}
         
@@ -209,7 +226,8 @@ public class MemberInfoServiceImpl implements MemberInfoService {
                         try {
                             memberBankCardService.unbindQuickPayCust(quickpayCustBean);
                         } catch (Exception e) {
-                            throw new Exception("解绑银行卡失败");
+                            //throw new Exception("解绑银行卡失败");
+                            throw new CommonException(ExcepitonTypeEnum.MEMBER_CARD.getCode(),"解绑银行卡失败");
                         }
                     }
                 } catch (IllegalAccessException e) {
@@ -262,7 +280,13 @@ public class MemberInfoServiceImpl implements MemberInfoService {
             member.setLoginName(pm.getLoginName());
             member.setInstiId(pojoCoopInsti.getId());
             member.setPhone(pm.getPhone());
-            return memberOperationService.resetPayPwd(MemberType.INDIVIDUAL, member, payPwd, false);
+            try {
+				return memberOperationService.resetPayPwd(MemberType.INDIVIDUAL, member, payPwd, false);
+			} catch (Exception e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+				 throw new CommonException(ExcepitonTypeEnum.PASSWORD.getCode(),e.getMessage());
+			}
         }
 		return false;
 	}
@@ -275,7 +299,7 @@ public class MemberInfoServiceImpl implements MemberInfoService {
 	 * @throws DataCheckFailedException 
 	 */
 	@Override
-	public boolean vaildatePayPwd(String memberId, String payPwd) throws Exception {
+	public boolean vaildatePayPwd(String memberId, String payPwd) throws CommonException {
 		PojoMember pm = memberService.getMbmberByMemberId(memberId, MemberType.INDIVIDUAL);
 		if(pm==null){
 			return false;
@@ -285,7 +309,12 @@ public class MemberInfoServiceImpl implements MemberInfoService {
 		member.setInstiId(pm.getInstiId());
 		member.setPhone(pm.getPhone());
 		member.setPaypwd(payPwd);
-		return memberOperationService.verifyPayPwd(MemberType.INDIVIDUAL, member);
+		try {
+			return memberOperationService.verifyPayPwd(MemberType.INDIVIDUAL, member);
+		} catch (Exception e) {
+			// TODO Auto-generated catch block
+			 throw new CommonException(ExcepitonTypeEnum.PASSWORD.getCode(),e.getMessage());
+		}
 	}
 
 	/**
@@ -297,7 +326,7 @@ public class MemberInfoServiceImpl implements MemberInfoService {
 	 * @throws DataCheckFailedException 
 	 */
 	@Override
-	public boolean modifyPwd(String memberId, String orgPwd, String pwd) throws Exception {
+	public boolean modifyPwd(String memberId, String orgPwd, String pwd) throws CommonException {
 		PojoMember pm = memberService.getMbmberByMemberId(memberId, MemberType.INDIVIDUAL);
 		if(pm==null){
 			return false;
@@ -307,7 +336,13 @@ public class MemberInfoServiceImpl implements MemberInfoService {
 		member.setInstiId(pm.getInstiId());
 		member.setPhone(pm.getPhone());
 		member.setPwd(orgPwd);
-		return memberOperationService.resetLoginPwd(MemberType.INDIVIDUAL, member, pwd, true);
+		try {
+			return memberOperationService.resetLoginPwd(MemberType.INDIVIDUAL, member, pwd, true);
+		} catch (Exception e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+			 throw new CommonException(ExcepitonTypeEnum.PASSWORD.getCode(),e.getMessage());
+		}
 	}
 
 	/**
@@ -319,7 +354,7 @@ public class MemberInfoServiceImpl implements MemberInfoService {
 	 * @throws DataCheckFailedException 
 	 */
 	@Override
-	public boolean modifyPayPwd(String memberId, String orgPayPwd, String payPwd) throws Exception {
+	public boolean modifyPayPwd(String memberId, String orgPayPwd, String payPwd) throws CommonException {
 		PojoMember pm = memberService.getMbmberByMemberId(memberId, null);
 		if(pm==null){
 			return false;
@@ -330,10 +365,16 @@ public class MemberInfoServiceImpl implements MemberInfoService {
 		member.setPhone(pm.getPhone());
 		member.setPaypwd(orgPayPwd);
 
-		if(orgPayPwd!=null&&!"".equals(orgPayPwd)){
-			return memberOperationService.resetPayPwd(MemberType.INDIVIDUAL, member, payPwd, false);	
-		} else {
-			return memberOperationService.resetPayPwd(MemberType.INDIVIDUAL, member, payPwd, true);
+		try {
+			if(orgPayPwd!=null&&!"".equals(orgPayPwd)){
+				return memberOperationService.resetPayPwd(MemberType.INDIVIDUAL, member, payPwd, false);	
+			} else {
+				return memberOperationService.resetPayPwd(MemberType.INDIVIDUAL, member, payPwd, true);
+			}
+		} catch (Exception e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+			 throw new CommonException(ExcepitonTypeEnum.PASSWORD.getCode(),e.getMessage());
 		}
 
 	}
@@ -347,7 +388,7 @@ public class MemberInfoServiceImpl implements MemberInfoService {
 	 * @throws DataCheckFailedException 
 	 */
 	@Override
-	public boolean resetPwd(String memberId, String pwd, String smsCode) throws Exception {
+	public boolean resetPwd(String memberId, String pwd, String smsCode) throws CommonException {
 		PojoMember pm = memberService.getMbmberByMemberId(memberId, MemberType.INDIVIDUAL);
 		if(pm==null){
 			return false;
@@ -361,7 +402,13 @@ public class MemberInfoServiceImpl implements MemberInfoService {
 		member.setLoginName(pm.getLoginName());
 		member.setInstiId(pm.getInstiId());
 		member.setPhone(pm.getPhone());
-		return memberOperationService.resetLoginPwd(MemberType.INDIVIDUAL, member, pwd, false);
+		try {
+			return memberOperationService.resetLoginPwd(MemberType.INDIVIDUAL, member, pwd, false);
+		} catch (Exception e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+			 throw new CommonException(ExcepitonTypeEnum.PASSWORD.getCode(),e.getMessage());
+		}
 	}
 
 	/**
@@ -373,7 +420,7 @@ public class MemberInfoServiceImpl implements MemberInfoService {
 	 * @throws DataCheckFailedException 
 	 */
 	@Override
-	public boolean resetPayPwd(String memberId, String payPwd, String smsCode) throws Exception {
+	public boolean resetPayPwd(String memberId, String payPwd, String smsCode) throws CommonException {
 		PojoMember pm = memberService.getMbmberByMemberId(memberId, MemberType.INDIVIDUAL);
 		if(pm==null){
 			return false;
@@ -387,7 +434,13 @@ public class MemberInfoServiceImpl implements MemberInfoService {
 		member.setLoginName(pm.getLoginName());
 		member.setInstiId(pm.getInstiId());
 		member.setPhone(pm.getPhone());
-		return memberOperationService.resetPayPwd(MemberType.INDIVIDUAL, member, payPwd, false);
+		try {
+			return memberOperationService.resetPayPwd(MemberType.INDIVIDUAL, member, payPwd, false);
+		} catch (Exception e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+			 throw new CommonException(ExcepitonTypeEnum.PASSWORD.getCode(),e.getMessage());
+		}
 	}
 
 	/**
@@ -400,7 +453,7 @@ public class MemberInfoServiceImpl implements MemberInfoService {
 	 */
 	@Override
 	public boolean vaildatePwd(String memberId, String pwd)
-			throws Exception {
+			throws CommonException {
 		PojoMember pm = memberService.getMbmberByMemberId(memberId, MemberType.INDIVIDUAL);
 		if(pm==null){
 			return false;
@@ -410,69 +463,75 @@ public class MemberInfoServiceImpl implements MemberInfoService {
 		member.setInstiId(pm.getInstiId());
 		member.setPhone(pm.getPhone());
 		member.setPwd(pwd);
-		if(StringUtil.isNotEmpty(memberOperationService.login(MemberType.INDIVIDUAL, member))){
-			return true;
+		try {
+			if(StringUtil.isNotEmpty(memberOperationService.login(MemberType.INDIVIDUAL, member))){
+				return true;
+			}
+		} catch (Exception e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+			 throw new CommonException(ExcepitonTypeEnum.PASSWORD.getCode(),e.getMessage());
 		}
 		return false;
 	}
 	
 	@Override
-	public boolean vaildateUnbindPhone(String memberId,String phone,String payPwd,String smsCode) throws CommonException,Exception{
+	public boolean vaildateUnbindPhone(String memberId,String phone,String payPwd,String smsCode) throws CommonException{
 		//验证短信验证码
-		if (smsService.verifyCode(phone,"",smsCode)!=1) {
+		if (smsService.verifyCodeByModuleType(ModuleTypeEnum.UNBINDPHONE.getCode(), phone, smsCode)!=1) {
             // throw new SmsCodeVerifyFailException();
-         	throw new CommonException("5M","短信验证码错误");
+         	throw new CommonException(ExcepitonTypeEnum.PASSWORD.getCode(),"短信验证码错误");
         }
 		//验证支付密码
 		if(!vaildatePayPwd(memberId, payPwd)){
-			throw new CommonException("5M","支付密码错误");
+			throw new CommonException(ExcepitonTypeEnum.PASSWORD.getCode(),"支付密码错误");
 		}
 		return true;
 	}
 	@Override
-	public void vaildateBankCardForModifyPhone(String memberId,long bindId,String cardNo,String certNo,String payPwd)throws CommonException,Exception{
+	public void vaildateBankCardForModifyPhone(String memberId,long bindId,String cardNo,String certNo,String payPwd)throws CommonException{
 		QuickpayCustBean memberBankCard = memberBankCardService.getMemberBankCardById(bindId);
 		if(memberBankCard==null){
-			throw new CommonException("58","未找到银行卡信息");
+			throw new CommonException(ExcepitonTypeEnum.MEMBER_CARD.getCode(),"未找到银行卡信息");
 		}
 		if(StringUtil.isNotEmpty(cardNo)){
 			if(!cardNo.equals(memberBankCard.getCardno())){
-				throw new CommonException("58","银行卡号错误");
+				throw new CommonException(ExcepitonTypeEnum.MEMBER_CARD.getCode(),"银行卡号错误");
 			}
 		}else{
-			throw new CommonException("58","银行卡号为空");
+			throw new CommonException(ExcepitonTypeEnum.MEMBER_CARD.getCode(),"银行卡号为空");
 		}
 		
 		if(StringUtil.isNotEmpty(certNo)){
 			if(!certNo.equals(memberBankCard.getIdnum())){
-				throw new CommonException("58","身份证号错误");
+				throw new CommonException(ExcepitonTypeEnum.MEMBER_CARD.getCode(),"身份证号错误");
 			}
 		}else{
-			throw new CommonException("58","身份证号为空");
+			throw new CommonException(ExcepitonTypeEnum.MEMBER_CARD.getCode(),"身份证号为空");
 		}
 		
 		if(!vaildatePayPwd(memberId, payPwd)){
-			throw new CommonException("5M","支付密码错误");
+			throw new CommonException(ExcepitonTypeEnum.PASSWORD.getCode(),"支付密码错误");
 		}
 	}
 	
 	@Override
 	public void modifyPhone(String memberId,String phone,String smsCode) throws CommonException{
 		//验证短信验证码
-		if (smsService.verifyCode(phone,"",smsCode)!=1) {
+		if (smsService.verifyCodeByModuleType(ModuleTypeEnum.BINDPHONE.getCode(), phone, smsCode)!=1) {
             // throw new SmsCodeVerifyFailException();
-         	throw new CommonException("5M","短信验证码错误");
+         	throw new CommonException(ExcepitonTypeEnum.MEMBER_CARD.getCode(),"短信验证码错误");
         }
 		//获取会员所属合作机构ID
 		PojoMember member = memberService.getMbmberByMemberId(memberId, null);
 		
 		PojoMember memberByPhone = memberService.getMemberByPhoneAndCoopInsti(phone, member.getInstiId());
 		if(memberByPhone!=null){
-			throw new CommonException("58","手机号已经被注册 ");
+			throw new CommonException(ExcepitonTypeEnum.MEMBER_INFO.getCode(),"手机号已经被注册 ");
 		}
 		//更新会员手机号 t_member 
 		if(!memberOperationService.modifyPhone(memberId, phone)){
-			throw new CommonException("58","手机号已经被注册 ");
+			throw new CommonException(ExcepitonTypeEnum.MEMBER_INFO.getCode(),"手机号已经被注册 ");
 		}
 		
 	}
@@ -482,27 +541,27 @@ public class MemberInfoServiceImpl implements MemberInfoService {
 		//获取绑卡信息
 		QuickpayCustBean memberBankCard = memberBankCardService.getMemberBankCardById(bindId);
 		if(memberBankCard==null){
-			throw new CommonException("58","未找到银行卡信息");
+			throw new CommonException(ExcepitonTypeEnum.MEMBER_CARD.getCode(),"未找到银行卡信息");
 		}
 		//校验银行卡号
 		if(StringUtil.isNotEmpty(cardNo)){
 			if(!cardNo.equals(memberBankCard.getCardno())){
-				throw new CommonException("58","银行卡号错误");
+				throw new CommonException(ExcepitonTypeEnum.MEMBER_CARD.getCode(),"银行卡号错误");
 			}
 		}else{
-			throw new CommonException("58","银行卡号为空");
+			throw new CommonException(ExcepitonTypeEnum.MEMBER_CARD.getCode(),"银行卡号为空");
 		}
 		//校验银行卡预留手机号
 		if(StringUtil.isNotEmpty(phone)){
 			if(!memberBankCard.getPhone().equals(phone)){
-				throw new CommonException("58","银行卡预留手机号错误");
+				throw new CommonException(ExcepitonTypeEnum.MEMBER_CARD.getCode(),"银行卡预留手机号错误");
 			}
 		}else{
-			throw new CommonException("58","银行卡预留手机号为空");
+			throw new CommonException(ExcepitonTypeEnum.MEMBER_CARD.getCode(),"银行卡预留手机号为空");
 		}
 		//验证短信验证码
-		if(smsService.verifyCode(phone,"",smsCode)!=1) {
-         	throw new CommonException("5M","短信验证码错误");
+		if(smsService.verifyCodeByModuleType(ModuleTypeEnum.RESETPAYPWD.getCode(), phone, smsCode)!=1) {
+         	throw new CommonException(ExcepitonTypeEnum.PASSWORD.getCode(),"短信验证码错误");
         }
 	}
 	

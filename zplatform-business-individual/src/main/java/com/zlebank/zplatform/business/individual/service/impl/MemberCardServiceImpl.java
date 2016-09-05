@@ -27,6 +27,8 @@ import com.zlebank.zplatform.business.individual.bean.BankCardInfo;
 import com.zlebank.zplatform.business.individual.bean.IndividualRealInfo;
 import com.zlebank.zplatform.business.individual.bean.Member;
 import com.zlebank.zplatform.business.individual.bean.SupportedBankCardType;
+import com.zlebank.zplatform.business.individual.bean.enums.ExcepitonTypeEnum;
+import com.zlebank.zplatform.business.individual.exception.CommonException;
 import com.zlebank.zplatform.business.individual.service.MemberCardService;
 import com.zlebank.zplatform.commons.bean.DefaultPageResult;
 import com.zlebank.zplatform.commons.bean.PagedResult;
@@ -98,7 +100,6 @@ public class MemberCardServiceImpl implements MemberCardService{
 	@Override
 	public PagedResult<BankCardInfo> queryBankCard(String memberId,String cardType,String devId,int page,int pageSize) throws IllegalAccessException {
 		PagedResult<QuickpayCustBean> pagedResult = memberBankCardService.queryMemberBankCard(memberId, cardType,devId, page, pageSize);
-		System.out.println(JSON.toJSON(pagedResult.getPagedResult()));
 		List<BankCardInfo> bankCardList = new ArrayList<BankCardInfo>();
 		for(QuickpayCustBean custBean :pagedResult.getPagedResult()){
 			BankCardInfo bankCardInfo = new BankCardInfo();
@@ -143,14 +144,15 @@ public class MemberCardServiceImpl implements MemberCardService{
 	 * @param bankCardInfo
 	 * @param smsCode
 	 * @return
+	 * @throws CommonException 
 	 */
 	@Override
 	public String bindBankCard(Member individualMember,
-			BankCardInfo bankCardInfo, String smsCode) {
+			BankCardInfo bankCardInfo, String smsCode) throws CommonException {
 		int retCode = smsService.verifyCode(ModuleTypeEnum.BINDCARD.getCode(),
 				individualMember.getPhone(), smsCode);
 		if (retCode != 1) {
-			throw new RuntimeException("验证码错误");
+			 throw new CommonException(ExcepitonTypeEnum.PASSWORD.getCode(),"验证码错误");
 		}
 		// 查询实名认证信息
 		RealNameBean bean = new RealNameBean();
@@ -160,8 +162,9 @@ public class MemberCardServiceImpl implements MemberCardService{
         if ( realNameInfo != null ) 
             realName = realNameInfo.getRealname();
         String cardName = bankCardInfo.getBankCardInfo().getCustomerName(); // 绑卡真实姓名
-        if (!realName.equals(cardName)) 
-            throw new RuntimeException("绑卡姓名和实名信息不一致");
+        if (!realName.equals(cardName)) {
+        	 throw new CommonException(ExcepitonTypeEnum.MEMBER_CARD.getCode(),"绑卡姓名和实名信息不一致");
+        }
 		QuickpayCustBean quickpayCustBean = new QuickpayCustBean();
 		CoopInsti pojoCoopInsti = coopInstiService.getInstiByInstiCode(individualMember.getInstiCode());
 		quickpayCustBean.setCustomerno(pojoCoopInsti.getInstiCode());
@@ -192,11 +195,11 @@ public class MemberCardServiceImpl implements MemberCardService{
 	 */
 	@Override
 	public boolean unbindBankCard(String memberId, String bindcardid,
-			String payPwd) throws Exception {
+			String payPwd) throws CommonException {
 		//校验支付密码
 	    PojoMember member = memberServiceImpl.getMbmberByMemberId(memberId, MemberType.INDIVIDUAL);
         if (member == null) {// 资金账户不存在
-            throw new Exception("会员不存在");
+        	 throw new CommonException(ExcepitonTypeEnum.MEMBER_INFO.getCode(),"会员不存在");
         }
 	    MemberBean memberBean = new MemberBean();
         memberBean.setLoginName(member.getLoginName());
@@ -204,13 +207,25 @@ public class MemberCardServiceImpl implements MemberCardService{
         memberBean.setPhone(member.getPhone());
         memberBean.setPaypwd(payPwd);
         // 校验支付密码
-        if (!memberOperationServiceImpl.verifyPayPwd(MemberType.INDIVIDUAL,  memberBean)) {
-            throw new Exception("支付密码不对");
-        }
+        try {
+			if (!memberOperationServiceImpl.verifyPayPwd(MemberType.INDIVIDUAL,  memberBean)) {
+				throw new CommonException(ExcepitonTypeEnum.PASSWORD.getCode(),"支付密码错误");
+			}
+		} catch (Exception e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+			throw new CommonException(ExcepitonTypeEnum.MEMBER_CARD.getCode(),e.getMessage());
+		}
 		QuickpayCustBean quickpayCustBean = new QuickpayCustBean();
 		quickpayCustBean.setId(Long.valueOf(bindcardid));
 		quickpayCustBean.setRelatememberno(memberId);
-		memberBankCardService.unbindQuickPayCust(quickpayCustBean);
+		try {
+			memberBankCardService.unbindQuickPayCust(quickpayCustBean);
+		} catch (Exception e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+			throw new CommonException(ExcepitonTypeEnum.MEMBER_CARD.getCode(),e.getMessage());
+		}
 		
 		return true;
 	}

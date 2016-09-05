@@ -42,10 +42,7 @@ public class MemberAccountServiceTest extends ApplicationContextAbled {
             // test anonymous
             tn = memberAccountService.recharge(orderGenerator.generate(true));
             Assert.fail();
-        } catch (ValidateOrderException e) {
-            e.printStackTrace();
-            Assert.assertTrue(e.getMessage(), true);
-        } catch (Exception e) {
+        }catch (Exception e) {
             Assert.fail(e.getMessage());
         }
     }

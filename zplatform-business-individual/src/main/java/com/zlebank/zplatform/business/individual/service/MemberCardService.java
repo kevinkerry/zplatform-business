@@ -5,6 +5,7 @@ import java.util.Map;
 import com.zlebank.zplatform.business.individual.bean.BankCardInfo;
 import com.zlebank.zplatform.business.individual.bean.Member;
 import com.zlebank.zplatform.business.individual.bean.SupportedBankCardType;
+import com.zlebank.zplatform.business.individual.exception.CommonException;
 import com.zlebank.zplatform.commons.bean.PagedResult;
 import com.zlebank.zplatform.trade.bean.CardBinBean;
 import com.zlebank.zplatform.trade.bean.ResultBean;
@@ -39,7 +40,7 @@ public interface MemberCardService {
 	 */
 	public String bindBankCard(Member individualMember,
             BankCardInfo bankCardInfo,
-            String smsCode) throws Exception;
+            String smsCode) throws CommonException;
 	/**
 	 * 解绑银行卡 Unbind a bank card 
 	 * @param memberId 会员号

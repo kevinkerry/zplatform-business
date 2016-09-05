@@ -10,6 +10,7 @@
  */
 package com.zlebank.zplatform.business.individual.service;
 
+import com.zlebank.zplatform.business.individual.exception.CommonException;
 import com.zlebank.zplatform.trade.model.PojoMerchWhiteList;
 
 /**
@@ -29,28 +30,28 @@ public interface MerchBusinessService {
 	 * @param pub_key
 	 * @return
 	 */
-	public boolean updateMerchPubKey(String memberId, String pub_key) throws Exception;
+	public boolean updateMerchPubKey(String memberId, String pub_key) throws CommonException;
 	
 	/**
 	 * 保存白名单信息
 	 * @param merchWhiteList
 	 * @return
 	 */
-	public boolean saveWhiteList(PojoMerchWhiteList merchWhiteList)  throws Exception;
+	public boolean saveWhiteList(PojoMerchWhiteList merchWhiteList)  throws CommonException;
 	
 	/**
 	 * 更新白名单
 	 * @param merchWhiteList
 	 * @return
 	 */
-	public boolean updateWhiteList(PojoMerchWhiteList merchWhiteList)  throws Exception;
+	public boolean updateWhiteList(PojoMerchWhiteList merchWhiteList)  throws CommonException;
 	
 	/**
 	 * 删除白名单
 	 * @param id
 	 * @return
 	 */
-	public boolean deleteWhiteList(Long id)  throws Exception;
+	public boolean deleteWhiteList(Long id)  throws CommonException;
 	
 	/**
 	 * 重置商户支付密码
@@ -59,5 +60,5 @@ public interface MerchBusinessService {
 	 * @return
 	 * @throws DataCheckFailedException
 	 */
-	public boolean resetPayPwd(String memberId, String pwd) throws Exception;
+	public boolean resetPayPwd(String memberId, String pwd) throws CommonException;
 }

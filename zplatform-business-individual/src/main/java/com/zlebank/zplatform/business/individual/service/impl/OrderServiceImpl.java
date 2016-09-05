@@ -24,11 +24,12 @@ import com.zlebank.zplatform.acc.pojo.Money;
 import com.zlebank.zplatform.acc.service.entry.EntryEvent;
 import com.zlebank.zplatform.business.individual.bean.IndividualRealInfo;
 import com.zlebank.zplatform.business.individual.bean.Order;
+import com.zlebank.zplatform.business.individual.bean.enums.ExcepitonTypeEnum;
 import com.zlebank.zplatform.business.individual.bean.enums.OrderStatus;
 import com.zlebank.zplatform.business.individual.bean.enums.OrderType;
 import com.zlebank.zplatform.business.individual.bean.enums.PayWay;
 import com.zlebank.zplatform.business.individual.bean.enums.WechatType;
-import com.zlebank.zplatform.business.individual.exception.ValidateOrderException;
+import com.zlebank.zplatform.business.individual.exception.CommonException;
 import com.zlebank.zplatform.business.individual.service.OrderService;
 import com.zlebank.zplatform.business.individual.utils.Constants;
 import com.zlebank.zplatform.commons.bean.DefaultPageResult;
@@ -201,8 +202,7 @@ public class OrderServiceImpl implements OrderService {
 	}
 
     @Override
-    public String createOrder(Order order) throws ValidateOrderException,
-            Exception {
+    public String createOrder(Order order) throws CommonException{
         String tn = null;
         fullNonWalletData(order);
 
@@ -211,8 +211,8 @@ public class OrderServiceImpl implements OrderService {
         String retCode = validateResult.get(IOrderValidator.RET_CODE);
         if (retCode != null
                 && !retCode.equals(IOrderValidator.RET_CODE_SUCCESS)) {
-            throw new ValidateOrderException(
-                    validateResult.get(IOrderValidator.RET_CODE),
+            throw new CommonException(
+            		ExcepitonTypeEnum.ORDER.getCode(),
                     validateResult.get(IOrderValidator.RET_MESSAGE));
         }
         try {
@@ -220,11 +220,11 @@ public class OrderServiceImpl implements OrderService {
         } catch (Exception e) {
             e.printStackTrace();
             //throw new UnCheckedSystemException();
-            throw new Exception();
+            throw new CommonException(ExcepitonTypeEnum.TRADE.getCode(),e.getMessage());
         }
         if (tn == null || tn.equals("")) {
             //throw new UnCheckedSystemException();
-            throw new Exception();
+            throw new CommonException(ExcepitonTypeEnum.TRADE.getCode(),"订单生成失败");
         }
         return tn;
     }
@@ -260,12 +260,12 @@ public class OrderServiceImpl implements OrderService {
             String smsCode,
             String payPwd,
             PayWay payWay) throws 
-            Exception {
+            CommonException {
         Order orderObj = JSON.parseObject(order, Order.class);
         String memberId = orderObj.getMemberId();
         PojoMember member = memberServiceImpl.getMbmberByMemberId(memberId, MemberType.INDIVIDUAL);
         if (member == null) {// 资金账户不存在
-            throw new Exception("资金账户不存在");
+            throw new CommonException(ExcepitonTypeEnum.MEMBER_ACCOUNT.getCode(),"资金账户不存在");
         }
 
         List<BusiAcctQuery> busiAcctList = memberServiceImpl
@@ -279,7 +279,7 @@ public class OrderServiceImpl implements OrderService {
         }
 
         if (basicFund == null) {// 资金账户不存在
-            throw new Exception("资金账户不存在");
+        	throw new CommonException(ExcepitonTypeEnum.MEMBER_ACCOUNT.getCode(),"资金账户不存在");
         }
         try {
             MemberBean memberBean = new MemberBean();
@@ -291,13 +291,13 @@ public class OrderServiceImpl implements OrderService {
             if (!memberOperationServiceImpl.verifyPayPwd(MemberType.INDIVIDUAL,
                     memberBean)) {
                 //throw new PayPwdVerifyFailException();
-                throw new Exception();
+            	throw new CommonException(ExcepitonTypeEnum.PASSWORD.getCode(),"支付密码错误");
             }
         } catch (Exception e) {
             /*PayPwdVerifyFailException pe = new PayPwdVerifyFailException();
             pe.initCause(e);
             throw pe;*/
-        	throw new Exception();
+        	throw new CommonException(ExcepitonTypeEnum.MEMBER_ACCOUNT.getCode(),e.getMessage());
         }
 
         String phoneNo = "";
@@ -314,12 +314,12 @@ public class OrderServiceImpl implements OrderService {
             	// 校验手机短信验证码
                 if (smsService.verifyCode(phoneNo,orderObj.getTn(),smsCode)!=1) {
                    // throw new SmsCodeVerifyFailException();
-                	throw new Exception();
+                	throw new CommonException(ExcepitonTypeEnum.PASSWORD.getCode(),"短信验证码错误");
                 }
                 Money amount = Money.valueOf(new BigDecimal(orderObj
                         .getTxnAmt()));
                 if (basicFund.getBalance().minus(amount).compareTo(Money.ZERO) < 0) {// 余额不足
-                    throw new Exception("余额不足");
+                    throw new CommonException(ExcepitonTypeEnum.MEMBER_ACCOUNT.getCode(),"余额不足");
                 }
                 gateWayService.accountPay(order);
                 updateAnonOrderToMemberOrder(orderObj);
@@ -329,14 +329,14 @@ public class OrderServiceImpl implements OrderService {
                 QuickpayCustBean memberBankCard = memberBankCardService.getMemberBankCardById(Long.valueOf(orderObj.getBindId()));
                 if (memberBankCard == null) {
                    // throw new InvalidBindIdException();
-                    throw new Exception();
+                	throw new CommonException(ExcepitonTypeEnum.MEMBER_CARD.getCode(),"银行卡不存在");
                 }
                 gateWayService.submitPay(order);
                 updateAnonOrderToMemberOrder(orderObj);
                 break;
             default :
                 //throw new UnknowPayWayException();
-            	throw new Exception();
+            	throw new CommonException(ExcepitonTypeEnum.TRADE.getCode(),"未知支付类型");
         }
 
         Order orderRet = queryOrder(member.getMemberId(),orderObj.getTn());
@@ -371,7 +371,7 @@ public class OrderServiceImpl implements OrderService {
     }
     
     public OrderStatus anonymousPay(String order,String smsCode) throws 
-             Exception {
+             CommonException {
         Order orderObj = JSON.parseObject(order, Order.class);
         String memberId = "999999999999999";
         String bindId = orderObj.getBindId();
@@ -382,13 +382,13 @@ public class OrderServiceImpl implements OrderService {
         	 memberBankCard = memberBankCardService.getMemberBankCardById(Long.valueOf(orderObj.getBindId()));
         	if (memberBankCard == null) {
                 //throw new InvalidBindIdException();
-                throw new Exception();
+        		throw new CommonException(ExcepitonTypeEnum.MEMBER_CARD.getCode(),"银行卡不存在");
             }
         	//绑卡表中的卡信息和参数卡信息进行比较
         	if(!memberBankCard.getAccname().equals(orderObj.getAccNo())||!memberBankCard.getCardno().equals(orderObj.getCardNo())||
         			!memberBankCard.getIdnum().equals(orderObj.getCertifId())||!memberBankCard.getPhone().equals(orderObj.getPhoneNo())){
         		//throw new InvalidBindIdException();
-        		throw new Exception();
+        		throw new CommonException(ExcepitonTypeEnum.MEMBER_CARD.getCode(),"银行卡信息校验失败");
         	}
         	phoneNo = memberBankCard.getPhone();
         }else if(StringUtil.isNotEmpty(bindId)){
@@ -402,7 +402,7 @@ public class OrderServiceImpl implements OrderService {
         		orderObj.setBindId(quickpayCustBean.getId()+"");
         	}else{
         		//throw new InvalidBindIdException();
-        		throw new Exception();
+        		throw new CommonException(ExcepitonTypeEnum.MEMBER_CARD.getCode(),"绑定银行卡失败");
         	}
         }
         // 校验手机短信验证码
@@ -498,8 +498,7 @@ public class OrderServiceImpl implements OrderService {
          return tradeNum.substring(0,6)+"99"+tradeNum.substring(6);
     }
     
-    public String createRefundOrder(Order order) throws ValidateOrderException,
-    Exception{
+    public String createRefundOrder(Order order) throws CommonException{
     	
     	String tn = null;
         fullNonWalletData(order);
@@ -509,8 +508,8 @@ public class OrderServiceImpl implements OrderService {
         String retCode = validateResult.get(IOrderValidator.RET_CODE);
         if (retCode != null
                 && !retCode.equals(IOrderValidator.RET_CODE_SUCCESS)) {
-            throw new ValidateOrderException(
-                    validateResult.get(IOrderValidator.RET_CODE),
+            throw new CommonException(
+                    ExcepitonTypeEnum.ORDER.getCode(),
                     validateResult.get(IOrderValidator.RET_MESSAGE));
         }
         try {
@@ -518,11 +517,11 @@ public class OrderServiceImpl implements OrderService {
         } catch (Exception e) {
             e.printStackTrace();
             //throw new UnCheckedSystemException();
-            throw new Exception();
+            throw new CommonException(ExcepitonTypeEnum.TRADE.getCode(),e.getMessage());
         }
         if (tn == null || tn.equals("")) {
            // throw new UnCheckedSystemException();
-            throw new Exception();
+        	throw new CommonException(ExcepitonTypeEnum.MEMBER_CARD.getCode(),"退款订单提交失败");
         }
         return tn;
     }
@@ -649,10 +648,10 @@ public class OrderServiceImpl implements OrderService {
 		return creatOrder;
 	}
 	@Override
-	public JSONObject createWechatOrder(String tn, String typeId) throws Exception {
+	public JSONObject createWechatOrder(String tn, String typeId) throws CommonException {
 		JSONObject result = null;
 		if(StringUtil.isEmpty(typeId)||StringUtil.isEmpty(tn)){
-			throw new Exception("tn或typeId不能为空！");
+			throw new CommonException(ExcepitonTypeEnum.ORDER.getCode(),"tn或typeId不能为空！");
 		}
 		//微信APP支付
 		if(typeId.equals(WechatType.APP.getTypeId())){
@@ -666,10 +665,10 @@ public class OrderServiceImpl implements OrderService {
 	}
 
 	@Override
-	public ResultBean queryWechatOrder(String tn, String typeId)throws Exception {
+	public ResultBean queryWechatOrder(String tn, String typeId)throws CommonException{
 		ResultBean result = null;
 		if(StringUtil.isEmpty(typeId)||StringUtil.isEmpty(tn)){
-			throw new Exception( "tn或typeId不能为空！");
+			throw new CommonException(ExcepitonTypeEnum.ORDER.getCode(),"tn或typeId不能为空！");
 		}
 		TradeBean trade = new TradeBean();
 		trade.setTn(tn);

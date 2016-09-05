@@ -16,7 +16,7 @@ public interface MemberInfoService {
 	 * @throws CreateMemberFailedException 
 	 * @throws InvalidMemberDataException 
 	 */
-	public String register(Member registerMemberInfo,String smsCode) throws Exception;
+	public String register(Member registerMemberInfo,String smsCode) throws CommonException;
 	/**
 	 * 会员信息查询 Query a member information
 	 * @param loginName 登录名
@@ -33,7 +33,7 @@ public interface MemberInfoService {
 	 * @throws LoginFailedException 
 	 * @throws DataCheckFailedException 
 	 */
-	public String login(String loginName,String pwd,String coopInstiCode) throws Exception;
+	public String login(String loginName,String pwd,String coopInstiCode) throws CommonException;
 	/**
 	 * 实名认证 Do a real name authenticate
 	 * @param individualRealInfo 实名认证信息
@@ -46,7 +46,7 @@ public interface MemberInfoService {
 	public boolean realName(IndividualRealInfo individualRealInfo,
             String smsCode,
             String payPwd,
-            String memberId,RealNameTypeEnum realNameTypeEnum) throws Exception;
+            String memberId,RealNameTypeEnum realNameTypeEnum) throws CommonException;
 	/**
 	 * 验证支付密码  Verify the pay password
 	 * @param memberId 会员号
@@ -54,7 +54,7 @@ public interface MemberInfoService {
 	 * @return
 	 * @throws DataCheckFailedException 
 	 */
-	public boolean vaildatePayPwd(String memberId,String payPwd) throws Exception;
+	public boolean vaildatePayPwd(String memberId,String payPwd) throws CommonException;
 	
 	/**
 	 * 验证登录密码  Verify the login password
@@ -64,7 +64,7 @@ public interface MemberInfoService {
 	 * @throws DataCheckFailedException
 	 * @throws LoginFailedException 
 	 */
-	public boolean vaildatePwd(String memberId,String pwd) throws Exception;
+	public boolean vaildatePwd(String memberId,String pwd) throws CommonException;
 	/**
 	 * Modify the login password.<p>Note:The up layer which invoker the method must make
      * sure that member has login</p>
@@ -75,7 +75,7 @@ public interface MemberInfoService {
 	 * @return
 	 * @throws DataCheckFailedException 
 	 */
-	public boolean modifyPwd(String memberId,String orgPwd,String pwd) throws Exception;
+	public boolean modifyPwd(String memberId,String orgPwd,String pwd) throws CommonException;
 	/**
      * Modify the pay password.<p>Note:The up layer which invoker the method must make
      * sure that member has login</p>
@@ -86,7 +86,7 @@ public interface MemberInfoService {
 	 * @return
 	 * @throws DataCheckFailedException 
 	 */
-	public boolean modifyPayPwd(String memberId,String orgPayPwd,String payPwd) throws Exception;
+	public boolean modifyPayPwd(String memberId,String orgPayPwd,String payPwd) throws CommonException;
 	/**
 	 * 重置登录密码 Reset login password.No need to make sure that member has login
 	 * @param memberId 会员号
@@ -95,7 +95,7 @@ public interface MemberInfoService {
 	 * @return
 	 * @throws DataCheckFailedException 
 	 */
-	public boolean resetPwd(String memberId,String pwd,String smsCode) throws Exception;
+	public boolean resetPwd(String memberId,String pwd,String smsCode) throws CommonException;
 	/**
 	 * 重置支付密码 Reset pay password.No need to make sure that member has login
 	 * @param memberId 会员号
@@ -104,7 +104,7 @@ public interface MemberInfoService {
 	 * @return
 	 * @throws DataCheckFailedException 
 	 */
-	public boolean resetPayPwd(String memberId,String payPwd,String smsCode) throws Exception;
+	public boolean resetPayPwd(String memberId,String payPwd,String smsCode) throws CommonException;
 	
 	/**
 	 * 校验解绑手机信息
@@ -116,7 +116,7 @@ public interface MemberInfoService {
 	 * @throws CommonException
 	 * @throws Exception
 	 */
-	public boolean vaildateUnbindPhone(String memberId,String phone,String payPwd,String smsCode) throws CommonException,Exception;
+	public boolean vaildateUnbindPhone(String memberId,String phone,String payPwd,String smsCode) throws CommonException;
 	
 	/**
 	 * 校验并更新会员绑定的手机号
@@ -136,7 +136,7 @@ public interface MemberInfoService {
 	 * @throws CommonException
 	 * @throws Exception
 	 */
-	public void vaildateBankCardForModifyPhone(String memberId,long bindId,String cardNo,String certNo,String payPwd)throws CommonException,Exception;
+	public void vaildateBankCardForModifyPhone(String memberId,long bindId,String cardNo,String certNo,String payPwd)throws CommonException;
 	
 	/**
 	 * 校验绑卡信息和短信验证码（实名后重置支付密码）

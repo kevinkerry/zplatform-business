@@ -10,6 +10,7 @@
  */
 package com.zlebank.zplatform.business.merchant.enterprise.service;
 
+import com.zlebank.zplatform.business.merchant.exception.CommonException;
 import com.zlebank.zplatform.member.bean.EnterpriseBankAccountBean;
 import com.zlebank.zplatform.member.bean.EnterpriseBean;
 import com.zlebank.zplatform.member.bean.EnterpriseRealNameBean;
@@ -29,26 +30,26 @@ public interface EnterpriseOperationService {
 	 * 企业注册申请
 	 * @param enterpriseBean
 	 */
-	public String registerApply(EnterpriseBean enterpriseBean) throws Exception;
+	public String registerApply(EnterpriseBean enterpriseBean) throws CommonException;
 	
 	/**
 	 * 企业实名认证申请
 	 * @param enterpriseRealNameBean
 	 * @return
 	 */
-	public String realNameApply(EnterpriseRealNameBean enterpriseRealNameBean) throws Exception;
+	public String realNameApply(EnterpriseRealNameBean enterpriseRealNameBean) throws CommonException;
 	
 	/**
 	 * 企业实名认证确认
 	 * @param enterpriseRealNameConfirmBean
 	 */
-	public void realnameConfirm(EnterpriseRealNameConfirmBean enterpriseRealNameConfirmBean) throws Exception;
+	public void realnameConfirm(EnterpriseRealNameConfirmBean enterpriseRealNameConfirmBean) throws CommonException;
 	
 	/**
 	 * 企业会员绑定银行账户
 	 * @param enterpriseBankAccountBean
 	 */
-	public void bindingBankAccount(EnterpriseBankAccountBean enterpriseBankAccountBean) throws Exception;
+	public void bindingBankAccount(EnterpriseBankAccountBean enterpriseBankAccountBean) throws CommonException;
 	
 	/**
 	 * 更加企业会员号查询企业状态

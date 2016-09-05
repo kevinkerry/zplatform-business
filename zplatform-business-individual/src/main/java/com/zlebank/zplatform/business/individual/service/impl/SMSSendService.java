@@ -377,8 +377,8 @@ public class SMSSendService implements SmsService{
 				}
 				 
 		}
-		log.error("发送短信失败：modelType is null ");
-		return null;
+		
+		return retcode;
 	}
 	public static void main(String[] args) {
 		Map<String, Object> resultMap = new HashMap<String, Object>();

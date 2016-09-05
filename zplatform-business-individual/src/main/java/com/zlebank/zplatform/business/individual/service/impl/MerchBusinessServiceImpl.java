@@ -13,6 +13,8 @@ package com.zlebank.zplatform.business.individual.service.impl;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import com.zlebank.zplatform.business.individual.bean.enums.ExcepitonTypeEnum;
+import com.zlebank.zplatform.business.individual.exception.CommonException;
 import com.zlebank.zplatform.business.individual.service.MerchBusinessService;
 import com.zlebank.zplatform.member.bean.MemberBean;
 import com.zlebank.zplatform.member.bean.MerchMK;
@@ -54,14 +56,14 @@ public class MerchBusinessServiceImpl implements MerchBusinessService{
 	 * @return
 	 * @throws MerchMKNotExistException,DataBaseErrorException 
 	 */
-	public boolean updateMerchPubKey(String memberId, String pub_key) throws Exception {
+	public boolean updateMerchPubKey(String memberId, String pub_key) throws CommonException {
 		// TODO Auto-generated method stub
 		
 		MerchMK merchMK = merchMKService.get(memberId);
 		if(merchMK==null){
 			//商户秘钥不存在异常
 			//throw new MerchMKNotExistException();
-			throw new Exception();
+			throw new CommonException(ExcepitonTypeEnum.MERCHANTE.getCode(),"商户秘钥不存在异常");
 		}
 		merchMK.setMemberPubKey(pub_key);
 		try {
@@ -71,7 +73,8 @@ public class MerchBusinessServiceImpl implements MerchBusinessService{
 			// TODO Auto-generated catch block
 			e.printStackTrace();
 			//throw new DataBaseErrorException();
-			throw new Exception();
+			//throw new Exception();
+			throw new CommonException(ExcepitonTypeEnum.MERCHANTE.getCode(),e.getMessage());
 		}
 		return true;
 	}
@@ -82,7 +85,7 @@ public class MerchBusinessServiceImpl implements MerchBusinessService{
 	 * @return
 	 * @throws DataBaseErrorException 
 	 */
-	public boolean saveWhiteList(PojoMerchWhiteList merchWhiteList) throws Exception {
+	public boolean saveWhiteList(PojoMerchWhiteList merchWhiteList) throws CommonException {
 		// TODO Auto-generated method stub
 		try {
 			merchWhiteListService.merge(merchWhiteList);
@@ -90,7 +93,7 @@ public class MerchBusinessServiceImpl implements MerchBusinessService{
 			// TODO Auto-generated catch block
 			e.printStackTrace();
 			//throw new DataBaseErrorException();
-			throw new Exception();
+			throw new CommonException(ExcepitonTypeEnum.MERCHANTE.getCode(),e.getMessage());
 		}
 		return true;
 	}
@@ -100,11 +103,11 @@ public class MerchBusinessServiceImpl implements MerchBusinessService{
 	 * @param merchWhiteList
 	 * @return
 	 */
-	public boolean updateWhiteList(PojoMerchWhiteList merchWhiteList)  throws Exception{
+	public boolean updateWhiteList(PojoMerchWhiteList merchWhiteList)  throws CommonException{
 		PojoMerchWhiteList merchWhite = merchWhiteListService.getMerchWhiteListById(merchWhiteList.getId());
 		if(merchWhite==null){
 		//	throw new MerchWhiteListNotExistException();
-			throw new Exception();
+			throw new CommonException(ExcepitonTypeEnum.MERCHANTE.getCode(),"商户白名单不存在");
 		}
 		try {
 			merchWhite.setAccName(merchWhiteList.getAccName());
@@ -120,7 +123,7 @@ public class MerchBusinessServiceImpl implements MerchBusinessService{
 			// TODO Auto-generated catch block
 			e.printStackTrace();
 			//throw new DataBaseErrorException();
-			throw new Exception();
+			throw new CommonException(ExcepitonTypeEnum.MERCHANTE.getCode(),e.getMessage());
 		}
 		return true;
 	}
@@ -131,12 +134,12 @@ public class MerchBusinessServiceImpl implements MerchBusinessService{
 	 * @return
 	 * @throws MerchWhiteListNotExistException 
 	 */
-	public boolean deleteWhiteList(Long id)  throws Exception{
+	public boolean deleteWhiteList(Long id)  throws CommonException{
 		// TODO Auto-generated method stub
 		PojoMerchWhiteList merchWhiteList = merchWhiteListService.getMerchWhiteListById(id);
 		if(merchWhiteList==null){
 			//throw new MerchWhiteListNotExistException();
-			throw new Exception();
+			throw new CommonException(ExcepitonTypeEnum.MERCHANTE.getCode(),"商户白名单不存在");
 		}
 		merchWhiteList.setStatus("9");
 		try {
@@ -145,12 +148,12 @@ public class MerchBusinessServiceImpl implements MerchBusinessService{
 			// TODO Auto-generated catch block
 			e.printStackTrace();
 			//throw new DataBaseErrorException();
-			throw new Exception();
+			throw new CommonException(ExcepitonTypeEnum.MERCHANTE.getCode(),e.getMessage());
 		}
 		return true;
 	}
 
-	public boolean resetPayPwd(String memberId, String payPwd) throws Exception {
+	public boolean resetPayPwd(String memberId, String payPwd) throws CommonException {
 		PojoMember pm = memberService.getMbmberByMemberId(memberId, MemberType.ENTERPRISE);
 		if(pm==null){
 			return false;
@@ -159,6 +162,12 @@ public class MerchBusinessServiceImpl implements MerchBusinessService{
 		member.setLoginName(pm.getLoginName());
 		member.setInstiId(pm.getInstiId());
 		member.setPhone(pm.getPhone());
-		return memberOperationService.resetPayPwd(MemberType.ENTERPRISE, member, payPwd, false);
+		try {
+			return memberOperationService.resetPayPwd(MemberType.ENTERPRISE, member, payPwd, false);
+		} catch (Exception e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+			throw new CommonException(ExcepitonTypeEnum.MERCHANTE.getCode(),e.getMessage());
+		}
 	}
 }

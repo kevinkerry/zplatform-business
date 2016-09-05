@@ -16,6 +16,8 @@ import org.springframework.stereotype.Service;
 import com.zlebank.zplatform.acc.bean.FinanceProductBean;
 import com.zlebank.zplatform.acc.bean.enums.Usage;
 import com.zlebank.zplatform.business.merchant.enterprise.bean.ProductBalanceBean;
+import com.zlebank.zplatform.business.merchant.enterprise.bean.enums.ExcepitonTypeEnum;
+import com.zlebank.zplatform.business.merchant.exception.CommonException;
 import com.zlebank.zplatform.business.merchant.product.service.ProductService;
 import com.zlebank.zplatform.member.bean.FinanceProductAccountBean;
 import com.zlebank.zplatform.member.bean.FinanceProductQueryBean;
@@ -63,13 +65,21 @@ public class ProductServiceImpl implements ProductService{
 		}
 	}
 	
-	public ProductBalanceBean queryBalance(String productCode) throws Exception{
+	public ProductBalanceBean queryBalance(String productCode) throws CommonException{
 		FinanceProductQueryBean bean = new FinanceProductQueryBean();
 		bean.setProductCode(productCode);
 		//资金账户余额
-		FinanceProductAccountBean basicpayBalance = financeProductAccountService.queryBalance(bean, Usage.BASICPAY);
+		FinanceProductAccountBean basicpayBalance = null;
 		//待结算账户余额
-		FinanceProductAccountBean waitsettleBalance = financeProductAccountService.queryBalance(bean, Usage.WAITSETTLE);
+		FinanceProductAccountBean waitsettleBalance = null;
+		try {
+			basicpayBalance = financeProductAccountService.queryBalance(bean, Usage.BASICPAY);
+			waitsettleBalance = financeProductAccountService.queryBalance(bean, Usage.WAITSETTLE);
+		} catch (Exception e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+			throw new CommonException(ExcepitonTypeEnum.ENTERPRISE_CARD.getCode(),e.getMessage());
+		}
 		
 		ProductBalanceBean productBalanceBean = new ProductBalanceBean();
 		productBalanceBean.setProductCode(productCode);

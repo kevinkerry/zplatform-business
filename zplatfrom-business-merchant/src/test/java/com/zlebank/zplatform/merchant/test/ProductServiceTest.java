@@ -37,14 +37,14 @@ public class ProductServiceTest {
 	private ProductService productService;
 	
 	@Test
-	//@Ignore
+	@Ignore
 	public void test_async_product(){
 		boolean openProduct = productService.openProduct("100000001", "测试产品1", "200000000000855", "200000000000853");
 		System.out.println(openProduct);
 	}
 	
 	@Test
-	@Ignore
+	//@Ignore
 	public void test_query(){
 		try {
 			ProductBalanceBean queryBalance = productService.queryBalance("100000001");
