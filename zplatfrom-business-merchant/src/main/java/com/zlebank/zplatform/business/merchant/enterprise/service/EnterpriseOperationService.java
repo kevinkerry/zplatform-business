@@ -57,4 +57,11 @@ public interface EnterpriseOperationService {
 	 * @return
 	 */
 	public String queryEnterpriseStatus(String memberId);
+	
+	/**
+	 * 查询企业信息
+	 * @param memberId
+	 * @return
+	 */
+	public EnterpriseBean queryEnterpriseByMemberId(String memberId);
 }

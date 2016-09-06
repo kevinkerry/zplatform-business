@@ -134,4 +134,15 @@ public class EnterpriseOperationServiceImpl implements EnterpriseOperationServic
 		
 	}
 
+	/**
+	 *
+	 * @param memberId
+	 * @return
+	 */
+	@Override
+	public EnterpriseBean queryEnterpriseByMemberId(String memberId) {
+		EnterpriseBean enterpris = enterpriseService.getEnterpriseByMemberId(memberId);
+		return enterpris;
+	}
+
 }

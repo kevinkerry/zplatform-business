@@ -10,7 +10,6 @@
  */
 package com.zlebank.zplatform.business.individual.bean.enums;
 
-import java.net.PasswordAuthentication;
 
 /**
  * Class Description
@@ -23,16 +22,15 @@ import java.net.PasswordAuthentication;
 public enum ExcepitonTypeEnum {
 
 	
-	MEMBER_ACCOUNT(""),
-	MEMBER_INFO(""),
-	MEMBER_CARD(""),
-	MERCHANTE(""),
-	ORDER(""),
-	PHONE_SMS(""),
-	TRADE(""),
-	PASSWORD(""),
-	SYSTEM(""),
-	UNKNOW("");
+	MEMBER_ACCOUNT("MA"),
+	MEMBER_INFO("MI"),
+	MEMBER_CARD("MC"),
+	MERCHANTE("MERCH"),
+	ORDER("ORDER"),
+	TRADE("TRADE"),
+	PASSWORD("PW"),
+	SYSTEM("SYS"),
+	UNKNOW("9999");
 	
 	private String code;
 	

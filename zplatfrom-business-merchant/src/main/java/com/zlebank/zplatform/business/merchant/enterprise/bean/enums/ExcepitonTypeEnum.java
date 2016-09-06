@@ -22,16 +22,15 @@ package com.zlebank.zplatform.business.merchant.enterprise.bean.enums;
 public enum ExcepitonTypeEnum {
 
 	
-	ENTERPRISE_ACCOUNT(""),
-	ENTERPRISE_INFO(""),
-	ENTERPRISE_CARD(""),
-	MERCHANTE(""),
-	ORDER(""),
-	PHONE_SMS(""),
-	TRADE(""),
-	PASSWORD(""),
-	SYSTEM(""),
-	UNKNOW("");
+	ENTERPRISE_ACCOUNT("EA"),
+	ENTERPRISE_INFO("EI"),
+	ENTERPRISE_CARD("EC"),
+	MERCHANTE("MERCH"),
+	ORDER("ORDER"),
+	TRADE("TRADE"),
+	PASSWORD("PW"),
+	SYSTEM("SYS"),
+	UNKNOW("9999");
 	
 	private String code;
 	
