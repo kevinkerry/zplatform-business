@@ -1,5 +1,7 @@
 package com.zlebank.zplatform.business.individual.bean;
 
+import java.io.Serializable;
+
 import com.zlebank.zplatform.commons.bean.Bean;
 
 /**
@@ -7,7 +9,11 @@ import com.zlebank.zplatform.commons.bean.Bean;
  * @author yangying
  *
  */
-public class BankCardInfo implements Bean{
+public class BankCardInfo implements Bean,Serializable{
+	/**
+	 * serialVersionUID
+	 */
+	private static final long serialVersionUID = 2244325493404492900L;
 	/**绑卡标示**/
 	private String bindcardid;
     private Bank bank;

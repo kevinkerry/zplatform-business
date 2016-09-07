@@ -115,7 +115,7 @@ public class EnterpriseOperationServiceTest {
 		enterpriseRealNameBean.setTxnSubType("00");// 交易子类
 		enterpriseRealNameBean.setBizType("000207");// 产品类型
 		enterpriseRealNameBean.setChannelType("00");// 渠道类型
-		enterpriseRealNameBean.setMemberId("200000000000856");;// 企业会员ID
+		enterpriseRealNameBean.setMemberId("200000000000935");;// 企业会员ID
 		enterpriseRealNameBean.setEnterpriseName("测试企业");;// 企业名称
 		enterpriseRealNameBean.setLicenceNo("123456789");;// 工商营业执照号
 		enterpriseRealNameBean.setCorporation("法人");;// 法人姓名

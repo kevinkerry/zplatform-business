@@ -11,7 +11,6 @@
 package com.zlebank.zplatform.business.individual.service;
 
 import org.junit.Test;
-import org.springframework.beans.BeansException;
 
 import com.alibaba.fastjson.JSON;
 import com.zlebank.zplatform.business.individual.bean.IndividualRealInfo;

@@ -564,6 +564,43 @@ public class MemberInfoServiceImpl implements MemberInfoService {
          	throw new CommonException(ExcepitonTypeEnum.PASSWORD.getCode(),"短信验证码错误");
         }
 	}
+
+	/**
+	 *
+	 * @param memberId
+	 * @return
+	 */
+	@Override
+	public Member queryPersonMember(String memberId) {
+		PojoMember pm = memberService.getMbmberByMemberId(memberId, MemberType.INDIVIDUAL);//memberService.getMemberByLoginNameAndCoopInsti(loginName, coopInsti.getId());
+		
+		if(pm==null){
+			return null;
+		}
+		Member member = new Member();
+		long memid = pm.getMemId();
+		String memberName=pm.getMemberName();
+		String pwd=pm.getPwd();
+		String paypwd=pm.getPayPwd();
+		RealNameLvType realnameLv=pm.getRealnameLv();
+		String phone=pm.getPhone();
+		String email=pm.getEmail();
+		String memberType=pm.getMemberType().getCode();
+		String memberStatus=pm.getStatus().getCode();
+		String registerIdent=pm.getRegisterIdent();
+		member.setMemid(memid+"");
+		member.setMemberId(memberId);
+		member.setMemberName(memberName);
+		member.setPwd(pwd);
+		member.setPaypwd(paypwd);
+		member.setRealnameLv(realnameLv.getCode());
+		member.setPhone(phone);
+		member.setEmail(email);
+		member.setMemberType(memberType);
+		member.setMemberStatus(memberStatus);
+		member.setRegisterIdent(registerIdent);
+		return member;
+	}
 	
 
 }

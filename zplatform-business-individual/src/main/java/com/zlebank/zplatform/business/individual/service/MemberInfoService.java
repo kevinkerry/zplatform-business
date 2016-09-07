@@ -148,4 +148,11 @@ public interface MemberInfoService {
 	 * @throws CommonException
 	 */
 	public void vaildateBankCardForResetPwd(String memberId,String phone,String smsCode,long bindId,String cardNo) throws CommonException;
+	
+	/**
+	 * 查询会员信息（个人会员）
+	 * @param memberId
+	 * @return
+	 */
+	public Member queryPersonMember(String memberId);
 }
