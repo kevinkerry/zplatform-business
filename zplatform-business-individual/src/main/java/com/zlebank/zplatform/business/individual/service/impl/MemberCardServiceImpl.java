@@ -149,7 +149,7 @@ public class MemberCardServiceImpl implements MemberCardService{
 	@Override
 	public String bindBankCard(Member individualMember,
 			BankCardInfo bankCardInfo, String smsCode) throws CommonException {
-		int retCode = smsService.verifyCode(ModuleTypeEnum.BINDCARD.getCode(),
+		int retCode = smsService.verifyCodeByModuleType(ModuleTypeEnum.BINDCARD.getCode(),
 				individualMember.getPhone(), smsCode);
 		if (retCode != 1) {
 			 throw new CommonException(ExcepitonTypeEnum.PASSWORD.getCode(),"验证码错误");

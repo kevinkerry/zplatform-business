@@ -20,6 +20,7 @@ import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 
 import com.alibaba.fastjson.JSON;
+import com.zlebank.zplatform.rmi.commons.SMSServiceProxy;
 import com.zlebank.zplatform.sms.pojo.enums.ModuleTypeEnum;
 
 /**
@@ -36,15 +37,12 @@ public class SMSServiceTest {
 
 	@Autowired
 	private SmsService smsService; 
+	@Autowired
+	private SMSServiceProxy smsServiceProxy;
 	
 	@Test
 	public void test_send(){
-		
-		Map<String, Object> jsonMap = new HashMap<String, Object>();
-		jsonMap.put("phoneNo", "18600806796");
-		
-		//smsService.sendSmsCode(JSON.toJSONString(jsonMap), ModuleTypeEnum.ENTERPRISEREALNAME);
-		
-		smsService.sendSmsCode(JSON.toJSONString(jsonMap), ModuleTypeEnum.RESETPAYPWD);
+		int verifyCodeByModuleType = smsServiceProxy.verifyCodeByModuleType("1005", "18201289505", "388375");
+		System.out.println(verifyCodeByModuleType);
 	}
 }

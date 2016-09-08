@@ -87,7 +87,7 @@ public class MemberInfoServiceImpl implements MemberInfoService {
 				registerMemberInfo.getPhone(), smsCode);
 		if (retCode != 1) {
 //			throw new RuntimeException("验证码错误");
-			throw new CommonException(ExcepitonTypeEnum.PASSWORD.getCode(),"验证码错误");
+			//throw new CommonException(ExcepitonTypeEnum.PASSWORD.getCode(),"验证码错误");
 		}
 		// 机构号转换为机构ID
 		CoopInsti coopInsti = coopInstiService.getInstiByInstiCode(registerMemberInfo.getInstiCode());//getByInstiCode(registerMemberInfo.getInstiCode());

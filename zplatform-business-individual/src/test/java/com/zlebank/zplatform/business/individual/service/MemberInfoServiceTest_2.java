@@ -21,6 +21,7 @@ import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 
 import com.alibaba.fastjson.JSON;
+import com.zlebank.zplatform.business.individual.bean.Member;
 import com.zlebank.zplatform.business.individual.exception.CommonException;
 import com.zlebank.zplatform.sms.pojo.enums.ModuleTypeEnum;
 
@@ -40,8 +41,38 @@ public class MemberInfoServiceTest_2 {
 	@Autowired
 	private MemberInfoService memberInfoService;
 	
+	
 	@Test
 	//@Ignore
+	public void test_querymembere(){
+		
+		Member member = memberInfoService.queryMember("wjf018", "300000000000004");
+		System.out.println(JSON.toJSONString(member));
+	}
+	
+	
+	@Test
+	@Ignore
+	public void test_register(){
+		try {
+        	Member registerMemberInfo = new Member();
+        	//loginName/pwd/phone/instiCode)
+        	registerMemberInfo.setLoginName("guojia_092");
+        	registerMemberInfo.setPwd("123456guojia");
+        	registerMemberInfo.setPhone("18600816798");
+        	registerMemberInfo.setInstiCode("300000000000027");
+        	String memberId = memberInfoService.register(registerMemberInfo, "537543");
+        	System.out.println(memberId);
+        } catch (Exception e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		} 
+	}
+	
+	
+	
+	@Test
+	@Ignore
 	public void test_vaildateUnbindPhone(){
 		Map<String, Object> jsonMap = new HashMap<String, Object>();
 		jsonMap.put("phoneNo", "13654608889");
