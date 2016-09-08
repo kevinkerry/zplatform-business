@@ -43,7 +43,7 @@ public class MemberInfoServiceTest_2 {
 	
 	
 	@Test
-	//@Ignore
+	@Ignore
 	public void test_querymembere(){
 		
 		Member member = memberInfoService.queryMember("wjf018", "300000000000004");
@@ -52,15 +52,15 @@ public class MemberInfoServiceTest_2 {
 	
 	
 	@Test
-	@Ignore
+	//@Ignore
 	public void test_register(){
 		try {
         	Member registerMemberInfo = new Member();
         	//loginName/pwd/phone/instiCode)
-        	registerMemberInfo.setLoginName("guojia_092");
+        	registerMemberInfo.setLoginName("guojia_091");
         	registerMemberInfo.setPwd("123456guojia");
-        	registerMemberInfo.setPhone("18600816798");
-        	registerMemberInfo.setInstiCode("300000000000027");
+        	registerMemberInfo.setPhone("18600826798");
+        	registerMemberInfo.setInstiCode("300000000000036");
         	String memberId = memberInfoService.register(registerMemberInfo, "537543");
         	System.out.println(memberId);
         } catch (Exception e) {
