@@ -57,9 +57,9 @@ public class EnterpriseOperationServiceTest {
 	@Test
 	//@Ignore
 	public void test_regist(){
-		for(int i=0 ;i<10;i++){
+		for(int i=0 ;i<5;i++){
 			EnterpriseBean enterpriseBean = new EnterpriseBean();
-			enterpriseBean.setCoopInstiCode("300000000000027");
+			enterpriseBean.setCoopInstiCode("300000000000006");
 			enterpriseBean.setEnterpriseName("测试企业"+System.currentTimeMillis());
 			enterpriseBean.setEmail("test@"+System.currentTimeMillis()+".com");
 			enterpriseBean.setCellPhoneNo("13"+getVerifyCode());

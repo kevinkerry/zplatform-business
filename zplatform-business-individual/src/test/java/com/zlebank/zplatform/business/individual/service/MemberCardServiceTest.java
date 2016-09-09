@@ -18,10 +18,10 @@ import com.zlebank.zplatform.business.individual.bean.BankCardInfo;
 import com.zlebank.zplatform.business.individual.bean.IndividualRealInfo;
 import com.zlebank.zplatform.business.individual.bean.Member;
 import com.zlebank.zplatform.business.individual.bean.SupportedBankCardType;
+import com.zlebank.zplatform.business.individual.exception.CommonException;
 import com.zlebank.zplatform.business.individual.util.ApplicationContextAbled;
 import com.zlebank.zplatform.commons.bean.PagedResult;
 import com.zlebank.zplatform.sms.pojo.enums.ModuleTypeEnum;
-import com.zlebank.zplatform.trade.bean.CardBinBean;
 
 /**
  * Class Description
@@ -51,8 +51,9 @@ public class MemberCardServiceTest extends ApplicationContextAbled {
 	public void test_queryCardBin() {
 		MemberCardService memberCardService = (MemberCardService) getContext()
 				.getBean("memberCardService");
-		CardBinBean cardbin = memberCardService.queryCardBin("123456789012");
-		System.out.println(JSON.toJSONString(cardbin));
+		//CardBin cardbin = memberCardService.queryCardBin("123456789012");
+		//System.out.println(JSON.toJSONString(cardbin));
+		
 	}
 
 	public void testSMS() {
@@ -62,7 +63,7 @@ public class MemberCardServiceTest extends ApplicationContextAbled {
 	}
 
 	// @Test
-	public void test_bindBankCard() {
+	public void test_bindBankCard() throws CommonException  {
 		MemberCardService memberCardService = (MemberCardService) getContext()
 				.getBean("memberCardService");
 		Member individualMember = new Member();
@@ -85,25 +86,17 @@ public class MemberCardServiceTest extends ApplicationContextAbled {
 		individualRealInfo.setCvn2("");
 		individualRealInfo.setExpired("");
 		bankCardInfo.setBankCardInfo(individualRealInfo);
-		try {
-			memberCardService
-					.bindBankCard(individualMember, bankCardInfo, "235469");
-		} catch (Exception e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		}
+		memberCardService
+				.bindBankCard(individualMember, bankCardInfo, "235469");
 	}
 
 	
-	public void test_unbindBankCard() {
+	public void test_unbindBankCard() throws Exception {
 		MemberCardService memberCardService = (MemberCardService) getContext().getBean("memberCardService");
-		try {
+		
 			boolean flag = memberCardService.unbindBankCard("100000000000572", "105", "654321");
 			System.out.println(flag);
-		} catch (Exception e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		}
+		
 	}
 //	@Test
 	public void test_queryBank(){
