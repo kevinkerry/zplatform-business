@@ -55,7 +55,13 @@ public class EnterpriseOperationServiceTest {
 	private EnterpriseOperationService enterpriseOperationService; 
 	
 	@Test
-	//@Ignore
+	public void test_query(){
+		EnterpriseBean enterpriseBean = enterpriseOperationService.queryEnterpriseByMemberId("200000000000810");
+		System.out.println(enterpriseBean.getCellPhoneNo());
+	}
+	
+	@Test
+	@Ignore
 	public void test_regist(){
 		for(int i=0 ;i<5;i++){
 			EnterpriseBean enterpriseBean = new EnterpriseBean();

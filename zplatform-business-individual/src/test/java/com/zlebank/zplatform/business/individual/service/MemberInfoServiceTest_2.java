@@ -57,10 +57,10 @@ public class MemberInfoServiceTest_2 {
 		try {
         	Member registerMemberInfo = new Member();
         	//loginName/pwd/phone/instiCode)
-        	registerMemberInfo.setLoginName("guojia_091");
+        	registerMemberInfo.setLoginName("guojia_092");
         	registerMemberInfo.setPwd("123456guojia");
         	registerMemberInfo.setPhone("18600826798");
-        	registerMemberInfo.setInstiCode("300000000000036");
+        	registerMemberInfo.setInstiCode("300000000000006");
         	String memberId = memberInfoService.register(registerMemberInfo, "537543");
         	System.out.println(memberId);
         } catch (Exception e) {

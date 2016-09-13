@@ -35,10 +35,10 @@ public class MemberInfoServiceTest extends ApplicationContextAbled{
         try {
         	Member registerMemberInfo = new Member();
         	//loginName/pwd/phone/instiCode)
-        	registerMemberInfo.setLoginName("guojia_01");
+        	registerMemberInfo.setLoginName("guojia_101");
         	registerMemberInfo.setPwd("123456guojia");
         	registerMemberInfo.setPhone("18600806795");
-        	registerMemberInfo.setInstiCode("300000000000027");
+        	registerMemberInfo.setInstiCode("300000000000006");
         	String memberId = memberInfoService.register(registerMemberInfo, "537543");
         	System.out.println(memberId);
         } catch (Exception e) {
