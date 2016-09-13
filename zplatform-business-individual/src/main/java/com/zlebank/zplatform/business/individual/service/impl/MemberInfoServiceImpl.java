@@ -355,6 +355,9 @@ public class MemberInfoServiceImpl implements MemberInfoService {
 	 */
 	@Override
 	public boolean modifyPayPwd(String memberId, String orgPayPwd, String payPwd) throws CommonException {
+		if(payPwd.equals(orgPayPwd)){
+			throw new CommonException(ExcepitonTypeEnum.PASSWORD.getCode(),"新支付密码和原支付密码一样");
+		}
 		PojoMember pm = memberService.getMbmberByMemberId(memberId, null);
 		if(pm==null){
 			return false;
@@ -366,10 +369,10 @@ public class MemberInfoServiceImpl implements MemberInfoService {
 		member.setPaypwd(orgPayPwd);
 
 		try {
-			if(orgPayPwd!=null&&!"".equals(orgPayPwd)){
-				return memberOperationService.resetPayPwd(MemberType.INDIVIDUAL, member, payPwd, false);	
-			} else {
+			if(StringUtil.isNotEmpty(orgPayPwd)){
 				return memberOperationService.resetPayPwd(MemberType.INDIVIDUAL, member, payPwd, true);
+			} else {
+				return memberOperationService.resetPayPwd(MemberType.INDIVIDUAL, member, payPwd, false);
 			}
 		} catch (Exception e) {
 			// TODO Auto-generated catch block
