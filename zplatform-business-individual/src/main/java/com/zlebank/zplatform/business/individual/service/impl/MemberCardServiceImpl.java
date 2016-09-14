@@ -132,8 +132,9 @@ public class MemberCardServiceImpl implements MemberCardService{
 	@Override
 	public CardBinBean queryCardBin(String bankCardNo) {
 		CardBinBean cardBin = cardBinService.getCard(bankCardNo);
-		if (cardBin == null)
+		if (cardBin == null){
 		    return null;
+		}
 		cardBin.setBankCode(cardBin.getBankCode()+"0000");
 		return cardBin;
 	}

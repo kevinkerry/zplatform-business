@@ -1,5 +1,6 @@
 package com.zlebank.zplatform.business.individual.service;
 
+import com.zlebank.zplatform.business.individual.bean.MemInAndExDetail;
 import com.zlebank.zplatform.business.individual.bean.Order;
 import com.zlebank.zplatform.business.individual.exception.CommonException;
 import com.zlebank.zplatform.business.individual.exception.ValidateOrderException;
@@ -70,7 +71,7 @@ public interface MemberAccountService {
      * @throws AbstractTradeDescribeException
      * @throws IllegalAccessException
      */
-    PagedResult<?> queryAccInAndExDetail(String memberId,
+    PagedResult<MemInAndExDetail> queryAccInAndExDetail(String memberId,
             int page,
             int pageSize) throws CommonException;
 }
