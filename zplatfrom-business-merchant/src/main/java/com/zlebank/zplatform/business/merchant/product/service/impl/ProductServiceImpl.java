@@ -21,8 +21,10 @@ import com.zlebank.zplatform.business.merchant.exception.CommonException;
 import com.zlebank.zplatform.business.merchant.product.service.ProductService;
 import com.zlebank.zplatform.member.bean.FinanceProductAccountBean;
 import com.zlebank.zplatform.member.bean.FinanceProductQueryBean;
+import com.zlebank.zplatform.member.pojo.PojoMember;
 import com.zlebank.zplatform.rmi.acc.IFinanceProductService;
 import com.zlebank.zplatform.rmi.member.IFinanceProductAccountService;
+import com.zlebank.zplatform.rmi.member.IMemberService;
 
 /**
  * Class Description
@@ -39,6 +41,8 @@ public class ProductServiceImpl implements ProductService{
 	private IFinanceProductService financeProductService;
 	@Autowired
 	private IFinanceProductAccountService financeProductAccountService;
+	@Autowired
+	private IMemberService memberService;
 	/**
 	 *
 	 * @param productCode
@@ -46,11 +50,20 @@ public class ProductServiceImpl implements ProductService{
 	 * @param fundManager
 	 * @param financier
 	 * @return
+	 * @throws CommonException 
 	 */
 	@Override
 	public boolean openProduct(String productCode, String prodcutName,
-			String fundManager, String financier) {
+			String fundManager, String financier) throws CommonException {
 		FinanceProductBean bean = new FinanceProductBean();
+		PojoMember financierMember = memberService.getMbmberByMemberId(financier, null);
+		if(financierMember==null){
+			throw new CommonException(ExcepitonTypeEnum.PRODUCT.getCode(), "融资人不存在");
+		}
+		PojoMember fundManagerMember = memberService.getMbmberByMemberId(fundManager, null);
+		if(fundManagerMember==null){
+			throw new CommonException(ExcepitonTypeEnum.PRODUCT.getCode(), "资管人不存在");
+		}
 		bean.setFinancier(financier);
 		bean.setFundManager(fundManager);
 		bean.setProductCode(productCode);
@@ -61,7 +74,8 @@ public class ProductServiceImpl implements ProductService{
 		} catch (Exception e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
-			return false;
+			throw new CommonException(ExcepitonTypeEnum.PRODUCT.getCode(), e.getMessage());
+			
 		}
 	}
 	

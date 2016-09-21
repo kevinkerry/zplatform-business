@@ -49,7 +49,7 @@ public interface MemberCardService {
 	 * @throws UnbindBankFailedException 
 	 * @throws DataCheckFailedException 
 	 */
-	public boolean unbindBankCard(String memberId, String bindcardid, String payPwd) throws Exception;
+	public boolean unbindBankCard(String memberId, String bindcardid, String payPwd) throws CommonException;
 	/**
 	 * 查询支持交易的银行卡列表  Query list of bank
 	 * @return

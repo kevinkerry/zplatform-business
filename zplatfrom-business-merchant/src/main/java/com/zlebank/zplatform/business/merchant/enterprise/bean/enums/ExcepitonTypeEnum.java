@@ -30,6 +30,7 @@ public enum ExcepitonTypeEnum {
 	TRADE("TRADE"),
 	PASSWORD("PW"),
 	SYSTEM("SYS"),
+	PRODUCT("product"),
 	UNKNOW("9999");
 	
 	private String code;

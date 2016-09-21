@@ -19,6 +19,7 @@ import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 
 import com.alibaba.fastjson.JSON;
 import com.zlebank.zplatform.business.merchant.enterprise.bean.ProductBalanceBean;
+import com.zlebank.zplatform.business.merchant.exception.CommonException;
 import com.zlebank.zplatform.business.merchant.product.service.ProductService;
 
 /**
@@ -38,7 +39,7 @@ public class ProductServiceTest {
 	
 	@Test
 	@Ignore
-	public void test_async_product(){
+	public void test_async_product() throws CommonException{
 		boolean openProduct = productService.openProduct("100000001", "测试产品1", "200000000000855", "200000000000853");
 		System.out.println(openProduct);
 	}

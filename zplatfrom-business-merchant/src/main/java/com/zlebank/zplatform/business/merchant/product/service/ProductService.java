@@ -11,6 +11,7 @@
 package com.zlebank.zplatform.business.merchant.product.service;
 
 import com.zlebank.zplatform.business.merchant.enterprise.bean.ProductBalanceBean;
+import com.zlebank.zplatform.business.merchant.exception.CommonException;
 
 /**
  * Class Description
@@ -31,7 +32,7 @@ public interface ProductService {
 	 * @param financier 融资人
 	 * @return
 	 */
-	public boolean openProduct(String productCode,String prodcutName,String fundManager,String financier);
+	public boolean openProduct(String productCode,String prodcutName,String fundManager,String financier) throws CommonException;
 	
 	/**
 	 * 查询产品账户

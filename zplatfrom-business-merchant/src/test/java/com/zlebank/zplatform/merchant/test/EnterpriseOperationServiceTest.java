@@ -55,17 +55,17 @@ public class EnterpriseOperationServiceTest {
 	private EnterpriseOperationService enterpriseOperationService; 
 	
 	@Test
+	@Ignore
 	public void test_query(){
 		EnterpriseBean enterpriseBean = enterpriseOperationService.queryEnterpriseByMemberId("200000000000810");
 		System.out.println(enterpriseBean.getCellPhoneNo());
 	}
 	
 	@Test
-	@Ignore
 	public void test_regist(){
-		for(int i=0 ;i<5;i++){
+		for(int i=0 ;i<1;i++){
 			EnterpriseBean enterpriseBean = new EnterpriseBean();
-			enterpriseBean.setCoopInstiCode("300000000000006");
+			enterpriseBean.setCoopInstiCode("300000000000036");
 			enterpriseBean.setEnterpriseName("测试企业"+System.currentTimeMillis());
 			enterpriseBean.setEmail("test@"+System.currentTimeMillis()+".com");
 			enterpriseBean.setCellPhoneNo("13"+getVerifyCode());
