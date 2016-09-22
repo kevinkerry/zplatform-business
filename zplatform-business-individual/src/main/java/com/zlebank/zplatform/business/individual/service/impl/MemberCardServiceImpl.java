@@ -107,6 +107,7 @@ public class MemberCardServiceImpl implements MemberCardService{
 			Bank bank = new Bank();
 			bank.setBankCode(custBean.getBankcode());
 			bank.setBankName(custBean.getBankname());
+			bank.setBankIcon(cashBankService.getBankICON(custBean.getBankcode()).getIco());
 			bankCardInfo.setBank(bank);
 			IndividualRealInfo individualRealInfo = new IndividualRealInfo();
 			individualRealInfo.setCardNo(custBean.getCardno());

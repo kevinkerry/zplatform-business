@@ -43,16 +43,16 @@ public class MemberInfoServiceTest_2 {
 	
 	
 	@Test
-	@Ignore
+	
 	public void test_querymembere(){
 		
-		Member member = memberInfoService.queryMember("wjf018", "300000000000004");
+		Member member = memberInfoService.queryMember("ly123456", "300000000000027");
 		System.out.println(JSON.toJSONString(member));
 	}
 	
 	
 	@Test
-	//@Ignore
+	@Ignore
 	public void test_register(){
 		try {
         	Member registerMemberInfo = new Member();

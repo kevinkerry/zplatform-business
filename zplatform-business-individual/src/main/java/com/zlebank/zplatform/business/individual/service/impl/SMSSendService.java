@@ -119,7 +119,7 @@ public class SMSSendService implements SmsService{
 				break;
 			case ENTERPRISEREALNAME://1.5.0 新增企业实名认证
 				phoneNo = jsonObject.get("phoneNo").toString();
-				retcode = smsSendService.sendSMS(moduleType.getCode(), phoneNo, "", "");
+				retcode = smsSendService.sendSMS(moduleType.getCode(), phoneNo, jsonObject.get("tn").toString(), "");
 				break;
 			case UNBINDPHONE://1.5.0 新增解绑手机
 				phoneNo = jsonObject.get("phoneNo").toString();
