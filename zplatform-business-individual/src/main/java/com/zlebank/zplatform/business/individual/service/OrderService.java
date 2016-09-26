@@ -1,7 +1,7 @@
+
 package com.zlebank.zplatform.business.individual.service;
 
 import java.util.Date;
-import java.util.Map;
 
 import net.sf.json.JSONObject;
 
@@ -9,12 +9,10 @@ import com.zlebank.zplatform.business.individual.bean.IndividualRealInfo;
 import com.zlebank.zplatform.business.individual.bean.Order;
 import com.zlebank.zplatform.business.individual.bean.enums.OrderStatus;
 import com.zlebank.zplatform.business.individual.bean.enums.PayWay;
-import com.zlebank.zplatform.business.individual.exception.AbstractIndividualBusinessException;
+import com.zlebank.zplatform.business.individual.exception.CommonException;
 import com.zlebank.zplatform.business.individual.exception.ValidateOrderException;
 import com.zlebank.zplatform.commons.bean.PagedResult;
 import com.zlebank.zplatform.trade.bean.ResultBean;
-import com.zlebank.zplatform.trade.exception.AbstractTradeDescribeException;
-import com.zlebank.zplatform.trade.exception.TradeException;
 
 
 public interface OrderService {
@@ -44,8 +42,7 @@ public interface OrderService {
      * @throws TradeException
      * @throws AbstractIndividualBusinessException
      */
-    String createOrder(Order order) throws ValidateOrderException,
-            TradeException, AbstractIndividualBusinessException;
+    String createOrder(Order order) throws CommonException;
     /**
      * Pay a order with account balance
      * 
@@ -55,8 +52,7 @@ public interface OrderService {
      * @return {@link OrderStatus}
      */
     OrderStatus pay(String order, String smsCode, String payPwd, PayWay payWay)
-            throws AbstractTradeDescribeException,
-            AbstractIndividualBusinessException,TradeException;
+            throws CommonException;
 
     /**
      * 匿名支付
@@ -70,8 +66,7 @@ public interface OrderService {
      */
     public OrderStatus anonymousPay(String order,
             String smsCode
-            ) throws AbstractTradeDescribeException,
-            AbstractIndividualBusinessException, TradeException;
+            ) throws  CommonException;
     
     /**
      * 匿名支付 实名认证
@@ -89,8 +84,7 @@ public interface OrderService {
      * @throws TradeException
      * @throws AbstractIndividualBusinessException
      */
-    public String createRefundOrder(Order order) throws ValidateOrderException,
-    TradeException, AbstractIndividualBusinessException;
+    public String createRefundOrder(Order order) throws CommonException;
     
     /**
      * 创建微信订单
@@ -108,11 +102,45 @@ public interface OrderService {
      * @return
      */
     public Long getRefundFee(String txnseqno,String merchNo,String txnAmt,String busicode);
-
     /***
-     * 查询微信订单状态
-     * @param map
+     * 查询微信订单
+     * @param tn
      * @return
      */
     public ResultBean queryWechatOrder(String tn);
+    /***
+     * 收银台支付
+     * @param order
+     * @param smsCode
+     * @param memberId 
+     * @return
+     */
+	public ResultBean cashPay(Order order, String smsCode, String memberId);
+
+	
+	/**
+	 * 创建微信扫描支付订单
+	 * @param tn
+	 * @return
+	 */
+	public JSONObject createWeChatOrderQR(String tn);
+
+	/****
+	 * 微信统一下单
+	 * @param tn
+	 * @param typeId
+	 * @return
+	 */
+	public JSONObject createWechatOrder(String tn , String typeId)throws CommonException;
+	
+	
+	 /***
+     * 查询微信订单
+     * @param tn
+     * @return
+     */
+    public ResultBean queryWechatOrder(String tn,String typeId)throws CommonException;
+	
+	
 }
+

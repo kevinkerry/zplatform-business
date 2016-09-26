@@ -11,19 +11,12 @@
 package com.zlebank.zplatform.business.individual.service;
 
 import org.junit.Test;
-import org.springframework.beans.BeansException;
 
 import com.alibaba.fastjson.JSON;
 import com.zlebank.zplatform.business.individual.bean.IndividualRealInfo;
 import com.zlebank.zplatform.business.individual.bean.Member;
 import com.zlebank.zplatform.business.individual.bean.enums.RealNameTypeEnum;
 import com.zlebank.zplatform.business.individual.util.ApplicationContextAbled;
-import com.zlebank.zplatform.member.exception.CreateBusiAcctFailedException;
-import com.zlebank.zplatform.member.exception.CreateMemberFailedException;
-import com.zlebank.zplatform.member.exception.DataCheckFailedException;
-import com.zlebank.zplatform.member.exception.InvalidMemberDataException;
-import com.zlebank.zplatform.member.exception.LoginFailedException;
-import com.zlebank.zplatform.member.exception.UnbindBankFailedException;
 import com.zlebank.zplatform.sms.pojo.enums.ModuleTypeEnum;
 
 /**
@@ -42,22 +35,16 @@ public class MemberInfoServiceTest extends ApplicationContextAbled{
         try {
         	Member registerMemberInfo = new Member();
         	//loginName/pwd/phone/instiCode)
-        	registerMemberInfo.setLoginName("guojia_01");
+        	registerMemberInfo.setLoginName("guojia_101");
         	registerMemberInfo.setPwd("123456guojia");
         	registerMemberInfo.setPhone("18600806795");
-        	registerMemberInfo.setInstiCode("300000000000027");
+        	registerMemberInfo.setInstiCode("300000000000006");
         	String memberId = memberInfoService.register(registerMemberInfo, "537543");
         	System.out.println(memberId);
-        } catch (InvalidMemberDataException e) {
+        } catch (Exception e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
-		} catch (CreateMemberFailedException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		} catch (CreateBusiAcctFailedException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		}
+		} 
     }
   // @Test
     public void testSMS(){
@@ -76,13 +63,10 @@ public class MemberInfoServiceTest extends ApplicationContextAbled{
 		try {
 			String memberid = memberInfoService.login("guojia", "123456guojia", "300000000000027");
 			System.out.println(memberid);
-		} catch (DataCheckFailedException e) {
+		} catch (Exception e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
-		} catch (LoginFailedException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		}
+		} 
 	}
 	
 	public void test_resetPayPwd(){
@@ -90,7 +74,7 @@ public class MemberInfoServiceTest extends ApplicationContextAbled{
 		try {
 			boolean flag = memberInfoService.resetPayPwd("100000000000572", "123456", "628954");
 			System.out.println(flag);
-		} catch (DataCheckFailedException e) {
+		} catch (Exception e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
@@ -101,7 +85,7 @@ public class MemberInfoServiceTest extends ApplicationContextAbled{
 		try {
 			boolean flag = memberInfoService.vaildatePayPwd("100000000000572", "654321");
 			System.out.println(flag);
-		} catch (DataCheckFailedException e) {
+		} catch (Exception e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
@@ -113,7 +97,7 @@ public class MemberInfoServiceTest extends ApplicationContextAbled{
 		try {
 			boolean flag = memberInfoService.modifyPwd("100000000000572", "123456guojia", "54321guojia");
 			System.out.println(flag);
-		} catch (DataCheckFailedException e) {
+		} catch (Exception e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
@@ -124,7 +108,7 @@ public class MemberInfoServiceTest extends ApplicationContextAbled{
 		try {
 			boolean flag = memberInfoService.modifyPayPwd("100000000000572", "123456", "654321");
 			System.out.println(flag);
-		} catch (DataCheckFailedException e) {
+		} catch (Exception e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
@@ -136,13 +120,10 @@ public class MemberInfoServiceTest extends ApplicationContextAbled{
 			MemberInfoService memberInfoService = (MemberInfoService)getContext().getBean("memberInfoService");
 			boolean flag = memberInfoService.resetPwd("100000000000572", "123456guojia", "121495");
 			System.out.println(flag);
-		} catch (DataCheckFailedException e) {
+		} catch (Exception e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
-		} catch (BeansException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		}
+		} 
 	}
 	@Test
 	public void test_realName(){
@@ -151,13 +132,10 @@ public class MemberInfoServiceTest extends ApplicationContextAbled{
 		try {
 			boolean flag = memberInfoService.realName(individualRealInfo, "679519", "654321", "100000000000572",RealNameTypeEnum.CARDREALNAME);
 			System.out.println(flag);
-		} catch (DataCheckFailedException e) {
+		} catch (Exception e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
-		} catch (UnbindBankFailedException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		}
+		} 
 	}
 	//@Test
 	public void test_vaildatePwd(){
@@ -165,12 +143,9 @@ public class MemberInfoServiceTest extends ApplicationContextAbled{
 		try {
 			boolean flag = memberInfoService.vaildatePwd("100000000000572", "123456guojia");
 			System.out.println(flag);
-		} catch (DataCheckFailedException e) {
+		} catch (Exception e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
-		} catch (LoginFailedException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		}
+		} 
 	}
 }

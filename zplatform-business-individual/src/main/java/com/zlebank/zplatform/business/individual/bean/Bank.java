@@ -9,6 +9,18 @@ public class Bank {
 	private String bankCode;
 	/**银行名称*/
 	private String bankName;
+	/**银行图标**/
+	private String bankIcon;
+	
+	
+
+	public String getBankIcon() {
+		return bankIcon;
+	}
+
+	public void setBankIcon(String bankIcon) {
+		this.bankIcon = bankIcon;
+	}
 
 	public String getBankCode() {
 		return bankCode;

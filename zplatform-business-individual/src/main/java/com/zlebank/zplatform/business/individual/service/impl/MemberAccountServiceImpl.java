@@ -5,11 +5,9 @@ import java.util.ArrayList;
 import java.util.List;
 
 import org.springframework.beans.BeanUtils;
+import org.springframework.beans.BeansException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Isolation;
-import org.springframework.transaction.annotation.Propagation;
-import org.springframework.transaction.annotation.Transactional;
 
 import com.alibaba.fastjson.JSON;
 import com.alibaba.fastjson.JSONObject;
@@ -18,10 +16,8 @@ import com.zlebank.zplatform.acc.bean.enums.Usage;
 import com.zlebank.zplatform.acc.pojo.Money;
 import com.zlebank.zplatform.business.individual.bean.MemInAndExDetail;
 import com.zlebank.zplatform.business.individual.bean.Order;
-import com.zlebank.zplatform.business.individual.exception.AbstractIndividualBusinessException;
-import com.zlebank.zplatform.business.individual.exception.PayPwdVerifyFailException;
-import com.zlebank.zplatform.business.individual.exception.UnCheckedSystemException;
-import com.zlebank.zplatform.business.individual.exception.ValidateOrderException;
+import com.zlebank.zplatform.business.individual.bean.enums.ExcepitonTypeEnum;
+import com.zlebank.zplatform.business.individual.exception.CommonException;
 import com.zlebank.zplatform.business.individual.service.MemberAccountService;
 import com.zlebank.zplatform.business.individual.service.OrderService;
 import com.zlebank.zplatform.business.individual.utils.Constants;
@@ -31,52 +27,42 @@ import com.zlebank.zplatform.member.bean.MemberAccountBean;
 import com.zlebank.zplatform.member.bean.MemberBalanceDetailBean;
 import com.zlebank.zplatform.member.bean.MemberBean;
 import com.zlebank.zplatform.member.bean.enums.MemberType;
-import com.zlebank.zplatform.member.dao.CoopInstiDAO;
-import com.zlebank.zplatform.member.exception.DataCheckFailedException;
-import com.zlebank.zplatform.member.exception.GetAccountFailedException;
 import com.zlebank.zplatform.member.pojo.PojoMember;
-import com.zlebank.zplatform.member.service.MemberOperationService;
-import com.zlebank.zplatform.member.service.MemberService;
-import com.zlebank.zplatform.sms.service.ISMSService;
+import com.zlebank.zplatform.rmi.commons.SMSServiceProxy;
+import com.zlebank.zplatform.rmi.member.IMemberAccountService;
+import com.zlebank.zplatform.rmi.member.IMemberOperationService;
+import com.zlebank.zplatform.rmi.member.IMemberService;
+import com.zlebank.zplatform.rmi.trade.GateWayServiceProxy;
 import com.zlebank.zplatform.trade.bean.wap.WapWithdrawBean;
-import com.zlebank.zplatform.trade.exception.AbstractTradeDescribeException;
-import com.zlebank.zplatform.trade.exception.BalanceNotEnoughException;
-import com.zlebank.zplatform.trade.exception.FailToGetAccountInfoException;
-import com.zlebank.zplatform.trade.exception.TradeException;
-import com.zlebank.zplatform.trade.service.IGateWayService;
 
 @Service("busiMemberAccountServiceImpl")
 public class MemberAccountServiceImpl implements MemberAccountService {
 
     @Autowired
-    private IGateWayService gateWayService;
+    private GateWayServiceProxy gateWayService;
     @Autowired
     private IOrderValidator orderValidator;
     @Autowired
-    private MemberOperationService memberOperationServiceImpl;
+    private IMemberOperationService memberOperationServiceImpl;
     @Autowired
-    private MemberService memberServiceImpl;
+    private IMemberService memberServiceImpl;
     @Autowired
-    private com.zlebank.zplatform.member.service.MemberAccountService memberAccountServiceImpl;
+    private IMemberAccountService memberAccountServiceImpl;
     @Autowired
-    private ISMSService smsService;
+    private SMSServiceProxy smsService;
     @Autowired
     private OrderService orderServiceImpl;
-    @Autowired
-    CoopInstiDAO coopInstiDAO;
+    //@Autowired
+    //CoopInstiDAO coopInstiDAO;
 
     @Override
-    @Transactional(isolation = Isolation.READ_COMMITTED, propagation = Propagation.REQUIRED)
-    public String recharge(Order order) throws ValidateOrderException,
-            TradeException, AbstractIndividualBusinessException {
+    public String recharge(Order order) throws CommonException {
         return orderServiceImpl.createOrder(order);
     }
 
     @Override
-    @Transactional(isolation = Isolation.READ_COMMITTED, propagation = Propagation.REQUIRED)
     public String withdraw(String json, String payPwd)
-            throws ValidateOrderException, TradeException,
-            AbstractTradeDescribeException, AbstractIndividualBusinessException {
+            throws CommonException{
         json = fullNonWalletData(json);
         WapWithdrawBean withdrawBean = JSON.parseObject(json,
                 WapWithdrawBean.class);
@@ -88,7 +74,7 @@ public class MemberAccountServiceImpl implements MemberAccountService {
                 MemberType.INDIVIDUAL);
 
         if (member == null) {// 资金账户不存在
-            throw new FailToGetAccountInfoException();
+            throw new CommonException(ExcepitonTypeEnum.MEMBER_ACCOUNT.getCode(),"资金账户不存在");
         }
 
         List<BusiAcctQuery> busiAcctList = memberServiceImpl
@@ -102,85 +88,96 @@ public class MemberAccountServiceImpl implements MemberAccountService {
         }
 
         if (basicFund == null) {// 资金账户不存在
-            throw new FailToGetAccountInfoException();
+        	throw new CommonException(ExcepitonTypeEnum.MEMBER_ACCOUNT.getCode(),"资金账户不存在");
         }
 
         if (basicFund.getBalance().minus(withDrawAmount).compareTo(Money.ZERO) < 0) {// 余额不足
-            throw new BalanceNotEnoughException();
+        	throw new CommonException(ExcepitonTypeEnum.MEMBER_ACCOUNT.getCode(),"资金账户余额不足");
         }
 
+        
         try {
-            MemberBean memberBean = new MemberBean();
-            memberBean.setLoginName(member.getLoginName());
-            memberBean.setInstiId(member.getInstiId());
-            memberBean.setPhone(member.getPhone());
-            memberBean.setPaypwd(payPwd);
-            // 校验支付密码
-            if (!memberOperationServiceImpl.verifyPayPwd(MemberType.INDIVIDUAL,
-                    memberBean)) {
-                throw new PayPwdVerifyFailException();
-            }
-        } catch (DataCheckFailedException e) {
-            PayPwdVerifyFailException pe = new PayPwdVerifyFailException();
-            pe.initCause(e);
-            throw pe;
-        }
+			MemberBean memberBean = new MemberBean();
+			memberBean.setLoginName(member.getLoginName());
+			memberBean.setInstiId(member.getInstiId());
+			memberBean.setPhone(member.getPhone());
+			memberBean.setPaypwd(payPwd);
+			// 校验支付密码
+			if (!memberOperationServiceImpl.verifyPayPwd(MemberType.INDIVIDUAL,
+			        memberBean)) {
+			    //throw new PayPwdVerifyFailException();
+				//throw new Exception();
+				throw new CommonException(ExcepitonTypeEnum.PASSWORD.getCode(),"支付密码错误");
+			}
+		} catch (Exception e1) {
+			// TODO Auto-generated catch block
+			throw new CommonException(ExcepitonTypeEnum.PASSWORD.getCode(),"支付密码错误");
+		}
+        
 
         String tn = null;
         try {
-            tn = gateWayService.withdraw(json);
-        } catch (TradeException e) {
-            e.printStackTrace();
+            tn = gateWayService.withdraw(json);//.withdraw(json);
         } catch (Exception e) {
             e.printStackTrace();
-            throw new UnCheckedSystemException();
+            throw new CommonException(ExcepitonTypeEnum.TRADE.getCode(),e.getMessage());
         }
         if (tn == null || tn.equals("")) {
-            throw new UnCheckedSystemException();
+           // throw new UnCheckedSystemException();
+        	throw new CommonException(ExcepitonTypeEnum.TRADE.getCode(),"提现订单生成失败");
         }
         return tn;
     }
     @Override
     public MemberAccountBean queryMemberFuns(String memberId)
-            throws AbstractTradeDescribeException {
+            throws CommonException {
         MemberBean member = new MemberBean();
         member.setMemberId(memberId);
         MemberAccountBean memberAccount = null;
         try {
-            memberAccount = memberAccountServiceImpl.queryBalance(
-                    MemberType.INDIVIDUAL, member, Usage.BASICPAY);
-        } catch (DataCheckFailedException e) {
-            throw new FailToGetAccountInfoException();
-        } catch (GetAccountFailedException e) {
-            throw new FailToGetAccountInfoException();
-        }
+			memberAccount = memberAccountServiceImpl.queryBalance(MemberType.INDIVIDUAL, member, Usage.BASICPAY);
+		} catch (Exception e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+			throw new CommonException(ExcepitonTypeEnum.MEMBER_ACCOUNT.getCode(),e.getMessage());
+		}
+        
         return memberAccount;
     }
 
     @Override
     public PagedResult<MemInAndExDetail> queryAccInAndExDetail(String memberId,
             int page,
-            int pageSize) throws AbstractTradeDescribeException,
-            IllegalAccessException {
+            int pageSize) throws CommonException {
         MemberBean member = new MemberBean();
         member.setMemberId(memberId);
-        PagedResult<MemberBalanceDetailBean> entrys;
+        PagedResult<MemberBalanceDetailBean> entrys = null;
+        
         try {
-            entrys = memberAccountServiceImpl.queryBalanceDetail(
-                    MemberType.INDIVIDUAL, member, page, pageSize);
-        } catch (GetAccountFailedException e) {
-            throw new FailToGetAccountInfoException();
-        }
+			entrys = memberAccountServiceImpl.queryBalanceDetail(
+			        MemberType.INDIVIDUAL, member, page, pageSize);
+		} catch (Exception e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+			throw new CommonException(ExcepitonTypeEnum.MEMBER_ACCOUNT.getCode(),e.getMessage());
+		}
+        
         if (entrys == null) {
             return null;
         }
         List<MemInAndExDetail> memInAndExDetailList = new ArrayList<MemInAndExDetail>();
-        for (MemberBalanceDetailBean memberBalanceDetailBean : entrys
-                .getPagedResult()) {
-            MemInAndExDetail memInAndExDetail = new MemInAndExDetail();
-            BeanUtils.copyProperties(memberBalanceDetailBean, memInAndExDetail);
-            memInAndExDetailList.add(memInAndExDetail);
-        }
+        try {
+			for (MemberBalanceDetailBean memberBalanceDetailBean : entrys
+			        .getPagedResult()) {
+			    MemInAndExDetail memInAndExDetail = new MemInAndExDetail();
+			    BeanUtils.copyProperties(memberBalanceDetailBean, memInAndExDetail);
+			    memInAndExDetailList.add(memInAndExDetail);
+			}
+		} catch (BeansException | IllegalAccessException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+			throw new CommonException(ExcepitonTypeEnum.SYSTEM.getCode(),e.getMessage());
+		}
         PagedResult<MemInAndExDetail> result = new DefaultPageResult<>(
                 memInAndExDetailList, entrys.getTotal());
         return result;

@@ -2,12 +2,10 @@ package com.zlebank.zplatform.business.individual.service;
 
 import com.zlebank.zplatform.business.individual.bean.MemInAndExDetail;
 import com.zlebank.zplatform.business.individual.bean.Order;
-import com.zlebank.zplatform.business.individual.exception.AbstractIndividualBusinessException;
+import com.zlebank.zplatform.business.individual.exception.CommonException;
 import com.zlebank.zplatform.business.individual.exception.ValidateOrderException;
 import com.zlebank.zplatform.commons.bean.PagedResult;
 import com.zlebank.zplatform.member.bean.MemberAccountBean;
-import com.zlebank.zplatform.trade.exception.AbstractTradeDescribeException;
-import com.zlebank.zplatform.trade.exception.TradeException;
 /**
  * 
  * Individual member account service
@@ -34,8 +32,7 @@ public interface MemberAccountService {
      * @throws AbstractIndividualBusinessException
      * @see OrderService
      */
-    String recharge(Order order) throws ValidateOrderException, TradeException,
-            AbstractIndividualBusinessException;
+    String recharge(Order order) throws CommonException;
     /**
      * Member account withdraw.Just create a withdraw order,it will be processed
      * by background program. Member can check bank account later if background
@@ -53,8 +50,7 @@ public interface MemberAccountService {
      * @throws AbstractIndividualBusinessException
      */
     String withdraw(String json, String payPwd)
-            throws ValidateOrderException, TradeException,
-            AbstractTradeDescribeException, AbstractIndividualBusinessException;
+            throws CommonException;
     /**
      * query member basic funds account
      * 
@@ -64,7 +60,7 @@ public interface MemberAccountService {
      *             if member funs account not exist
      */
     MemberAccountBean queryMemberFuns(String memberId)
-            throws AbstractTradeDescribeException;
+            throws CommonException;
     /**
      * query member income and express detail
      * 
@@ -77,6 +73,5 @@ public interface MemberAccountService {
      */
     PagedResult<MemInAndExDetail> queryAccInAndExDetail(String memberId,
             int page,
-            int pageSize) throws AbstractTradeDescribeException,
-            IllegalAccessException;
+            int pageSize) throws CommonException;
 }

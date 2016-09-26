@@ -27,5 +27,13 @@ public interface SmsService {
 	 * @return
 	 */
 	public boolean sendSmsCode(String json,ModuleTypeEnum moduleType);
+	
+	/**
+	 * 生成短信验证码（不发送短信验证码）
+	 * @param json
+	 * @param moduleType
+	 * @return
+	 */
+	public String generateSmsCode(String json, ModuleTypeEnum moduleType);
 
 }

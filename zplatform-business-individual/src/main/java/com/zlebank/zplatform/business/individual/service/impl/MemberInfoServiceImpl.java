@@ -14,39 +14,33 @@ import java.util.List;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Propagation;
-import org.springframework.transaction.annotation.Transactional;
 
 import com.zlebank.zplatform.business.individual.bean.IndividualRealInfo;
 import com.zlebank.zplatform.business.individual.bean.Member;
+import com.zlebank.zplatform.business.individual.bean.enums.ExcepitonTypeEnum;
 import com.zlebank.zplatform.business.individual.bean.enums.RealNameTypeEnum;
+import com.zlebank.zplatform.business.individual.exception.CommonException;
 import com.zlebank.zplatform.business.individual.service.MemberInfoService;
-import com.zlebank.zplatform.commons.bean.CardBin;
 import com.zlebank.zplatform.commons.bean.PagedResult;
-import com.zlebank.zplatform.commons.dao.CardBinDao;
-import com.zlebank.zplatform.commons.utils.StringUtil;
+import com.zlebank.zplatform.member.bean.CoopInsti;
 import com.zlebank.zplatform.member.bean.MemberBean;
 import com.zlebank.zplatform.member.bean.QuickpayCustBean;
 import com.zlebank.zplatform.member.bean.RealNameBean;
 import com.zlebank.zplatform.member.bean.enums.MemberType;
 import com.zlebank.zplatform.member.bean.enums.RealNameLvType;
-import com.zlebank.zplatform.member.dao.CoopInstiDAO;
-import com.zlebank.zplatform.member.dao.MemberDAO;
-import com.zlebank.zplatform.member.exception.CreateBusiAcctFailedException;
-import com.zlebank.zplatform.member.exception.CreateMemberFailedException;
-import com.zlebank.zplatform.member.exception.DataCheckFailedException;
-import com.zlebank.zplatform.member.exception.InvalidMemberDataException;
-import com.zlebank.zplatform.member.exception.LoginFailedException;
-import com.zlebank.zplatform.member.exception.UnbindBankFailedException;
-import com.zlebank.zplatform.member.pojo.PojoCoopInsti;
 import com.zlebank.zplatform.member.pojo.PojoMember;
-import com.zlebank.zplatform.member.service.MemberBankCardService;
-import com.zlebank.zplatform.member.service.MemberOperationService;
+import com.zlebank.zplatform.rmi.commons.SMSServiceProxy;
+import com.zlebank.zplatform.rmi.member.ICoopInstiService;
+import com.zlebank.zplatform.rmi.member.IMemberBankCardService;
+import com.zlebank.zplatform.rmi.member.IMemberOperationService;
+import com.zlebank.zplatform.rmi.member.IMemberService;
+import com.zlebank.zplatform.rmi.trade.CardBinServiceProxy;
+import com.zlebank.zplatform.rmi.trade.GateWayServiceProxy;
 import com.zlebank.zplatform.sms.pojo.enums.ModuleTypeEnum;
-import com.zlebank.zplatform.sms.service.ISMSService;
+import com.zlebank.zplatform.trade.bean.CardBinBean;
 import com.zlebank.zplatform.trade.bean.ResultBean;
 import com.zlebank.zplatform.trade.bean.wap.WapCardBean;
-import com.zlebank.zplatform.trade.service.IGateWayService;
+import com.zlebank.zplatform.trade.utils.StringUtil;
 
 /**
  * Class Description
@@ -60,19 +54,23 @@ import com.zlebank.zplatform.trade.service.IGateWayService;
 public class MemberInfoServiceImpl implements MemberInfoService {
 
 	@Autowired
-	private MemberOperationService memberOperationService;
+	private IMemberOperationService memberOperationService;
 	@Autowired
-	private ISMSService smsService;
+	private SMSServiceProxy smsService;
 	@Autowired
-	private MemberDAO memberDAO;
+	//private MemberDAO memberDAO;
+	private IMemberService memberService;
 	@Autowired
-	private MemberBankCardService memberBankCardService;
+	private IMemberBankCardService memberBankCardService;
 	@Autowired
-	private IGateWayService gateWayService;
+	private GateWayServiceProxy gateWayService;
 	@Autowired
-	private CardBinDao cardBinDao;
+	//private CardBinDao cardBinDao;
+	private CardBinServiceProxy cardBinService;
     @Autowired
-    CoopInstiDAO coopInstiDAO;
+    //CoopInstiDAO coopInstiDAO;
+    private ICoopInstiService coopInstiService;
+    
 	/**
 	 *
 	 * @param registerMemberInfo
@@ -84,19 +82,26 @@ public class MemberInfoServiceImpl implements MemberInfoService {
 	 */
 	@Override
 	public String register(Member registerMemberInfo, String smsCode)
-			throws InvalidMemberDataException, CreateMemberFailedException,
-			CreateBusiAcctFailedException {
-		int retCode = smsService.verifyCode(ModuleTypeEnum.REGISTER,
+			throws CommonException{
+		int retCode = smsService.verifyCodeByModuleType(ModuleTypeEnum.REGISTER.getCode(),
 				registerMemberInfo.getPhone(), smsCode);
 		if (retCode != 1) {
-			throw new RuntimeException("验证码错误");
+//			throw new RuntimeException("验证码错误");
+			throw new CommonException(ExcepitonTypeEnum.PASSWORD.getCode(),"验证码错误");
 		}
 		// 机构号转换为机构ID
-		PojoCoopInsti coopInsti = coopInstiDAO.getByInstiCode(registerMemberInfo.getInstiCode());
+		CoopInsti coopInsti = coopInstiService.getInstiByInstiCode(registerMemberInfo.getInstiCode());//getByInstiCode(registerMemberInfo.getInstiCode());
 		registerMemberInfo.setInstiCode(coopInsti.getInstiCode());
 		registerMemberInfo.setInstiId(coopInsti.getId());
-		String memberId = memberOperationService.registMember(
-				MemberType.INDIVIDUAL, registerMemberInfo);
+		String memberId = null;
+		try {
+			memberId = memberOperationService.registMember(
+					MemberType.INDIVIDUAL, registerMemberInfo);
+		} catch (Exception e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+			throw new CommonException(ExcepitonTypeEnum.PASSWORD.getCode(),e.getMessage());
+		}
 		return memberId;
 	}
 
@@ -107,10 +112,9 @@ public class MemberInfoServiceImpl implements MemberInfoService {
 	 * @return
 	 */
 	@Override
-	@Transactional(propagation=Propagation.REQUIRED,rollbackFor=Throwable.class)
 	public Member queryMember(String loginName, String coopInstiCode) {
-	    PojoCoopInsti coopInsti = coopInstiDAO.getByInstiCode(coopInstiCode);
-		PojoMember pm = memberDAO.getMemberByLoginNameAndCoopInsti(loginName, coopInsti.getId());
+	    CoopInsti coopInsti = coopInstiService.getInstiByInstiCode(coopInstiCode);
+		PojoMember pm = memberService.getMemberByLoginNameAndCoopInsti(loginName, coopInsti.getId());
 		if(pm==null){
 			return null;
 		}
@@ -152,14 +156,21 @@ public class MemberInfoServiceImpl implements MemberInfoService {
 	 */
 	@Override
 	public String login(String loginName, String pwd, String coopInstiCode)
-			throws DataCheckFailedException, LoginFailedException {
+			throws CommonException{
 		MemberBean member = new MemberBean();
 		member.setLoginName(loginName);
 		member.setPwd(pwd);
-		PojoCoopInsti coopInsti = coopInstiDAO.getByInstiCode(coopInstiCode);
+		CoopInsti coopInsti = coopInstiService.getInstiByInstiCode(coopInstiCode);
 		member.setInstiId(coopInsti.getId());
-		String memberId = memberOperationService.login(MemberType.INDIVIDUAL,member);
-		if (StringUtil.isNotEmpty(memberId)) {
+		String memberId = null;
+		try {
+			memberId = memberOperationService.login(MemberType.INDIVIDUAL,member);
+		} catch (Exception e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+			throw new CommonException(ExcepitonTypeEnum.PASSWORD.getCode(),e.getMessage());
+		}
+		if (memberId!=null&&!"".equals(memberId)) {
 			return memberId;
 		}
 		return null;
@@ -175,20 +186,20 @@ public class MemberInfoServiceImpl implements MemberInfoService {
 	 * @throws UnbindBankFailedException 
 	 */
 	@Override
-	@Transactional(propagation=Propagation.REQUIRED,rollbackFor=Throwable.class)
 	public boolean realName(IndividualRealInfo individualRealInfo,
             String smsCode,
             String payPwd,
-            String memberId,RealNameTypeEnum realNameTypeEnum) throws DataCheckFailedException, UnbindBankFailedException {
+            String memberId,RealNameTypeEnum realNameTypeEnum) throws CommonException {
 		//校验短信验证码
-		PojoMember pm = memberDAO.getMemberByMemberId(memberId, MemberType.INDIVIDUAL);
+		PojoMember pm = memberService.getMbmberByMemberId(memberId, MemberType.INDIVIDUAL);
 		if(realNameTypeEnum!=RealNameTypeEnum.CARDREALNAME){
 			if(pm==null){
 				return false;
 			}
-			int retCode = smsService.verifyCode(ModuleTypeEnum.BINDCARD,individualRealInfo.getPhoneNo(), smsCode);
+			int retCode = smsService.verifyCodeByModuleType(ModuleTypeEnum.BINDCARD.getCode(),individualRealInfo.getPhoneNo(), smsCode);
 			if(retCode != 1) {
-				throw new RuntimeException("验证码错误");
+				//throw new RuntimeException("验证码错误");
+				throw new CommonException(ExcepitonTypeEnum.PASSWORD.getCode(),"验证码错误");
 			}
 		}
         
@@ -214,8 +225,9 @@ public class MemberInfoServiceImpl implements MemberInfoService {
                         quickpayCustBean.setRelatememberno(memberId);
                         try {
                             memberBankCardService.unbindQuickPayCust(quickpayCustBean);
-                        } catch (UnbindBankFailedException e) {
-                            throw new UnbindBankFailedException();
+                        } catch (Exception e) {
+                            //throw new Exception("解绑银行卡失败");
+                            throw new CommonException(ExcepitonTypeEnum.MEMBER_CARD.getCode(),"解绑银行卡失败");
                         }
                     }
                 } catch (IllegalAccessException e) {
@@ -223,9 +235,9 @@ public class MemberInfoServiceImpl implements MemberInfoService {
                 }
           }
         }
-
+        
         // 【实名认证】【重置密码】
-        PojoCoopInsti pojoCoopInsti = coopInstiDAO.get(pm.getInstiId());
+        CoopInsti pojoCoopInsti = coopInstiService.getInstiByInstiID(pm.getInstiId());
         WapCardBean cardBean = new WapCardBean(individualRealInfo.getCardNo(), individualRealInfo.getCardType(), individualRealInfo.getCustomerName(), 
                 individualRealInfo.getCertifType(), individualRealInfo.getCertifNo(), individualRealInfo.getPhoneNo(), individualRealInfo.getCvn2(), 
                 individualRealInfo.getExpired());
@@ -259,7 +271,7 @@ public class MemberInfoServiceImpl implements MemberInfoService {
             quickpayCustBean.setRelatememberno(memberId);
             //新增设备ID支持匿名支付
             quickpayCustBean.setDevId(individualRealInfo.getDevId());
-            CardBin cardBin = cardBinDao.getCard(individualRealInfo.getCardNo());
+            CardBinBean cardBin = cardBinService.getCard(individualRealInfo.getCardNo());
             quickpayCustBean.setBankcode(cardBin.getBankCode());
             quickpayCustBean.setBankname(cardBin.getBankName());
             memberBankCardService.saveQuickPayCust(quickpayCustBean);
@@ -268,7 +280,13 @@ public class MemberInfoServiceImpl implements MemberInfoService {
             member.setLoginName(pm.getLoginName());
             member.setInstiId(pojoCoopInsti.getId());
             member.setPhone(pm.getPhone());
-            return memberOperationService.resetPayPwd(MemberType.INDIVIDUAL, member, payPwd, false);
+            try {
+				return memberOperationService.resetPayPwd(MemberType.INDIVIDUAL, member, payPwd, false);
+			} catch (Exception e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+				 throw new CommonException(ExcepitonTypeEnum.PASSWORD.getCode(),e.getMessage());
+			}
         }
 		return false;
 	}
@@ -281,9 +299,8 @@ public class MemberInfoServiceImpl implements MemberInfoService {
 	 * @throws DataCheckFailedException 
 	 */
 	@Override
-	@Transactional(propagation=Propagation.REQUIRED,rollbackFor=Throwable.class)
-	public boolean vaildatePayPwd(String memberId, String payPwd) throws DataCheckFailedException {
-		PojoMember pm = memberDAO.getMemberByMemberId(memberId, MemberType.INDIVIDUAL);
+	public boolean vaildatePayPwd(String memberId, String payPwd) throws CommonException {
+		PojoMember pm = memberService.getMbmberByMemberId(memberId, MemberType.INDIVIDUAL);
 		if(pm==null){
 			return false;
 		}
@@ -292,7 +309,12 @@ public class MemberInfoServiceImpl implements MemberInfoService {
 		member.setInstiId(pm.getInstiId());
 		member.setPhone(pm.getPhone());
 		member.setPaypwd(payPwd);
-		return memberOperationService.verifyPayPwd(MemberType.INDIVIDUAL, member);
+		try {
+			return memberOperationService.verifyPayPwd(MemberType.INDIVIDUAL, member);
+		} catch (Exception e) {
+			// TODO Auto-generated catch block
+			 throw new CommonException(ExcepitonTypeEnum.PASSWORD.getCode(),e.getMessage());
+		}
 	}
 
 	/**
@@ -304,9 +326,8 @@ public class MemberInfoServiceImpl implements MemberInfoService {
 	 * @throws DataCheckFailedException 
 	 */
 	@Override
-	@Transactional(propagation=Propagation.REQUIRED,rollbackFor=Throwable.class)
-	public boolean modifyPwd(String memberId, String orgPwd, String pwd) throws DataCheckFailedException {
-		PojoMember pm = memberDAO.getMemberByMemberId(memberId, MemberType.INDIVIDUAL);
+	public boolean modifyPwd(String memberId, String orgPwd, String pwd) throws CommonException {
+		PojoMember pm = memberService.getMbmberByMemberId(memberId, MemberType.INDIVIDUAL);
 		if(pm==null){
 			return false;
 		}
@@ -315,7 +336,13 @@ public class MemberInfoServiceImpl implements MemberInfoService {
 		member.setInstiId(pm.getInstiId());
 		member.setPhone(pm.getPhone());
 		member.setPwd(orgPwd);
-		return memberOperationService.resetLoginPwd(MemberType.INDIVIDUAL, member, pwd, true);
+		try {
+			return memberOperationService.resetLoginPwd(MemberType.INDIVIDUAL, member, pwd, true);
+		} catch (Exception e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+			 throw new CommonException(ExcepitonTypeEnum.PASSWORD.getCode(),e.getMessage());
+		}
 	}
 
 	/**
@@ -327,9 +354,11 @@ public class MemberInfoServiceImpl implements MemberInfoService {
 	 * @throws DataCheckFailedException 
 	 */
 	@Override
-	@Transactional(propagation=Propagation.REQUIRED,rollbackFor=Throwable.class)
-	public boolean modifyPayPwd(String memberId, String orgPayPwd, String payPwd) throws DataCheckFailedException {
-		PojoMember pm = memberDAO.getMemberByMemberId(memberId, null);
+	public boolean modifyPayPwd(String memberId, String orgPayPwd, String payPwd) throws CommonException {
+		if(payPwd.equals(orgPayPwd)){
+			throw new CommonException(ExcepitonTypeEnum.PASSWORD.getCode(),"新支付密码和原支付密码一样");
+		}
+		PojoMember pm = memberService.getMbmberByMemberId(memberId, null);
 		if(pm==null){
 			return false;
 		}
@@ -339,10 +368,16 @@ public class MemberInfoServiceImpl implements MemberInfoService {
 		member.setPhone(pm.getPhone());
 		member.setPaypwd(orgPayPwd);
 
-		if(StringUtil.isEmpty(orgPayPwd)){
-			return memberOperationService.resetPayPwd(MemberType.INDIVIDUAL, member, payPwd, false);	
-		} else {
-			return memberOperationService.resetPayPwd(MemberType.INDIVIDUAL, member, payPwd, true);
+		try {
+			if(StringUtil.isNotEmpty(orgPayPwd)){
+				return memberOperationService.resetPayPwd(MemberType.INDIVIDUAL, member, payPwd, true);
+			} else {
+				return memberOperationService.resetPayPwd(MemberType.INDIVIDUAL, member, payPwd, false);
+			}
+		} catch (Exception e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+			 throw new CommonException(ExcepitonTypeEnum.PASSWORD.getCode(),e.getMessage());
 		}
 
 	}
@@ -356,13 +391,12 @@ public class MemberInfoServiceImpl implements MemberInfoService {
 	 * @throws DataCheckFailedException 
 	 */
 	@Override
-	@Transactional(propagation=Propagation.REQUIRED,rollbackFor=Throwable.class)
-	public boolean resetPwd(String memberId, String pwd, String smsCode) throws DataCheckFailedException {
-		PojoMember pm = memberDAO.getMemberByMemberId(memberId, MemberType.INDIVIDUAL);
+	public boolean resetPwd(String memberId, String pwd, String smsCode) throws CommonException {
+		PojoMember pm = memberService.getMbmberByMemberId(memberId, MemberType.INDIVIDUAL);
 		if(pm==null){
 			return false;
 		}
-		int retCode = smsService.verifyCode(ModuleTypeEnum.CHANGELOGINPWD,
+		int retCode = smsService.verifyCodeByModuleType(ModuleTypeEnum.CHANGELOGINPWD.getCode(),
 				pm.getPhone(), smsCode);
 		if (retCode != 1) {
 			throw new RuntimeException("验证码错误");
@@ -371,7 +405,13 @@ public class MemberInfoServiceImpl implements MemberInfoService {
 		member.setLoginName(pm.getLoginName());
 		member.setInstiId(pm.getInstiId());
 		member.setPhone(pm.getPhone());
-		return memberOperationService.resetLoginPwd(MemberType.INDIVIDUAL, member, pwd, false);
+		try {
+			return memberOperationService.resetLoginPwd(MemberType.INDIVIDUAL, member, pwd, false);
+		} catch (Exception e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+			 throw new CommonException(ExcepitonTypeEnum.PASSWORD.getCode(),e.getMessage());
+		}
 	}
 
 	/**
@@ -383,13 +423,12 @@ public class MemberInfoServiceImpl implements MemberInfoService {
 	 * @throws DataCheckFailedException 
 	 */
 	@Override
-	@Transactional(propagation=Propagation.REQUIRED,rollbackFor=Throwable.class)
-	public boolean resetPayPwd(String memberId, String payPwd, String smsCode) throws DataCheckFailedException {
-		PojoMember pm = memberDAO.getMemberByMemberId(memberId, MemberType.INDIVIDUAL);
+	public boolean resetPayPwd(String memberId, String payPwd, String smsCode) throws CommonException {
+		PojoMember pm = memberService.getMbmberByMemberId(memberId, MemberType.INDIVIDUAL);
 		if(pm==null){
 			return false;
 		}
-		int retCode = smsService.verifyCode(ModuleTypeEnum.CHANGEPAYPWD,
+		int retCode = smsService.verifyCodeByModuleType(ModuleTypeEnum.RESETPAYPWD.getCode(),
 				pm.getPhone(), smsCode);
 		if (retCode != 1) {
 			throw new RuntimeException("验证码错误");
@@ -398,7 +437,13 @@ public class MemberInfoServiceImpl implements MemberInfoService {
 		member.setLoginName(pm.getLoginName());
 		member.setInstiId(pm.getInstiId());
 		member.setPhone(pm.getPhone());
-		return memberOperationService.resetPayPwd(MemberType.INDIVIDUAL, member, payPwd, false);
+		try {
+			return memberOperationService.resetPayPwd(MemberType.INDIVIDUAL, member, payPwd, false);
+		} catch (Exception e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+			 throw new CommonException(ExcepitonTypeEnum.PASSWORD.getCode(),e.getMessage());
+		}
 	}
 
 	/**
@@ -410,10 +455,9 @@ public class MemberInfoServiceImpl implements MemberInfoService {
 	 * @throws LoginFailedException 
 	 */
 	@Override
-	@Transactional(propagation=Propagation.REQUIRED,rollbackFor=Throwable.class)
 	public boolean vaildatePwd(String memberId, String pwd)
-			throws DataCheckFailedException, LoginFailedException {
-		PojoMember pm = memberDAO.getMemberByMemberId(memberId, MemberType.INDIVIDUAL);
+			throws CommonException {
+		PojoMember pm = memberService.getMbmberByMemberId(memberId, MemberType.INDIVIDUAL);
 		if(pm==null){
 			return false;
 		}
@@ -422,12 +466,144 @@ public class MemberInfoServiceImpl implements MemberInfoService {
 		member.setInstiId(pm.getInstiId());
 		member.setPhone(pm.getPhone());
 		member.setPwd(pwd);
-		if(StringUtil.isNotEmpty(memberOperationService.login(MemberType.INDIVIDUAL, member))){
-			return true;
+		try {
+			if(StringUtil.isNotEmpty(memberOperationService.login(MemberType.INDIVIDUAL, member))){
+				return true;
+			}
+		} catch (Exception e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+			 throw new CommonException(ExcepitonTypeEnum.PASSWORD.getCode(),e.getMessage());
 		}
 		return false;
 	}
 	
+	@Override
+	public boolean vaildateUnbindPhone(String memberId,String phone,String payPwd,String smsCode) throws CommonException{
+		//验证短信验证码
+		if (smsService.verifyCodeByModuleType(ModuleTypeEnum.UNBINDPHONE.getCode(), phone, smsCode)!=1) {
+            // throw new SmsCodeVerifyFailException();
+         	throw new CommonException(ExcepitonTypeEnum.PASSWORD.getCode(),"短信验证码错误");
+        }
+		//验证支付密码
+		if(!vaildatePayPwd(memberId, payPwd)){
+			throw new CommonException(ExcepitonTypeEnum.PASSWORD.getCode(),"支付密码错误");
+		}
+		return true;
+	}
+	@Override
+	public void vaildateBankCardForModifyPhone(String memberId,long bindId,String cardNo,String certNo,String payPwd)throws CommonException{
+		QuickpayCustBean memberBankCard = memberBankCardService.getMemberBankCardById(bindId);
+		if(memberBankCard==null){
+			throw new CommonException(ExcepitonTypeEnum.MEMBER_CARD.getCode(),"未找到银行卡信息");
+		}
+		if(StringUtil.isNotEmpty(cardNo)){
+			if(!cardNo.equals(memberBankCard.getCardno())){
+				throw new CommonException(ExcepitonTypeEnum.MEMBER_CARD.getCode(),"银行卡号错误");
+			}
+		}else{
+			throw new CommonException(ExcepitonTypeEnum.MEMBER_CARD.getCode(),"银行卡号为空");
+		}
+		
+		if(StringUtil.isNotEmpty(certNo)){
+			if(!certNo.equals(memberBankCard.getIdnum())){
+				throw new CommonException(ExcepitonTypeEnum.MEMBER_CARD.getCode(),"身份证号错误");
+			}
+		}else{
+			throw new CommonException(ExcepitonTypeEnum.MEMBER_CARD.getCode(),"身份证号为空");
+		}
+		
+		if(!vaildatePayPwd(memberId, payPwd)){
+			throw new CommonException(ExcepitonTypeEnum.PASSWORD.getCode(),"支付密码错误");
+		}
+	}
+	
+	@Override
+	public void modifyPhone(String memberId,String phone,String smsCode) throws CommonException{
+		//验证短信验证码
+		if (smsService.verifyCodeByModuleType(ModuleTypeEnum.BINDPHONE.getCode(), phone, smsCode)!=1) {
+            // throw new SmsCodeVerifyFailException();
+         	throw new CommonException(ExcepitonTypeEnum.MEMBER_CARD.getCode(),"短信验证码错误");
+        }
+		//获取会员所属合作机构ID
+		PojoMember member = memberService.getMbmberByMemberId(memberId, null);
+		
+		PojoMember memberByPhone = memberService.getMemberByPhoneAndCoopInsti(phone, member.getInstiId());
+		if(memberByPhone!=null){
+			throw new CommonException(ExcepitonTypeEnum.MEMBER_INFO.getCode(),"手机号已经被注册 ");
+		}
+		//更新会员手机号 t_member 
+		if(!memberOperationService.modifyPhone(memberId, phone)){
+			throw new CommonException(ExcepitonTypeEnum.MEMBER_INFO.getCode(),"手机号已经被注册 ");
+		}
+		
+	}
+	
+	@Override
+	public void vaildateBankCardForResetPwd(String memberId,String phone,String smsCode,long bindId,String cardNo) throws CommonException{
+		//获取绑卡信息
+		QuickpayCustBean memberBankCard = memberBankCardService.getMemberBankCardById(bindId);
+		if(memberBankCard==null){
+			throw new CommonException(ExcepitonTypeEnum.MEMBER_CARD.getCode(),"未找到银行卡信息");
+		}
+		//校验银行卡号
+		if(StringUtil.isNotEmpty(cardNo)){
+			if(!cardNo.equals(memberBankCard.getCardno())){
+				throw new CommonException(ExcepitonTypeEnum.MEMBER_CARD.getCode(),"银行卡号错误");
+			}
+		}else{
+			throw new CommonException(ExcepitonTypeEnum.MEMBER_CARD.getCode(),"银行卡号为空");
+		}
+		//校验银行卡预留手机号
+		if(StringUtil.isNotEmpty(phone)){
+			if(!memberBankCard.getPhone().equals(phone)){
+				throw new CommonException(ExcepitonTypeEnum.MEMBER_CARD.getCode(),"银行卡预留手机号错误");
+			}
+		}else{
+			throw new CommonException(ExcepitonTypeEnum.MEMBER_CARD.getCode(),"银行卡预留手机号为空");
+		}
+		//验证短信验证码
+		if(smsService.verifyCodeByModuleType(ModuleTypeEnum.RESETPAYPWD.getCode(), phone, smsCode)!=1) {
+         	throw new CommonException(ExcepitonTypeEnum.PASSWORD.getCode(),"短信验证码错误");
+        }
+	}
+
+	/**
+	 *
+	 * @param memberId
+	 * @return
+	 */
+	@Override
+	public Member queryPersonMember(String memberId) {
+		PojoMember pm = memberService.getMbmberByMemberId(memberId, MemberType.INDIVIDUAL);//memberService.getMemberByLoginNameAndCoopInsti(loginName, coopInsti.getId());
+		
+		if(pm==null){
+			return null;
+		}
+		Member member = new Member();
+		long memid = pm.getMemId();
+		String memberName=pm.getMemberName();
+		String pwd=pm.getPwd();
+		String paypwd=pm.getPayPwd();
+		RealNameLvType realnameLv=pm.getRealnameLv();
+		String phone=pm.getPhone();
+		String email=pm.getEmail();
+		String memberType=pm.getMemberType().getCode();
+		String memberStatus=pm.getStatus().getCode();
+		String registerIdent=pm.getRegisterIdent();
+		member.setMemid(memid+"");
+		member.setMemberId(memberId);
+		member.setMemberName(memberName);
+		member.setPwd(pwd);
+		member.setPaypwd(paypwd);
+		member.setRealnameLv(realnameLv.getCode());
+		member.setPhone(phone);
+		member.setEmail(email);
+		member.setMemberType(memberType);
+		member.setMemberStatus(memberStatus);
+		member.setRegisterIdent(registerIdent);
+		return member;
+	}
 	
 
 }

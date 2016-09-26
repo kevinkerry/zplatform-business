@@ -1,9 +1,11 @@
 package com.zlebank.zplatform.business.individual.service.impl;
 
 import java.math.BigDecimal;
-import java.net.URLEncoder;
+import java.text.DecimalFormat;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Date;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -13,126 +15,115 @@ import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Isolation;
-import org.springframework.transaction.annotation.Propagation;
-import org.springframework.transaction.annotation.Transactional;
 
 import com.alibaba.fastjson.JSON;
 import com.zlebank.zplatform.acc.bean.BusiAcctQuery;
 import com.zlebank.zplatform.acc.bean.TradeInfo;
 import com.zlebank.zplatform.acc.bean.enums.Usage;
-import com.zlebank.zplatform.acc.exception.AbstractBusiAcctException;
-import com.zlebank.zplatform.acc.exception.AccBussinessException;
 import com.zlebank.zplatform.acc.pojo.Money;
-import com.zlebank.zplatform.acc.service.AccEntryService;
 import com.zlebank.zplatform.acc.service.entry.EntryEvent;
 import com.zlebank.zplatform.business.individual.bean.IndividualRealInfo;
 import com.zlebank.zplatform.business.individual.bean.Order;
+import com.zlebank.zplatform.business.individual.bean.enums.ExcepitonTypeEnum;
 import com.zlebank.zplatform.business.individual.bean.enums.OrderStatus;
+import com.zlebank.zplatform.business.individual.bean.enums.OrderType;
 import com.zlebank.zplatform.business.individual.bean.enums.PayWay;
-import com.zlebank.zplatform.business.individual.exception.AbstractIndividualBusinessException;
-import com.zlebank.zplatform.business.individual.exception.InvalidBindIdException;
-import com.zlebank.zplatform.business.individual.exception.PayPwdVerifyFailException;
-import com.zlebank.zplatform.business.individual.exception.SmsCodeVerifyFailException;
-import com.zlebank.zplatform.business.individual.exception.UnCheckedSystemException;
-import com.zlebank.zplatform.business.individual.exception.UnknowPayWayException;
-import com.zlebank.zplatform.business.individual.exception.ValidateOrderException;
+import com.zlebank.zplatform.business.individual.bean.enums.WechatType;
+import com.zlebank.zplatform.business.individual.exception.CommonException;
 import com.zlebank.zplatform.business.individual.service.OrderService;
 import com.zlebank.zplatform.business.individual.utils.Constants;
-import com.zlebank.zplatform.commons.bean.CardBin;
 import com.zlebank.zplatform.commons.bean.DefaultPageResult;
 import com.zlebank.zplatform.commons.bean.PagedResult;
-import com.zlebank.zplatform.commons.dao.CardBinDao;
 import com.zlebank.zplatform.commons.dao.pojo.BusiTypeEnum;
 import com.zlebank.zplatform.commons.enums.BusinessCodeEnum;
-import com.zlebank.zplatform.commons.utils.DateUtil;
-import com.zlebank.zplatform.commons.utils.RSAUtils;
-import com.zlebank.zplatform.commons.utils.StringUtil;
+import com.zlebank.zplatform.member.bean.CoopInsti;
 import com.zlebank.zplatform.member.bean.MemberBean;
 import com.zlebank.zplatform.member.bean.QuickpayCustBean;
 import com.zlebank.zplatform.member.bean.enums.MemberType;
-import com.zlebank.zplatform.member.bean.enums.TerminalAccessType;
-import com.zlebank.zplatform.member.dao.CoopInstiDAO;
-import com.zlebank.zplatform.member.dao.MemberDAO;
-import com.zlebank.zplatform.member.exception.DataCheckFailedException;
-import com.zlebank.zplatform.member.pojo.PojoCoopInsti;
 import com.zlebank.zplatform.member.pojo.PojoMember;
-import com.zlebank.zplatform.member.service.MemberBankCardService;
-import com.zlebank.zplatform.member.service.MemberOperationService;
-import com.zlebank.zplatform.member.service.MemberService;
-import com.zlebank.zplatform.sms.service.ISMSService;
-import com.zlebank.zplatform.trade.adapter.accounting.IAccounting;
-import com.zlebank.zplatform.trade.bean.AppPartyBean;
+import com.zlebank.zplatform.rmi.acc.IAccEntryService;
+import com.zlebank.zplatform.rmi.commons.SMSServiceProxy;
+import com.zlebank.zplatform.rmi.member.ICoopInstiService;
+import com.zlebank.zplatform.rmi.member.IMemberAccountService;
+import com.zlebank.zplatform.rmi.member.IMemberBankCardService;
+import com.zlebank.zplatform.rmi.member.IMemberOperationService;
+import com.zlebank.zplatform.rmi.member.IMemberService;
+import com.zlebank.zplatform.rmi.trade.CardBinServiceProxy;
+import com.zlebank.zplatform.rmi.trade.ConfigInfoServiceProxy;
+import com.zlebank.zplatform.rmi.trade.GateWayServiceProxy;
+import com.zlebank.zplatform.rmi.trade.TradeQueryServiceProxy;
+import com.zlebank.zplatform.rmi.trade.TxnsLogServiceProxy;
+import com.zlebank.zplatform.rmi.trade.TxnsNotifyTaskServiceProxy;
+import com.zlebank.zplatform.rmi.trade.TxnsQuickpayServiceProxy;
+import com.zlebank.zplatform.rmi.trade.WeChatQRServiceProxy;
+import com.zlebank.zplatform.rmi.trade.WeChatServiceProxy;
+import com.zlebank.zplatform.trade.bean.CardBinBean;
+import com.zlebank.zplatform.trade.bean.ReaPayResultBean;
 import com.zlebank.zplatform.trade.bean.ResultBean;
 import com.zlebank.zplatform.trade.bean.TradeBean;
 import com.zlebank.zplatform.trade.bean.enums.ChannelEnmu;
 import com.zlebank.zplatform.trade.bean.enums.OrderStatusEnum;
-import com.zlebank.zplatform.trade.bean.gateway.AnonOrderAsynRespBean;
 import com.zlebank.zplatform.trade.bean.gateway.OrderAsynRespBean;
 import com.zlebank.zplatform.trade.bean.wap.WapCardBean;
-import com.zlebank.zplatform.trade.chanpay.enums.TradeStatusEnum;
-import com.zlebank.zplatform.trade.dao.ConfigInfoDAO;
-import com.zlebank.zplatform.trade.dao.ITxnsOrderinfoDAO;
-import com.zlebank.zplatform.trade.dao.impl.TxnsOrderinfoDAOImpl;
-import com.zlebank.zplatform.trade.exception.AbstractTradeDescribeException;
-import com.zlebank.zplatform.trade.exception.BalanceNotEnoughException;
-import com.zlebank.zplatform.trade.exception.FailToGetAccountInfoException;
-import com.zlebank.zplatform.trade.exception.TradeException;
-import com.zlebank.zplatform.trade.factory.AccountingAdapterFactory;
 import com.zlebank.zplatform.trade.model.ConfigInfoModel;
-import com.zlebank.zplatform.trade.model.QuickpayCustModel;
 import com.zlebank.zplatform.trade.model.TxnsLogModel;
 import com.zlebank.zplatform.trade.model.TxnsOrderinfoModel;
-import com.zlebank.zplatform.trade.service.IGateWayService;
-import com.zlebank.zplatform.trade.service.IQuickpayCustService;
-import com.zlebank.zplatform.trade.service.ITxnsLogService;
-import com.zlebank.zplatform.trade.utils.ObjectDynamic;
-import com.zlebank.zplatform.trade.utils.OrderNumber;
-import com.zlebank.zplatform.trade.utils.UUIDUtil;
-import com.zlebank.zplatform.wechat.enums.ResultCodeEnum;
-import com.zlebank.zplatform.wechat.service.WeChatService;
-import com.zlebank.zplatform.wechat.service.impl.WeChatServiceImpl;
-import com.zlebank.zplatform.wechat.wx.WXApplication;
-import com.zlebank.zplatform.wechat.wx.bean.QueryOrderBean;
-import com.zlebank.zplatform.wechat.wx.bean.QueryOrderResultBean;
+import com.zlebank.zplatform.trade.utils.DateUtil;
+import com.zlebank.zplatform.trade.utils.StringUtil;
 
 @Service
 public class OrderServiceImpl implements OrderService {
-	private static final Log log = LogFactory.getLog(WeChatServiceImpl.class);
+
+	private static final Log log = LogFactory.getLog(OrderServiceImpl.class);
     @Autowired
-    private IGateWayService gateWayService;
+    private GateWayServiceProxy gateWayService;
     @Autowired
     private IOrderValidator orderValidator;
     @Autowired
-    private MemberOperationService memberOperationServiceImpl;
+    private IMemberOperationService memberOperationServiceImpl;
     @Autowired
-    private MemberService memberServiceImpl;
+    private IMemberService memberServiceImpl;
     @Autowired
-    private com.zlebank.zplatform.member.service.MemberAccountService memberAccountServiceImpl;
+    private IMemberAccountService memberAccountServiceImpl;
     @Autowired
-    private ISMSService smsService;
-    @Autowired
-    private IQuickpayCustService quickpayCustService;
-    @Autowired
-    CoopInstiDAO coopInstiDAO;
-    @Autowired
-	private MemberDAO memberDAO;
-    @Autowired
-	private MemberBankCardService memberBankCardService;
-    @Autowired
-    private CardBinDao cardBinDao;
-    @Autowired
-    private ConfigInfoDAO configInfoDAO;
-
-    @Autowired
-    private AccEntryService accEntryService;
-    @Autowired
-    private ITxnsLogService txnsLogService;
-    @Autowired
-    private WeChatService weChatService;
-    @Autowired
-    private ITxnsOrderinfoDAO txnsOrderinfoDAO;
+    private SMSServiceProxy smsService;
+   // @Autowired
+   //private IQuickpayCustService quickpayCustService;
+   
+    /*@Autowired
+	private MemberDAO memberDAO;*/
+   
     
+    @Autowired
+    private IMemberService memberService;
+    
+    @Autowired
+	private IMemberBankCardService memberBankCardService;
+    @Autowired
+    //private CardBinDao cardBinDao;
+    private CardBinServiceProxy cardBinService;
+    @Autowired
+    //private ConfigInfoDAO configInfoDAO;
+    private ConfigInfoServiceProxy configInfoService;
+    @Autowired
+    private IAccEntryService accEntryService;
+    @Autowired
+    private TxnsLogServiceProxy txnsLogService;
+    @Autowired
+    private WeChatServiceProxy weChatService;
+    @Autowired
+    private TxnsQuickpayServiceProxy txnsQuickpayService;
+    
+    @Autowired
+    private TxnsNotifyTaskServiceProxy txnsNotifyTaskService;
+    @Autowired
+    private WeChatQRServiceProxy weChatQRService;
+    @Autowired
+    private ICoopInstiService coopInstiService;
+    @Autowired
+    private TradeQueryServiceProxy tradeQueryServiceProxy;
+    @Autowired
+    private ConfigInfoServiceProxy configInfoServiceProxy;
 	/**
 	 *
 	 * @param memberId
@@ -143,7 +134,6 @@ public class OrderServiceImpl implements OrderService {
 	 * @return
 	 */
 	@Override
-	@Transactional(propagation=Propagation.REQUIRED,rollbackFor=Throwable.class)
 	public PagedResult<Order> queryOrderList(String memberId, Date startDate, Date endDate,int page, int pageSize){
 		List<Map<String, Object>> orderinfoList = gateWayService.queryOrderInfo(memberId, DateUtil.formatDateTime(startDate), DateUtil.formatDateTime(endDate), page, pageSize);
 		List<Order> orderList = new ArrayList<Order>();
@@ -170,7 +160,6 @@ public class OrderServiceImpl implements OrderService {
 	 * @return
 	 */
 	@Override
-	@Transactional(propagation=Propagation.REQUIRED,rollbackFor=Throwable.class)
 	public Order queryOrder(String memberId, String tn) {
 		TxnsOrderinfoModel orderinfoModel = gateWayService.getOrderinfoByTN(tn);
 		TxnsLogModel txnsLog = txnsLogService.getTxnsLogByTxnseqno(orderinfoModel.getRelatetradetxn());
@@ -181,18 +170,39 @@ public class OrderServiceImpl implements OrderService {
 		order.setOrderId(orderinfoModel.getOrderno());
 		order.setTxnAmt(orderinfoModel.getOrderamt()+"");
 		order.setTxnTime(orderinfoModel.getOrdercommitime());
+		order.setOrderTime(txnsLog.getTxndate()+txnsLog.getTxntime());
 		order.setStatus(OrderStatus.fromValue(orderinfoModel.getStatus()));
 		order.setOrderDesc(orderinfoModel.getOrderdesc());
 		order.setCurrencyCode(orderinfoModel.getCurrencycode());
 		order.setTn(orderinfoModel.getTn());
 		order.setBankCode(txnsLog.getCardinstino());
+		BusiTypeEnum busitype = BusiTypeEnum.fromValue(txnsLog.getBusitype());
+		String code=OrderType.UNKNOW.getCode();
+		if(busitype.equals(BusiTypeEnum.consumption)){
+			code=OrderType.CONSUME.getCode();
+		}else if(busitype.equals(BusiTypeEnum.refund)){
+			code=OrderType.REFUND.getCode();
+		}else if(busitype.equals(BusiTypeEnum.charge)){
+			code=OrderType.RECHARGE.getCode();
+		}else if(busitype.equals(BusiTypeEnum.withdrawal)){
+			code=OrderType.WITHDRAW.getCode();
+		}
+		order.setOrderType( OrderType.fromValue(code));
+		//交易类型
+		order.setBusiType(txnsLog.getBusitype());
+		 ResultBean queryResultBean = null;
+	    ReaPayResultBean payResult = null;
+		if(ChannelEnmu.REAPAY==ChannelEnmu.fromValue(txnsLog.getPayinst())){//支付渠道为融宝时
+			if(OrderStatus.fromValue(orderinfoModel.getStatus())==OrderStatus.PAYING){//订单状态为正在支付
+				OrderStatusEnum queryTradeResult = tradeQueryServiceProxy.queryTradeResult(orderinfoModel.getRelatetradetxn());
+				order.setStatus(OrderStatus.fromValue(queryTradeResult.getStatus()));
+		}
+		}
 		return order;
 	}
 
     @Override
-    @Transactional(isolation = Isolation.READ_COMMITTED, propagation = Propagation.REQUIRED)
-    public String createOrder(Order order) throws ValidateOrderException,
-            TradeException, AbstractIndividualBusinessException {
+    public String createOrder(Order order) throws CommonException{
         String tn = null;
         fullNonWalletData(order);
 
@@ -201,20 +211,20 @@ public class OrderServiceImpl implements OrderService {
         String retCode = validateResult.get(IOrderValidator.RET_CODE);
         if (retCode != null
                 && !retCode.equals(IOrderValidator.RET_CODE_SUCCESS)) {
-            throw new ValidateOrderException(
-                    validateResult.get(IOrderValidator.RET_CODE),
+            throw new CommonException(
+            		ExcepitonTypeEnum.ORDER.getCode(),
                     validateResult.get(IOrderValidator.RET_MESSAGE));
         }
         try {
             tn = gateWayService.dealWithWapOrder(order);
-        } catch (TradeException e) {
-            e.printStackTrace();
         } catch (Exception e) {
             e.printStackTrace();
-            throw new UnCheckedSystemException();
+            //throw new UnCheckedSystemException();
+            throw new CommonException(ExcepitonTypeEnum.TRADE.getCode(),e.getMessage());
         }
         if (tn == null || tn.equals("")) {
-            throw new UnCheckedSystemException();
+            //throw new UnCheckedSystemException();
+            throw new CommonException(ExcepitonTypeEnum.TRADE.getCode(),"订单生成失败");
         }
         return tn;
     }
@@ -249,13 +259,13 @@ public class OrderServiceImpl implements OrderService {
     public OrderStatus pay(String order,
             String smsCode,
             String payPwd,
-            PayWay payWay) throws AbstractTradeDescribeException,
-            AbstractIndividualBusinessException, TradeException {
+            PayWay payWay) throws 
+            CommonException {
         Order orderObj = JSON.parseObject(order, Order.class);
         String memberId = orderObj.getMemberId();
         PojoMember member = memberServiceImpl.getMbmberByMemberId(memberId, MemberType.INDIVIDUAL);
         if (member == null) {// 资金账户不存在
-            throw new FailToGetAccountInfoException();
+            throw new CommonException(ExcepitonTypeEnum.MEMBER_ACCOUNT.getCode(),"资金账户不存在");
         }
 
         List<BusiAcctQuery> busiAcctList = memberServiceImpl
@@ -269,7 +279,7 @@ public class OrderServiceImpl implements OrderService {
         }
 
         if (basicFund == null) {// 资金账户不存在
-            throw new FailToGetAccountInfoException();
+        	throw new CommonException(ExcepitonTypeEnum.MEMBER_ACCOUNT.getCode(),"资金账户不存在");
         }
         try {
             MemberBean memberBean = new MemberBean();
@@ -280,49 +290,53 @@ public class OrderServiceImpl implements OrderService {
             // 校验支付密码
             if (!memberOperationServiceImpl.verifyPayPwd(MemberType.INDIVIDUAL,
                     memberBean)) {
-                throw new PayPwdVerifyFailException();
+                //throw new PayPwdVerifyFailException();
+            	throw new CommonException(ExcepitonTypeEnum.PASSWORD.getCode(),"支付密码错误");
             }
-        } catch (DataCheckFailedException e) {
-            PayPwdVerifyFailException pe = new PayPwdVerifyFailException();
+        } catch (Exception e) {
+            /*PayPwdVerifyFailException pe = new PayPwdVerifyFailException();
             pe.initCause(e);
-            throw pe;
+            throw pe;*/
+        	throw new CommonException(ExcepitonTypeEnum.MEMBER_ACCOUNT.getCode(),e.getMessage());
         }
 
         String phoneNo = "";
         if (payWay == PayWay.ACCOUNT) {
             phoneNo = member.getPhone();
         } else if (payWay == PayWay.QUICK){
-            QuickpayCustModel card = quickpayCustService.getCardByBindId(orderObj.getBindId());
-            phoneNo = card.getPhone();
+            //QuickpayCustModel card = quickpayCustService.getCardByBindId(orderObj.getBindId());
+        	QuickpayCustBean memberBankCard = memberBankCardService.getMemberBankCardById(Long.valueOf(orderObj.getBindId()));
+        			//quickpayCustService.getCardByBindId(orderObj.getBindId());
+            phoneNo = memberBankCard.getPhone();
         }
-
-        // 校验手机短信验证码
-        if (smsService.verifyCode(phoneNo,orderObj.getTn(),smsCode)!=1) {
-            throw new SmsCodeVerifyFailException();
-        }
-
         switch (payWay) {
             case ACCOUNT :
+            	// 校验手机短信验证码
+                if (smsService.verifyCode(phoneNo,orderObj.getTn(),smsCode)!=1) {
+                   // throw new SmsCodeVerifyFailException();
+                	throw new CommonException(ExcepitonTypeEnum.PASSWORD.getCode(),"短信验证码错误");
+                }
                 Money amount = Money.valueOf(new BigDecimal(orderObj
                         .getTxnAmt()));
                 if (basicFund.getBalance().minus(amount).compareTo(Money.ZERO) < 0) {// 余额不足
-                    throw new BalanceNotEnoughException();
+                    throw new CommonException(ExcepitonTypeEnum.MEMBER_ACCOUNT.getCode(),"余额不足");
                 }
-
                 gateWayService.accountPay(order);
-                updateAnonOrderToMemberOrder( orderObj);
+                updateAnonOrderToMemberOrder(orderObj);
                 break;
             case QUICK :
-                QuickpayCustModel card = quickpayCustService
-                        .getCardByBindId(orderObj.getBindId());
-                if (card == null) {
-                    throw new InvalidBindIdException();
+                //QuickpayCustModel card = quickpayCustService.getCardByBindId(orderObj.getBindId());
+                QuickpayCustBean memberBankCard = memberBankCardService.getMemberBankCardById(Long.valueOf(orderObj.getBindId()));
+                if (memberBankCard == null) {
+                   // throw new InvalidBindIdException();
+                	throw new CommonException(ExcepitonTypeEnum.MEMBER_CARD.getCode(),"银行卡不存在");
                 }
                 gateWayService.submitPay(order);
-                updateAnonOrderToMemberOrder( orderObj);
+                updateAnonOrderToMemberOrder(orderObj);
                 break;
             default :
-                throw new UnknowPayWayException();
+                //throw new UnknowPayWayException();
+            	throw new CommonException(ExcepitonTypeEnum.TRADE.getCode(),"未知支付类型");
         }
 
         Order orderRet = queryOrder(member.getMemberId(),orderObj.getTn());
@@ -333,54 +347,62 @@ public class OrderServiceImpl implements OrderService {
      * 更新匿名订单但是登陆支付的订单信息
      * @param order
      */
-    @Transactional(propagation=Propagation.REQUIRED,rollbackFor=Throwable.class)
-    private void updateAnonOrderToMemberOrder(Order order){
+    public void updateAnonOrderToMemberOrder(Order order){
+    	log.info("order json:"+JSON.toJSONString(order));
     	TxnsOrderinfoModel orderinfo = gateWayService.getOrderinfoByTN(order.getTn());
-    	TxnsLogModel txnsLog = txnsLogService.getTxnsLogByTxnseqno(orderinfo.getRelatetradetxn());
+    	//TxnsLogModel txnsLog = txnsLogService.getTxnsLogByTxnseqno(orderinfo.getRelatetradetxn());
     	String memberId = order.getMemberId();
-    	String old_order_member = txnsLog.getAccmemberid();
+    	String old_order_member = orderinfo.getMemberid();
     	if("999999999999999".equals(old_order_member)){
-    		//更新交易流水
+    		log.info("memberId:"+memberId);
+    		log.info("old_order_member:"+old_order_member);
+    		/*//更新交易流水
     		txnsLog.setAccmemberid(memberId);
-    		txnsLogService.update(txnsLog);
+    		txnsLogService.updateTxnsLog(txnsLog);
     		//更新交易订单
     		orderinfo.setMemberid(memberId);
-    		gateWayService.update(orderinfo);
+    		txnsOrderinfoDAO.updateOrderinfo(orderinfo);*/
+    		txnsLogService.updateAnonOrderToMemberOrder(orderinfo.getRelatetradetxn(), memberId);
+    		
     	}
     	
     	
     	
     }
     
-    
-    public OrderStatus anonymousPay(String order,String smsCode) throws AbstractTradeDescribeException,
-            AbstractIndividualBusinessException, TradeException {
+    public OrderStatus anonymousPay(String order,String smsCode) throws 
+             CommonException {
         Order orderObj = JSON.parseObject(order, Order.class);
         String memberId = "999999999999999";
         String bindId = orderObj.getBindId();
         String cardNo = orderObj.getCardNo();
         String phoneNo = "";
-        QuickpayCustModel card = null;
+        QuickpayCustBean memberBankCard = null;
         if(StringUtil.isNotEmpty(bindId)&&StringUtil.isNotEmpty(cardNo)){//绑卡标示和卡信息同时不为空时
-        	card = quickpayCustService.getCardByBindId(orderObj.getBindId());
-        	if (card == null) {
-                throw new InvalidBindIdException();
+        	 memberBankCard = memberBankCardService.getMemberBankCardById(Long.valueOf(orderObj.getBindId()));
+        	if (memberBankCard == null) {
+                //throw new InvalidBindIdException();
+        		throw new CommonException(ExcepitonTypeEnum.MEMBER_CARD.getCode(),"银行卡不存在");
             }
         	//绑卡表中的卡信息和参数卡信息进行比较
-        	if(!card.getAccname().equals(orderObj.getAccNo())||!card.getCardno().equals(orderObj.getCardNo())||
-        			!card.getIdnum().equals(orderObj.getCertifId())||!card.getPhone().equals(orderObj.getPhoneNo())){
-        		throw new InvalidBindIdException();
+        	if(!memberBankCard.getAccname().equals(orderObj.getAccNo())||!memberBankCard.getCardno().equals(orderObj.getCardNo())||
+        			!memberBankCard.getIdnum().equals(orderObj.getCertifId())||!memberBankCard.getPhone().equals(orderObj.getPhoneNo())){
+        		//throw new InvalidBindIdException();
+        		throw new CommonException(ExcepitonTypeEnum.MEMBER_CARD.getCode(),"银行卡信息校验失败");
         	}
-        	phoneNo = card.getPhone();
+        	phoneNo = memberBankCard.getPhone();
         }else if(StringUtil.isNotEmpty(bindId)){
-        	card = quickpayCustService.getCardByBindId(orderObj.getBindId());
-        	phoneNo = card.getPhone();
+        	memberBankCard = memberBankCardService.getMemberBankCardById(Long.valueOf(orderObj.getBindId()));
+        	phoneNo = memberBankCard.getPhone();
         }else if(StringUtil.isNotEmpty(cardNo)){
-        	List<QuickpayCustModel> cardList = (List<QuickpayCustModel>) quickpayCustService.queryByHQL("from QuickpayCustModel where cardno=? and accname = ? and phone = ? and idnum = ? and relatememberno = ? and status = ?", new Object[]{cardNo,orderObj.getCustomerNm(),orderObj.getPhoneNo(),orderObj.getCertifId(),memberId,"00"});
-        	if(cardList.size()>0){
-        		orderObj.setBindId(cardList.get(0).getId()+"");
+        	//List<QuickpayCustModel> cardList =this.quickpayCustService.getCardList(cardNo,orderObj.getCustomerNm(),orderObj.getPhoneNo(),orderObj.getCertifId(),memberId);
+        			//(List<QuickpayCustModel>) quickpayCustService.queryByHQL("from QuickpayCustModel where cardno=? and accname = ? and phone = ? and idnum = ? and relatememberno = ? and status = ?", new Object[]{cardNo,orderObj.getCustomerNm(),orderObj.getPhoneNo(),orderObj.getCertifId(),memberId,"00"});
+        	QuickpayCustBean quickpayCustBean = memberBankCardService.getCardList(cardNo,orderObj.getCustomerNm(), orderObj.getPhoneNo(), orderObj.getCertifId(), memberId);
+        	if(quickpayCustBean!=null){
+        		orderObj.setBindId(quickpayCustBean.getId()+"");
         	}else{
-        		throw new InvalidBindIdException();
+        		//throw new InvalidBindIdException();
+        		throw new CommonException(ExcepitonTypeEnum.MEMBER_CARD.getCode(),"绑定银行卡失败");
         	}
         }
         // 校验手机短信验证码
@@ -400,21 +422,27 @@ public class OrderServiceImpl implements OrderService {
      * @return
      * @throws DataCheckFailedException
      */
-    @Transactional(propagation=Propagation.REQUIRED,rollbackFor=Throwable.class)
+    
 	public ResultBean anonymousRealName(IndividualRealInfo individualRealInfo,String memberId) {
     	ResultBean resultBean = null;
     	try {
-			PojoMember pm = memberDAO.getMemberByMemberId(memberId, null);
+			//PojoMember pm = memberDAO.getMemberByMemberId(memberId, null);
+			PojoMember pm = memberService.getMbmberByMemberId(memberId, null);
+			
 			// 【实名认证】
-			PojoCoopInsti pojoCoopInsti = coopInstiDAO.get(pm.getInstiId());
+			//PojoCoopInsti pojoCoopInsti = coopInstiDAO.get(pm.getInstiId());
+			CoopInsti coopInsti = coopInstiService.getInstiByInstiID(pm.getInstiId());
+			
+			
+			
 			WapCardBean cardBean = new WapCardBean(individualRealInfo.getCardNo(), individualRealInfo.getCardType(), individualRealInfo.getCustomerName(), 
 			        individualRealInfo.getCertifType(), individualRealInfo.getCertifNo(), individualRealInfo.getPhoneNo(), individualRealInfo.getCvn2(), 
 			        individualRealInfo.getExpired());
-			resultBean = gateWayService.bindingBankCard(pojoCoopInsti.getInstiCode(), memberId, cardBean);
+			resultBean = gateWayService.bindingBankCard(coopInsti.getInstiCode(), memberId, cardBean);
 			if(resultBean.isResultBool()){
 			    //保存绑卡信息
 			    QuickpayCustBean quickpayCustBean = new QuickpayCustBean();
-			    quickpayCustBean.setCustomerno(pojoCoopInsti.getInstiCode());
+			    quickpayCustBean.setCustomerno(coopInsti.getInstiCode());
 			    quickpayCustBean.setCardno(individualRealInfo.getCardNo());
 			    quickpayCustBean.setCardtype(individualRealInfo.getCardType());
 			    quickpayCustBean.setAccname(individualRealInfo.getCustomerName());
@@ -426,7 +454,7 @@ public class OrderServiceImpl implements OrderService {
 			    quickpayCustBean.setRelatememberno("999999999999999");
 			    //新增设备ID支持匿名支付
 			    quickpayCustBean.setDevId(individualRealInfo.getDevId());
-			    CardBin cardBin = cardBinDao.getCard(individualRealInfo.getCardNo());
+			    CardBinBean cardBin = cardBinService.getCard(individualRealInfo.getCardNo());
 			    quickpayCustBean.setBankcode(cardBin.getBankCode());
 			    quickpayCustBean.setBankname(cardBin.getBankName());
 			    long bindId = memberBankCardService.saveQuickPayCust(quickpayCustBean);
@@ -434,10 +462,10 @@ public class OrderServiceImpl implements OrderService {
 			    boolean isCost = false;
 			    BusinessCodeEnum busiCode = BusinessCodeEnum.REALNAME_AUTH_COST;
 			    //记录实名认证手续费
-			    ConfigInfoModel startTime = configInfoDAO.getConfigByParaName("REALNAME_AUTH_PRICE");
+			    ConfigInfoModel startTime = configInfoService.getConfigByParaName("REALNAME_AUTH_PRICE");
 			    // 记录分录流水
 			    TradeInfo tradeInfo = new TradeInfo();
-			    tradeInfo.setTxnseqno(OrderNumber.getInstance().generateTxnseqno("8000"));
+			    tradeInfo.setTxnseqno(getTradeNum());
 			    tradeInfo.setAmount(BigDecimal.ZERO);
 			    tradeInfo.setCommission(BigDecimal.ZERO);
 			    tradeInfo.setAmountD(BigDecimal.ZERO);
@@ -447,28 +475,30 @@ public class OrderServiceImpl implements OrderService {
 			    tradeInfo.setCharge(new BigDecimal(startTime.getPara()));// 手续费
 			    
 			    tradeInfo.setChannelId(ChannelEnmu.CMBCWITHHOLDING.getChnlcode());
-			    tradeInfo.setCoopInstCode(pojoCoopInsti.getInstiCode());
+			    tradeInfo.setCoopInstCode(coopInsti.getInstiCode());
 			    accEntryService.accEntryProcess(tradeInfo,EntryEvent.TRADE_SUCCESS);
 			    resultBean = new ResultBean(bindId);
 			}
 		} catch (NumberFormatException e) {
 			// TODO Auto-generated catch block
 			resultBean = new ResultBean("", "数字格式化异常");
-		} catch (AccBussinessException e) {
+		} catch (Exception e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
-			resultBean = new ResultBean(e.getCode(), e.getMessage());
-		} catch (AbstractBusiAcctException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-			resultBean = new ResultBean(e.getCode(), e.getMessage());
+			resultBean = new ResultBean("", e.getMessage());
 		}
 		return resultBean;
 	}
     
-    @Transactional(isolation = Isolation.READ_COMMITTED, propagation = Propagation.REQUIRED)
-    public String createRefundOrder(Order order) throws ValidateOrderException,
-    TradeException, AbstractIndividualBusinessException{
+    private String getTradeNum(){
+    	long sequence = configInfoServiceProxy.getSequence("SEQ_TXNSEQNO");
+    	 DecimalFormat df = new DecimalFormat("00000000");
+         SimpleDateFormat sdf = new SimpleDateFormat("yyMMdd");
+         String tradeNum = sdf.format(new Date())+ df.format(sequence);
+         return tradeNum.substring(0,6)+"99"+tradeNum.substring(6);
+    }
+    
+    public String createRefundOrder(Order order) throws CommonException{
     	
     	String tn = null;
         fullNonWalletData(order);
@@ -478,20 +508,20 @@ public class OrderServiceImpl implements OrderService {
         String retCode = validateResult.get(IOrderValidator.RET_CODE);
         if (retCode != null
                 && !retCode.equals(IOrderValidator.RET_CODE_SUCCESS)) {
-            throw new ValidateOrderException(
-                    validateResult.get(IOrderValidator.RET_CODE),
+            throw new CommonException(
+                    ExcepitonTypeEnum.ORDER.getCode(),
                     validateResult.get(IOrderValidator.RET_MESSAGE));
         }
         try {
             tn = gateWayService.refund(JSON.toJSONString(order));
-        } catch (TradeException e) {
-            e.printStackTrace();
         } catch (Exception e) {
             e.printStackTrace();
-            throw new UnCheckedSystemException();
+            //throw new UnCheckedSystemException();
+            throw new CommonException(ExcepitonTypeEnum.TRADE.getCode(),e.getMessage());
         }
         if (tn == null || tn.equals("")) {
-            throw new UnCheckedSystemException();
+           // throw new UnCheckedSystemException();
+        	throw new CommonException(ExcepitonTypeEnum.MEMBER_CARD.getCode(),"退款订单提交失败");
         }
         return tn;
     }
@@ -504,15 +534,152 @@ public class OrderServiceImpl implements OrderService {
     	return gateWayService.getRefundFee(txnseqno, merchNo, txnAmt, busicode);
     }
 
-
 	@Override
-	 @Transactional(isolation = Isolation.READ_COMMITTED, propagation = Propagation.REQUIRED)
 	public ResultBean queryWechatOrder(String tn) {
 		TradeBean trade = new TradeBean();
 		trade.setTn(tn);
 		return this.weChatService.queryWechatOrder(trade);
 	}
-	
-	
-	
+
+	@Override
+	public ResultBean cashPay(Order orderObj,String smsCode,String memberId)  {
+        ResultBean result= null;
+        Map<String,Object> map = new HashMap<String, Object>();
+        TxnsOrderinfoModel orderinfoModel = gateWayService.getOrderinfoByTN(orderObj.getTn());
+        if(orderinfoModel==null){
+        	result =new ResultBean("","无效的交易信息");
+        	return result;
+        }
+		TxnsLogModel txnsLog = txnsLogService.getTxnsLogByTxnseqno(orderinfoModel.getRelatetradetxn());
+		if(txnsLog == null){
+			result =new ResultBean("","无效的交易信息");
+			return result;
+		}
+		map.put("fronturl", orderinfoModel.getFronturl());
+        memberId = null==memberId?"999999999999999":memberId;
+        String bindId = orderObj.getBindId();
+        String cardNo = orderObj.getCardNo();
+        String phoneNo = "";
+        QuickpayCustBean  memberBankCard = null;
+        if(StringUtil.isNotEmpty(bindId)&&StringUtil.isNotEmpty(cardNo)){//绑卡标示和卡信息同时不为空时
+        	memberBankCard = memberBankCardService.getMemberBankCardById(Long.valueOf(orderObj.getBindId()));
+        	if (memberBankCard == null) {
+                //throw new InvalidBindIdException();
+        		result =new ResultBean("", "无效的卡信息");
+        		result.setResultObj(map);
+        		return result;
+            }
+        	//绑卡表中的卡信息和参数卡信息进行比较
+        	if(!memberBankCard.getAccname().equals(orderObj.getAccNo())||!memberBankCard.getCardno().equals(orderObj.getCardNo())||
+        			!memberBankCard.getIdnum().equals(orderObj.getCertifId())||!memberBankCard.getPhone().equals(orderObj.getPhoneNo())){
+        		result =new ResultBean("", "请检查输入的卡信息");
+        		result.setResultObj(map);
+        		return result;
+        	}
+        	phoneNo = memberBankCard.getPhone();
+        }else if(StringUtil.isNotEmpty(bindId)){
+        	memberBankCard = memberBankCardService.getMemberBankCardById(Long.valueOf(orderObj.getBindId()));
+        	phoneNo = memberBankCard.getPhone();
+        }else if(StringUtil.isNotEmpty(cardNo)){
+        	//List<QuickpayCustModel> cardList =this.quickpayCustService.getCardList(cardNo,orderObj.getCustomerNm(),orderObj.getPhoneNo(),orderObj.getCertifId(),memberId);
+        	QuickpayCustBean quickpayCustBean = memberBankCardService.getCardList(cardNo,orderObj.getCustomerNm(), orderObj.getPhoneNo(), orderObj.getCertifId(), memberId);
+        	if(quickpayCustBean!=null){
+        		orderObj.setBindId(quickpayCustBean.getId()+"");
+        	}else{
+        		result =new ResultBean("", "请检查输入的卡信息");
+        		result.setResultObj(map);
+        		return result;
+        	}
+        }
+        orderObj.setSmsCode(smsCode);
+        try {
+			gateWayService.submitPay(JSON.toJSONString(orderObj));
+		} catch (Exception e) {
+			e.printStackTrace();
+			result =new ResultBean("", e.getMessage());
+    		result.setResultObj(map);
+    		return result;
+		}
+        Order orderRet = queryOrder(memberId,orderObj.getTn());
+        map.put("orderStatus", orderRet.getStatus());
+        if(orderRet.getStatus().equals(OrderStatus.SUCCESS)){
+        	
+        	
+        	ResultBean orderResp = gateWayService.generateAsyncRespMessage(txnsLog.getTxnseqno());
+        	OrderAsynRespBean respBean = (OrderAsynRespBean) orderResp.getResultObj();
+        	//同步通知有问题
+        	/*TxnsNotifyTaskModel task;
+			try {
+				task = new TxnsNotifyTaskModel(
+						orderinfoModel.getFirmemberno(),
+						orderinfoModel.getRelatetradetxn(), 1, 1,
+				        ObjectDynamic.generateReturnParamer(respBean, false, null),
+				        "00", "200", orderinfoModel.getFronturl(), "2");
+				txnsNotifyTaskService.saveTask(task);
+			} catch (Exception e) {
+				log.error(e.getMessage());
+				e.printStackTrace();
+				result =new ResultBean("","保存前台通知失败");
+	    		result.setResultObj(map);
+	    		return result;
+			}*/
+             
+        }
+        //返回url及状态
+        return new ResultBean(map);
+	}
+
+
+	/**
+	 *
+	 * @param tn
+	 * @return
+	 */
+	@Override
+	public JSONObject createWeChatOrderQR(String tn) {
+		// TODO Auto-generated method stub
+		JSONObject creatOrder = null;
+		try {
+			creatOrder = weChatQRService.creatOrder(tn);
+		} catch (Exception e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+		return creatOrder;
+	}
+	@Override
+	public JSONObject createWechatOrder(String tn, String typeId) throws CommonException {
+		JSONObject result = null;
+		if(StringUtil.isEmpty(typeId)||StringUtil.isEmpty(tn)){
+			throw new CommonException(ExcepitonTypeEnum.ORDER.getCode(),"tn或typeId不能为空！");
+		}
+		//微信APP支付
+		if(typeId.equals(WechatType.APP.getTypeId())){
+			result= weChatService.creatOrder(tn);
+		//扫码支付	
+		}else if(typeId.equals(WechatType.RQCODE.getTypeId())){
+			result=this.weChatQRService.creatOrder(tn);
+		}
+		return result;
+		
+	}
+
+	@Override
+	public ResultBean queryWechatOrder(String tn, String typeId)throws CommonException{
+		ResultBean result = null;
+		if(StringUtil.isEmpty(typeId)||StringUtil.isEmpty(tn)){
+			throw new CommonException(ExcepitonTypeEnum.ORDER.getCode(),"tn或typeId不能为空！");
+		}
+		TradeBean trade = new TradeBean();
+		trade.setTn(tn);
+		//微信APP支付
+		if(typeId.equals(WechatType.APP.getTypeId())){
+			result =this.weChatService.queryWechatOrder(trade);
+		//扫码支付	
+		}else if(typeId.equals(WechatType.RQCODE.getTypeId())){
+			result=this.weChatQRService.queryWechatOrder(trade);
+		}
+		return result;
+	}
 }
+

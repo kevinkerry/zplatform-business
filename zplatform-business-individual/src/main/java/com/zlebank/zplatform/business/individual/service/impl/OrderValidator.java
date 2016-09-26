@@ -9,22 +9,17 @@ import org.springframework.util.StringUtils;
 
 import com.zlebank.zplatform.business.individual.bean.Order;
 import com.zlebank.zplatform.business.individual.bean.enums.OrderType;
-import com.zlebank.zplatform.business.individual.utils.Constants;
+import com.zlebank.zplatform.rmi.trade.GateWayServiceProxy;
+import com.zlebank.zplatform.rmi.trade.ProdCaseServiceProxy;
 import com.zlebank.zplatform.trade.analyzer.GateWayTradeAnalyzer;
 import com.zlebank.zplatform.trade.bean.ResultBean;
-import com.zlebank.zplatform.trade.exception.TradeException;
-import com.zlebank.zplatform.trade.service.IGateWayService;
-import com.zlebank.zplatform.trade.service.IMemberService;
-import com.zlebank.zplatform.trade.service.IProdCaseService;
 
 @Service
 public class OrderValidator implements IOrderValidator {
     @Autowired
-    private IGateWayService gateWayService;
+    private GateWayServiceProxy gateWayService;
     @Autowired
-    private IProdCaseService prodCaseService;
-    @Autowired
-    private IMemberService memberService;
+    private ProdCaseServiceProxy prodCaseService;
 
     public Map<String, String> validateOrder(Order order) {
         // 验证订单数据有效性，用hibernate validator处理
@@ -50,11 +45,10 @@ public class OrderValidator implements IOrderValidator {
             gateWayService.verifyRepeatWebOrder(order.getOrderId(),
                     order.getTxnTime(), order.getTxnAmt(), order.getMerId(),
                     order.getMemberId());
-        } catch (TradeException e) {
+        } catch (Exception e) {
             // TODO Auto-generated catch block
             e.printStackTrace();
             resultMap.put(RET_MESSAGE, e.getMessage());
-            resultMap.put(RET_CODE, e.getCode());
             return resultMap;
         }
 
@@ -68,9 +62,8 @@ public class OrderValidator implements IOrderValidator {
 
 
         // 业务验证 
-        if (order.getOrderType() != OrderType.CONSUME) {//非消费类订单
-            if (StringUtils.isEmpty(order.getMemberId())
-                    || order.getMemberId().equals(Constants.ANONYMOUS_MERCH_ID)) {
+        /*if (order.getOrderType() != OrderType.CONSUME&&order.getOrderType()!=OrderType.REFUND) {//非消费类订单
+            if (StringUtils.isEmpty(order.getMemberId()) || order.getMemberId().equals(Constants.ANONYMOUS_MERCH_ID)) {
                 resultBean = new ResultBean("GW19", "非消费类订单不支持匿名支付");
                 resultMap.put(RET_MESSAGE, resultBean.getErrMsg());
                 resultMap.put(RET_CODE, resultBean.getErrCode());
@@ -83,7 +76,39 @@ public class OrderValidator implements IOrderValidator {
                 resultMap.put(RET_CODE, resultBean.getErrCode());
                 return resultMap;
             }
+        }*/
+        if(order.getOrderType() == OrderType.CONSUME){//消费类订单
+        	if (StringUtils.isEmpty(order.getMerId())) {
+                resultBean = new ResultBean("GW20", "消费类订单商户代码不能为空");
+                resultMap.put(RET_MESSAGE, resultBean.getErrMsg());
+                resultMap.put(RET_CODE, resultBean.getErrCode());
+                return resultMap;
+            }
+        }else if(order.getOrderType()==OrderType.RECHARGE){//充值类订单
+        	if(StringUtils.isEmpty(order.getMemberId())) {
+                resultBean = new ResultBean("GW20", "充值类订单会员号不能为空");
+                resultMap.put(RET_MESSAGE, resultBean.getErrMsg());
+                resultMap.put(RET_CODE, resultBean.getErrCode());
+                return resultMap;
+            }
+        }else if(order.getOrderType() == OrderType.REFUND){
+        	//退款订单商户号和会员号不可为空
+        	if(StringUtils.isEmpty(order.getMerId())||StringUtils.isEmpty(order.getMemberId())) {
+                resultBean = new ResultBean("GW20", "退款类订单商户号和会员号不能为空");
+                resultMap.put(RET_MESSAGE, resultBean.getErrMsg());
+                resultMap.put(RET_CODE, resultBean.getErrCode());
+                return resultMap;
+            }
+        }else if(order.getOrderType() == OrderType.WITHDRAW){
+        	if(StringUtils.isEmpty(order.getMemberId())) {
+                resultBean = new ResultBean("GW20", "提现类订单会员号不能为空");
+                resultMap.put(RET_MESSAGE, resultBean.getErrMsg());
+                resultMap.put(RET_CODE, resultBean.getErrCode());
+                return resultMap;
+            }
         }
+        
+        
         resultMap.put(RET_MESSAGE,RET_MESSAGE_SUCCESS );
         resultMap.put(RET_CODE, RET_CODE_SUCCESS);
         return resultMap;
