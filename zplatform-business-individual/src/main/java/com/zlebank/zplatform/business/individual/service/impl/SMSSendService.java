@@ -33,6 +33,7 @@ import com.zlebank.zplatform.trade.bean.ResultBean;
 import com.zlebank.zplatform.trade.bean.wap.WapCardBean;
 import com.zlebank.zplatform.trade.model.TxnsLogModel;
 import com.zlebank.zplatform.trade.model.TxnsOrderinfoModel;
+import com.zlebank.zplatform.trade.utils.StringUtil;
 
 /**
  * Class Description
@@ -302,6 +303,7 @@ public class SMSSendService implements SmsService{
 					 String bindFlag = jsonObject.get("bindFlag")+"";
 					 String instiCode = jsonObject.get("instiCode")+"";
 					 String devId = jsonObject.get("devId")+"";
+					 String merId="";
 					 QuickpayCustBean custBean = null;
 					 if(devId!=null&&!"".equals(devId)){
 						 custBean = memberBankCardService.getCardList(cardNo, customerNm, phoneNo, certifId, "999999999999999",devId);
@@ -322,13 +324,15 @@ public class SMSSendService implements SmsService{
 						}
 		        	}else{
 		        		if("1".equals(bindFlag)){//需要进行绑卡签约
-		        			 if(instiCode!=null&&!"".equals(instiCode)){
-		        				 TxnsOrderinfoModel orderinfo = gateWayService.getOrderinfoByTN(tn_);
-		        				 TxnsLogModel txnsLog = txnsLogService.getTxnsLogByTxnseqno(orderinfo.getRelatetradetxn());
+		        			TxnsOrderinfoModel orderinfo = gateWayService.getOrderinfoByTN(tn_);
+	        				 TxnsLogModel txnsLog = txnsLogService.getTxnsLogByTxnseqno(orderinfo.getRelatetradetxn());
+		        			 if(StringUtil.isEmpty(instiCode)){
 		        				 instiCode = txnsLog.getAcccoopinstino();
 		        			 }
+		        			 merId=txnsLog.getAccsecmerno()==null?txnsLog.getAccsecmerno():instiCode;
 		        	        WapCardBean cardBean = new WapCardBean(cardNo,cardType , customerNm,certifTp, certifId, phoneNo, cvn2, expired);
-		        	        ResultBean resultBean = gateWayService.bindingBankCard(instiCode, "999999999999999", cardBean);
+		        	        cardBean.setTn(tn_);
+		        	        ResultBean resultBean = gateWayService.bindingBankCard(merId, "999999999999999", cardBean);
 		        	        if(resultBean==null){
 		        	        	log.error("绑卡签约失败"+JSON.toJSONString(cardBean));
 		        	        	return null;
