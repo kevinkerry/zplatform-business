@@ -7,32 +7,13 @@ package com.zlebank.zplatform.business.individual.bean.enums;
  * @date 2016年9月5日 下午2:53:51
  * @since 
  */
-public enum AccTradeExcepitonEnum {
+public enum CreditAccExcepitonEnum {
 	UNKNOWN("UNKNOWN","未知"),
 	
-	AQ00("AQ00","字段校验非法"),
-	AQ01("AQ01","查询余额失败"),
-	TE00("TE00","非法字段"),
-	TE01("TE01","订单会员信息有误"),
-	TE02("TE02","不存在此交易"),
-	TE03("TE03","只处理转账业务"),
-	TE04("TE04","付款方不存在"),
-	TE05("TE05","收款方不存在"),
-	TE06("TE06","付款方未开通基本账户"),
-	TE07("TE07","付款方余额不足"),
-	TE08("TE08","收款方未开通基本账户"),
-	TE09("TE09","订单保存失败"),
+	CA00("CA00","不存在此会员"),
+	CA01("CA01","不存在此账户用途"),
+	CA02("CA02","账户开户失败"),
 	
-	BC00("BC00","字段校验非法"),
-	BC01("BC01","订单会员信息有误"),
-	BC02("BC02","不存在此交易"),
-	BC03("BC03","只处理保证金业务"),
-	BC04("BC04","充值会员不存在"),
-	BC05("BC05","未开通保证金账户"),
-	BC06("BC06","企业信息不存在"),
-	BC07("BC07","法人信息有误"),
-	BC08("BC08","此业务只允许企业会员"),
-	BC09("BC09","订单保存失败"),
 	
 	
 	BW00("BW00","字段校验非法"),
@@ -54,13 +35,13 @@ public enum AccTradeExcepitonEnum {
 	private String errorCode; // 错误码
 	private String errorMsg; // 错误信息
 
-	private AccTradeExcepitonEnum(String errorCode, String errorMsg) {
+	private CreditAccExcepitonEnum(String errorCode, String errorMsg) {
 		this.errorCode =  errorCode;
 		this.errorMsg = errorMsg;
 	}
 
 	public static String  getMsg(String code){
-        AccTradeExcepitonEnum message=AccTradeExcepitonEnum.valueOf(code);
+        CreditAccExcepitonEnum message=CreditAccExcepitonEnum.valueOf(code);
         if(message==null){
         	message=UNKNOWN;
         }
