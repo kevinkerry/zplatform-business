@@ -23,6 +23,7 @@ import com.zlebank.zplatform.acc.bean.enums.Usage;
 import com.zlebank.zplatform.acc.pojo.Money;
 import com.zlebank.zplatform.acc.service.entry.EntryEvent;
 import com.zlebank.zplatform.business.individual.bean.IndividualRealInfo;
+import com.zlebank.zplatform.business.individual.bean.IndustryOrderBean;
 import com.zlebank.zplatform.business.individual.bean.Order;
 import com.zlebank.zplatform.business.individual.bean.enums.ExcepitonTypeEnum;
 import com.zlebank.zplatform.business.individual.bean.enums.OrderStatus;
@@ -680,6 +681,12 @@ public class OrderServiceImpl implements OrderService {
 			result=this.weChatQRService.queryWechatOrder(trade);
 		}
 		return result;
+	}
+	
+	
+	public String createIndustryOrder(IndustryOrderBean orderBean){
+		
+		return null;
 	}
 }
 

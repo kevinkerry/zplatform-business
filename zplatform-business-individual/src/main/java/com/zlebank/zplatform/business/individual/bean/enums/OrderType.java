@@ -1,6 +1,5 @@
 package com.zlebank.zplatform.business.individual.bean.enums;
 
-import com.zlebank.zplatform.trade.bean.enums.RefundStatusEnum;
 
 public enum OrderType {
     /**
@@ -11,6 +10,16 @@ public enum OrderType {
      * consume
      */
     CONSUME("0001"), 
+    /**授信消费类**/
+    CREDIT_CONSUME("0003"),
+    /**授信充值类**/
+    CREDIT_RECHARGE("0004"),
+    /**行业消费类**/
+    INDUSTRY_CONSUME("0005"),	
+    /**行业充值类**/
+    INDUSTRY_RECHARGE("0006"),
+    /**保证金充值类**/
+    BAIL_RECHARGE("0007"),
     /**
      * consume
      */
@@ -18,7 +27,7 @@ public enum OrderType {
     /**
      * unknow
      */
-    REFUND("0003"),
+    REFUND("0000"),
     UNKNOW("");
     private String code;
     private OrderType(String code) {

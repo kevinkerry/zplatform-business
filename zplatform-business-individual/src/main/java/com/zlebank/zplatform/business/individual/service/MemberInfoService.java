@@ -48,6 +48,18 @@ public interface MemberInfoService {
             String payPwd,
             String memberId,RealNameTypeEnum realNameTypeEnum) throws CommonException;
 	/**
+	 * 实名认证 Do a real name authenticate
+	 * @param individualRealInfo 实名认证信息
+	 * @param smsCode 短信验证码
+	 * @param 会员号 
+	 * @param realNameFlag 实名认证标示，
+	 * @return bindId 绑卡标示
+	 * @throws DataCheckFailedException 
+	 */
+	public Long realName(IndividualRealInfo individualRealInfo,
+            String smsCode,
+            String memberId,RealNameTypeEnum realNameTypeEnum) throws CommonException;
+	/**
 	 * 验证支付密码  Verify the pay password
 	 * @param memberId 会员号
 	 * @param payPwd 支付密码

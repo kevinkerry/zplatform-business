@@ -258,12 +258,15 @@ public class SMSSendService implements SmsService{
 			case PAY:
 				//需要bindId tn
 				try {
-					gateWayService.sendSMSMessage(json);
+					jsonObject.put("smsFlag", "1");//1--不发短信。由第三方发， 0-支付平台发送
+					gateWayService.sendSMSMessage(jsonObject.toJSONString());
 				} catch (Exception e) {
 					e.printStackTrace();
-					return "false";
+					
 				}
-				return "true";
+				String orderNo = jsonObject.get("tn").toString();
+				retcode = smsSendService.generateCode(moduleType.getCode(), phoneNo, orderNo);
+				break;
 			case REGISTER:
 				phoneNo = jsonObject.get("phoneNo").toString();
 				retcode = smsSendService.generateCode(moduleType.getCode(), phoneNo, "");
