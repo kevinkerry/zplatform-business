@@ -5,6 +5,7 @@ import org.apache.commons.logging.LogFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import com.zlebank.zplatform.business.individual.bean.enums.AccTradeExcepitonEnum;
 import com.zlebank.zplatform.business.individual.bean.enums.ExcepitonTypeEnum;
 import com.zlebank.zplatform.business.individual.exception.CommonException;
 import com.zlebank.zplatform.business.individual.service.IAccountTradeService;
@@ -30,7 +31,8 @@ public class AccountTradeServiceImpl implements IAccountTradeService {
         } catch (Exception e) {
             e.printStackTrace();
             log.error(e.getMessage());
-            throw new CommonException(ExcepitonTypeEnum.TRADE.getCode(),e.getMessage());
+            String code= e.getMessage();
+            throw new CommonException(code,AccTradeExcepitonEnum.getMsg(code));
         }
 		return result;
 	}
@@ -43,7 +45,8 @@ public class AccountTradeServiceImpl implements IAccountTradeService {
 		} catch (Exception e) {
 			 e.printStackTrace();
 	         log.error(e.getMessage());
-	         throw new CommonException(ExcepitonTypeEnum.TRADE.getCode(),e.getMessage());
+	         String code= e.getMessage();
+	          throw new CommonException(code,AccTradeExcepitonEnum.getMsg(code));
 		} 
 		return tn;
 	}
@@ -57,7 +60,8 @@ public class AccountTradeServiceImpl implements IAccountTradeService {
 		} catch (Exception e) {
 			 e.printStackTrace();
 	         log.error(e.getMessage());
-	         throw new CommonException(ExcepitonTypeEnum.TRADE.getCode(),e.getMessage());
+	         String code= e.getMessage();
+	         throw new CommonException(code,AccTradeExcepitonEnum.getMsg(code));
 		} 
 		return tn;
 	}
@@ -71,7 +75,8 @@ public class AccountTradeServiceImpl implements IAccountTradeService {
 		} catch (Exception e) {
 			 e.printStackTrace();
 	         log.error(e.getMessage());
-	         throw new CommonException(ExcepitonTypeEnum.TRADE.getCode(),e.getMessage());
+	         String code= e.getMessage();
+	            throw new CommonException(code,AccTradeExcepitonEnum.getMsg(code));
 		} 
 		return tn;
 	}
